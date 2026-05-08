@@ -462,7 +462,7 @@ def run_variant(
 def build_component_registry(variant_results: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
     registry = []
     for metta_variant, result in variant_results.items():
-        non_train_accuracy = result["split_metrics"]["modular"]["non_train"]["accuracy"]
+        non_train_accuracy = result["split_metrics"]["modular"]["non_train"].get("accuracy", 0.0)
         for gate_family, audit in result["audits"].items():
             top = audit["top_effect"]
             if top is None:
