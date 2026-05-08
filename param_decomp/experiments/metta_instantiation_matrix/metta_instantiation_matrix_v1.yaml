@@ -1,0 +1,14 @@
+seed: 20260508
+hidden_dim: 32
+recursive_steps: 3
+epochs: 220
+lr: 0.03
+backend: auto
+rust_threads: 8
+limit: 128
+storyworld_limit: 96
+include_storyworld: true
+source_path: "C:/projects/Tesseract/Tesseract/data/normalized_trajectories/intellect_3_logic.jsonl"
+predictions_path: "C:/projects/trm_observability_harness/data/qwen27b_intellect3_logic_hybrid_200/predictions.jsonl"
+storyworld_play_root: "C:/projects/metta-storyworld/metta-storyworld/metta-storyworld/traces/local_llm_storyworld"
+storyworld_build_root: "C:/projects/GPTStoryworld/hermes-skills/storyworld-conveyor/working_worlds"

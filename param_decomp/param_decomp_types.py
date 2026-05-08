@@ -46,6 +46,6 @@ RootPath = Annotated[
 ]
 
 Probability = Annotated[float, Ge(0), Le(1)]
-TaskName = Literal["tms", "resid_mlp", "lm", "ih", "metta_keygate", "metta_amalgam"]
+TaskName = Literal["tms", "resid_mlp", "lm", "ih", "metta_keygate", "metta_amalgam", "metta_instantiation_matrix"]
 LayerwiseCiFnType = Literal["mlp", "vector_mlp", "shared_mlp"]
 GlobalCiFnType = Literal["global_shared_mlp", "global_shared_transformer"]

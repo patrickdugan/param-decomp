@@ -111,6 +111,12 @@ EXPERIMENT_REGISTRY: dict[str, ExperimentConfig] = {
         config_path=Path("param_decomp/experiments/metta_amalgam/metta_trm_amalgam_v1.yaml"),
         expected_runtime=2,
     ),
+    "metta_instantiation_matrix_v1": ExperimentConfig(
+        task_name="metta_instantiation_matrix",
+        decomp_script=Path("param_decomp/experiments/metta_instantiation_matrix/run.py"),
+        config_path=Path("param_decomp/experiments/metta_instantiation_matrix/metta_instantiation_matrix_v1.yaml"),
+        expected_runtime=8,
+    ),
 }
 
 
