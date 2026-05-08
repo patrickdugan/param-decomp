@@ -1,13 +1,25 @@
 """Local PD experiment runner"""
 
+import argparse
+import os
 import subprocess
 import sys
-
-import fire
 
 from param_decomp.log import logger
 from param_decomp.registry import EXPERIMENT_REGISTRY
 from param_decomp.settings import REPO_ROOT
+
+
+def _child_env(cpu: bool) -> dict[str, str]:
+    env = os.environ.copy()
+    existing_pythonpath = env.get("PYTHONPATH")
+    pythonpath_parts = [str(REPO_ROOT)]
+    if existing_pythonpath:
+        pythonpath_parts.append(existing_pythonpath)
+    env["PYTHONPATH"] = os.pathsep.join(pythonpath_parts)
+    if cpu:
+        env["CUDA_VISIBLE_DEVICES"] = ""
+    return env
 
 
 def main(
@@ -67,14 +79,24 @@ def main(
     if cpu:
         env_prefix = "CUDA_VISIBLE_DEVICES="
         logger.info(f"Running: {env_prefix} {' '.join(cmd)}")
-        subprocess.run(cmd, check=True, env={"CUDA_VISIBLE_DEVICES": ""})
+        subprocess.run(cmd, check=True, env=_child_env(cpu=True))
     else:
         logger.info(f"Running: {' '.join(cmd)}")
-        subprocess.run(cmd, check=True)
+        subprocess.run(cmd, check=True, env=_child_env(cpu=False))
 
 
 def cli() -> None:
-    fire.Fire(main)
+    try:
+        import fire
+    except ModuleNotFoundError:
+        parser = argparse.ArgumentParser(description="Run a single PD experiment locally.")
+        parser.add_argument("experiment")
+        parser.add_argument("--cpu", action="store_true")
+        parser.add_argument("--dp", type=int)
+        args = parser.parse_args()
+        main(args.experiment, cpu=args.cpu, dp=args.dp)
+    else:
+        fire.Fire(main)
 
 
 if __name__ == "__main__":

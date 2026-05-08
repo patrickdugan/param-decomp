@@ -99,6 +99,12 @@ EXPERIMENT_REGISTRY: dict[str, ExperimentConfig] = {
         config_path=Path("param_decomp/experiments/lm/pile_llama_simple_mlp-12L.yaml"),
         expected_runtime=2880,
     ),
+    "metta_keygate_v1": ExperimentConfig(
+        task_name="metta_keygate",
+        decomp_script=Path("param_decomp/experiments/metta_keygate/run.py"),
+        config_path=Path("param_decomp/experiments/metta_keygate/metta_keygate_v1.yaml"),
+        expected_runtime=2,
+    ),
 }
 
 
