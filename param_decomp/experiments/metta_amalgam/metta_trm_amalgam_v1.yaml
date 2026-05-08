@@ -1,0 +1,7 @@
+seed: 20260508
+hidden_dim: 32
+recursive_steps: 3
+epochs: 220
+lr: 0.03
+backend: auto
+rust_threads: 8
