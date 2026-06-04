@@ -162,6 +162,62 @@ def metric_rows(run_root: Path) -> list[dict[str, Any]]:
     return rows
 
 
+def policy_rows(run_root: Path) -> list[dict[str, Any]]:
+    feedback = read_json(run_root / "trm_feedback_loop_full_sweep_filtered_20260601T163437Z" / "outer_loop_summary.json")
+    rows = []
+    raw_by_policy = {row["policy"]: row for row in feedback.get("policy_comparison") or []}
+    filtered_by_policy = {row["policy"]: row for row in feedback.get("filtered_policy_comparison") or []}
+    for policy in sorted(set(raw_by_policy) | set(filtered_by_policy)):
+        raw = raw_by_policy.get(policy, {})
+        filtered = filtered_by_policy.get(policy, {})
+        rows.append(
+            {
+                "policy": policy,
+                "raw_total_metric_gain": raw.get("total_metric_gain", 0.0),
+                "raw_accepted_metric_gain": raw.get("accepted_metric_gain", 0.0),
+                "raw_accepted_count": raw.get("accepted_count", 0),
+                "filtered_metric_gain": filtered.get("filtered_metric_gain", 0.0),
+                "filtered_accept_count": filtered.get("filtered_accept_count", 0),
+                "filtered_mean_efficiency": filtered.get("mean_filtered_efficiency", 0.0),
+                "filtered_mean_specificity": filtered.get("mean_filtered_specificity", 0.0),
+            }
+        )
+    return rows
+
+
+def claim_ledger_rows(run_root: Path) -> list[dict[str, Any]]:
+    arena = read_json(run_root / "metta_organelle_arena_paper_20260601T024147Z" / "arena_summary.json")
+    feedback = read_json(run_root / "trm_feedback_loop_full_sweep_filtered_20260601T163437Z" / "outer_loop_summary.json")
+    eval_aligned = read_json(run_root / "trm_eval_aligned_edits_intellect3_logic_20260602" / "eval_aligned_summary.json")
+    runtime = read_json(run_root / "trm_gain_policy_runtime_edit_score_arc_20260604" / "runtime_edit_summary.json")
+    return [
+        {
+            "claim": "VPD components transfer between related TRM organelles under guardrails.",
+            "status": "supported",
+            "primary_artifact": "metta_organelle_arena_paper_20260601T024147Z",
+            "evidence": f"accepted_grafts={arena.get('accepted_count')}; stable_grafts={arena.get('stable_graft_count')}",
+        },
+        {
+            "claim": "Filtered feedback loop separates VPD accepted gain from random scalar movement.",
+            "status": "supported",
+            "primary_artifact": "trm_feedback_loop_full_sweep_filtered_20260601T163437Z",
+            "evidence": f"filtered_policy_rows={len(feedback.get('filtered_policy_comparison') or [])}",
+        },
+        {
+            "claim": "Proxy-positive VPD edits currently improve Intellect-3 downstream evals.",
+            "status": "not_supported_boundary",
+            "primary_artifact": "trm_eval_aligned_edits_intellect3_logic_20260602",
+            "evidence": f"accepted_eval_aligned_count={eval_aligned.get('accepted_eval_aligned_count')}",
+        },
+        {
+            "claim": "ARC activation-local runtime edit promotes beyond broad fixed-label controls.",
+            "status": "not_supported_open_track",
+            "primary_artifact": "trm_gain_policy_runtime_edit_score_arc_20260604",
+            "evidence": f"promotion_ready={runtime.get('promotion_ready')}; best_trial_delta={runtime.get('best_trial_delta')}; best_control_delta={runtime.get('best_control_delta')}",
+        },
+    ]
+
+
 def bar_svg(rows: list[dict[str, Any]]) -> str:
     selected = [
         ("VPD grafts", float(next((row["value"] for row in rows if row["metric"] == "accepted_count"), 0) or 0)),
@@ -191,6 +247,58 @@ def bar_svg(rows: list[dict[str, Any]]) -> str:
     )
 
 
+def feedback_svg(policy_table: list[dict[str, Any]]) -> str:
+    width, height = 840, 320
+    left, top, plot_w, plot_h = 72, 42, 700, 190
+    values = [(row["policy"], float(row["filtered_metric_gain"] or 0.0), int(row["filtered_accept_count"] or 0)) for row in policy_table]
+    max_value = max([value for _, value, _ in values] + [0.01])
+    bars = []
+    for index, (policy, gain, count) in enumerate(values):
+        bar_w = 100
+        x = left + index * 132
+        h = plot_h * gain / max_value
+        y = top + plot_h - h
+        bars.append(f'<rect x="{x}" y="{y:.2f}" width="{bar_w}" height="{h:.2f}" fill="#356f66"/>')
+        bars.append(f'<text x="{x}" y="{top + plot_h + 22}" font-family="Arial" font-size="11" fill="#222">{policy}</text>')
+        bars.append(f'<text x="{x}" y="{max(18, y - 8):.2f}" font-family="Arial" font-size="12" fill="#222">{gain:g} ({count})</text>')
+    return (
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}">'
+        '<rect width="100%" height="100%" fill="#fbfaf7"/>'
+        f'<text x="{left}" y="25" font-family="Arial" font-size="17" fill="#1d2327">Filtered accepted metric gain by policy</text>'
+        f'<line x1="{left}" y1="{top + plot_h}" x2="{left + plot_w}" y2="{top + plot_h}" stroke="#333"/>'
+        f'{"".join(bars)}'
+        '<text x="72" y="292" font-family="Arial" font-size="12" fill="#333">Numbers show filtered metric gain and accepted count.</text>'
+        '</svg>'
+    )
+
+
+def eval_collapse_svg(rows: list[dict[str, Any]]) -> str:
+    candidate_count = float(next((row["value"] for row in rows if row["metric"] == "candidate_count"), 0) or 0)
+    result_count = float(next((row["value"] for row in rows if row["metric"] == "result_count"), 0) or 0)
+    accepted_count = float(next((row["value"] for row in rows if row["metric"] == "accepted_eval_aligned_count"), 0) or 0)
+    stages = [("candidates", candidate_count), ("aligned rows", result_count), ("accepted eval edits", accepted_count)]
+    width, height = 720, 260
+    left, top, plot_w, plot_h = 72, 42, 560, 150
+    max_value = max([value for _, value in stages] + [1.0])
+    bars = []
+    for index, (label, value) in enumerate(stages):
+        x = left + index * 180
+        h = plot_h * value / max_value
+        y = top + plot_h - h
+        color = "#356f66" if index == 0 else ("#4c5f9d" if index == 1 else "#8d3f3f")
+        bars.append(f'<rect x="{x}" y="{y:.2f}" width="120" height="{h:.2f}" fill="{color}"/>')
+        bars.append(f'<text x="{x}" y="{top + plot_h + 22}" font-family="Arial" font-size="12" fill="#222">{label}</text>')
+        bars.append(f'<text x="{x}" y="{max(18, y - 8):.2f}" font-family="Arial" font-size="12" fill="#222">{value:g}</text>')
+    return (
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}">'
+        '<rect width="100%" height="100%" fill="#fbfaf7"/>'
+        f'<text x="{left}" y="25" font-family="Arial" font-size="17" fill="#1d2327">Eval-alignment boundary</text>'
+        f'<line x1="{left}" y1="{top + plot_h}" x2="{left + plot_w}" y2="{top + plot_h}" stroke="#333"/>'
+        f'{"".join(bars)}'
+        '</svg>'
+    )
+
+
 def compact_packet(summary: dict[str, Any]) -> str:
     return "\n".join(
         [
@@ -212,16 +320,35 @@ def run_roundout(args: argparse.Namespace) -> dict[str, Any]:
     args.out_dir.mkdir(parents=True, exist_ok=True)
     manifest = manifest_rows(args.run_root)
     metrics = metric_rows(args.run_root)
+    policies = policy_rows(args.run_root)
+    claims = claim_ledger_rows(args.run_root)
     write_csv(
         args.out_dir / "paper_experiment_manifest.csv",
         manifest,
         ["run_id", "path", "summary_path", "exists", "summary_exists", "tier", "role", "include_for_main_claims"],
     )
     write_csv(args.out_dir / "paper_metric_table.csv", metrics, ["result_family", "metric", "value", "claim_tier"])
+    write_csv(
+        args.out_dir / "paper_policy_comparison.csv",
+        policies,
+        [
+            "policy",
+            "raw_total_metric_gain",
+            "raw_accepted_metric_gain",
+            "raw_accepted_count",
+            "filtered_metric_gain",
+            "filtered_accept_count",
+            "filtered_mean_efficiency",
+            "filtered_mean_specificity",
+        ],
+    )
+    write_csv(args.out_dir / "paper_claim_ledger.csv", claims, ["claim", "status", "primary_artifact", "evidence"])
     (args.out_dir / "paper_experiment_manifest.json").write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     figures = args.out_dir / "figures"
     figures.mkdir(exist_ok=True)
     (figures / "roundout_summary.svg").write_text(bar_svg(metrics), encoding="utf-8")
+    (figures / "filtered_feedback_policy_gain.svg").write_text(feedback_svg(policies), encoding="utf-8")
+    (figures / "eval_alignment_collapse.svg").write_text(eval_collapse_svg(metrics), encoding="utf-8")
     summary = {
         "status": "completed",
         "generated_at_utc": utc_now(),
@@ -229,6 +356,8 @@ def run_roundout(args: argparse.Namespace) -> dict[str, Any]:
         "run_root": str(args.run_root),
         "manifest_row_count": len(manifest),
         "metric_row_count": len(metrics),
+        "policy_row_count": len(policies),
+        "claim_row_count": len(claims),
         "included_main_claim_run_count": sum(int(row["include_for_main_claims"]) for row in manifest),
         "excluded_run_count": sum(int(row["tier"] == "excluded") for row in manifest),
         "claim_boundary": "Paper artifact builder only; does not rerun experiments.",
@@ -237,7 +366,11 @@ def run_roundout(args: argparse.Namespace) -> dict[str, Any]:
             "manifest_csv": str(args.out_dir / "paper_experiment_manifest.csv"),
             "manifest_json": str(args.out_dir / "paper_experiment_manifest.json"),
             "metric_table": str(args.out_dir / "paper_metric_table.csv"),
+            "policy_comparison": str(args.out_dir / "paper_policy_comparison.csv"),
+            "claim_ledger": str(args.out_dir / "paper_claim_ledger.csv"),
             "summary_figure": str(figures / "roundout_summary.svg"),
+            "feedback_figure": str(figures / "filtered_feedback_policy_gain.svg"),
+            "eval_boundary_figure": str(figures / "eval_alignment_collapse.svg"),
             "prompt_packet": str(args.out_dir / "prompt_packet.txt"),
         },
     }

@@ -1518,11 +1518,27 @@ The conservative paper track now has deterministic roundout artifacts:
 run: D:\Research_Engine\runs\vpd_trm_paper_roundout_20260604
 manifest rows: 8
 metric rows: 27
+policy rows: 5
+claim rows: 4
 included main-claim runs: 3
 excluded runs: 1
 ```
 
 This manifest separates `claim_support`, `boundary_result`, `open_positive_track`, and `excluded` artifacts so the paper figures can freeze around supported claims while the activation-local runtime edit work remains visibly open.
+
+The roundout run now emits the paper-facing assets:
+
+```text
+paper_experiment_manifest.csv
+paper_metric_table.csv
+paper_policy_comparison.csv
+paper_claim_ledger.csv
+figures/roundout_summary.svg
+figures/filtered_feedback_policy_gain.svg
+figures/eval_alignment_collapse.svg
+```
+
+Use these as the current figure/table source of truth. The claim ledger is especially important because it explicitly marks the activation-local ARC runtime edit as `not_supported_open_track` rather than allowing the positive trial delta to be over-read.
 
 ### Edit Showcase and Decision Traces
 

@@ -20,7 +20,10 @@ def test_roundout_builds_manifest_and_metric_table(tmp_path: Path) -> None:
     )
     _write_json(
         root / "trm_feedback_loop_full_sweep_filtered_20260601T163437Z" / "outer_loop_summary.json",
-        {"filtered_policy_comparison": [{"policy": "vpd_greedy", "filtered_metric_gain": 0.2, "filtered_accept_count": 5}]},
+        {
+            "policy_comparison": [{"policy": "vpd_greedy", "total_metric_gain": 0.3, "accepted_metric_gain": 0.2, "accepted_count": 5}],
+            "filtered_policy_comparison": [{"policy": "vpd_greedy", "filtered_metric_gain": 0.2, "filtered_accept_count": 5}],
+        },
     )
     _write_json(
         root / "trm_eval_aligned_edits_intellect3_logic_20260602" / "eval_aligned_summary.json",
@@ -34,7 +37,11 @@ def test_roundout_builds_manifest_and_metric_table(tmp_path: Path) -> None:
     assert summary["metric_row_count"] > 0
     assert (tmp_path / "out" / "paper_experiment_manifest.csv").exists()
     assert (tmp_path / "out" / "paper_metric_table.csv").exists()
+    assert (tmp_path / "out" / "paper_policy_comparison.csv").exists()
+    assert (tmp_path / "out" / "paper_claim_ledger.csv").exists()
     assert (tmp_path / "out" / "figures" / "roundout_summary.svg").exists()
+    assert (tmp_path / "out" / "figures" / "filtered_feedback_policy_gain.svg").exists()
+    assert (tmp_path / "out" / "figures" / "eval_alignment_collapse.svg").exists()
 
 
 def test_roundout_marks_superseded_artifact_excluded(tmp_path: Path) -> None:
@@ -46,3 +53,17 @@ def test_roundout_marks_superseded_artifact_excluded(tmp_path: Path) -> None:
     assert summary["excluded_run_count"] == len(excluded)
     assert excluded
     assert excluded[0]["include_for_main_claims"] is False
+
+
+def test_claim_ledger_marks_runtime_edit_as_open_track(tmp_path: Path) -> None:
+    root = tmp_path / "runs"
+    _write_json(
+        root / "trm_gain_policy_runtime_edit_score_arc_20260604" / "runtime_edit_summary.json",
+        {"promotion_ready": False, "best_trial_delta": 0.1, "best_control_delta": 0.2},
+    )
+
+    run_roundout(Namespace(run_root=root, out_dir=tmp_path / "out"))
+    ledger = (tmp_path / "out" / "paper_claim_ledger.csv").read_text(encoding="utf-8")
+
+    assert "not_supported_open_track" in ledger
+    assert "promotion_ready=False" in ledger
