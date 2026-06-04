@@ -309,6 +309,7 @@ These are working result slots. Values should be updated only from artifact summ
 | Gain-function fresh-card validation | `trm_gain_function_memetic_arc_4seed_20260604` | completed | Seed 151 kept the trained tight top-margin policy positive; four-seed aggregate keeps it best with +0.048387 delta, zero damages, and 0.16129 touch rate. |
 | Gain-policy VPD bridge | `trm_gain_policy_vpd_bridge_arc_20260604` | completed | Converts the trained selective top-margin policy into a claimable logit-hook analogue, matched broad-prior controls, and a non-claimable VPD feature-search plan. |
 | Gain-policy hook scoring | `trm_gain_policy_hook_score_arc_4seed_20260604` | completed | Selective hook remains positive on cached four-seed ARC scores, but ties the best broad-prior control; promotion to VPD feature search is blocked until it beats controls. |
+| Rescue-family analysis | `trm_gain_policy_rescue_families_arc_4seed_20260604` | completed | Splits hook rescues into shared versus isolated families; all three hook rescues are shared with controls, producing the next edit contract instead of a premature VPD claim. |
 
 ## Current Thesis
 
@@ -1268,6 +1269,37 @@ prompt packet estimate: 182 tokens
 ```
 
 This result sharpens the claim boundary. The selective top-margin hook is accepted as a route-rule/logit-hook analogue because it improves the cached score with zero damage and low touch rate. It is not yet isolated as a VPD-search promotion because a broad `B` prior ties its delta, even though that broad control is less specific. The next experiment should split the four-seed cache into rescue families and ask whether the selective hook beats broad priors on close-margin subsets, held-out seeds, or activation-local feature candidates. If it only ties broad priors, the paper should treat it as a useful controller prior, not as a feature-local causal edit.
+
+That split now exists:
+
+```text
+run: D:\Research_Engine\runs\trm_gain_policy_rescue_families_arc_4seed_20260604
+samples: 62
+families: 24
+hook rescues/damages: 3/0
+isolated/shared hook rescues: 0/3
+promotion_ready: false
+prompt packet estimate: 155 tokens
+```
+
+Top rescue families:
+
+```text
+B->D:close_0_25 | samples 2 | hook rescues 2 | isolated 0 | shared 2
+B->C:close_0_25 | samples 1 | hook rescues 1 | isolated 0 | shared 1
+```
+
+This is a meaningful negative control result. The hook's gains are real in the cached scorer, but every rescue is shared with a broad `B` prior. The next edit contract therefore becomes:
+
+```text
+objective: beat broad-prior controls by rescuing close-margin failures with lower touch and no damage
+positive set: samples with hook_rescue=true and margin_bucket close_0_25
+negative set: same baseline label where broad controls rescue or already-correct close calls
+candidate feature: activation/module row active on close-call wrong-top-choice states, inactive on broad fixed-label prior states
+required next condition: isolated_hook_rescue_count > 0 or hook delta exceeds best broad-prior control on held-out family split
+```
+
+This is the first clean form of the continuous-learning loop: score a candidate, compare it against controls, decompose the residual failure/gain families, emit a new edit contract, and only then search for a narrower VPD/TRM edit. The value is the edit-policy iteration, not the first hook.
 
 ### Edit Showcase and Decision Traces
 
