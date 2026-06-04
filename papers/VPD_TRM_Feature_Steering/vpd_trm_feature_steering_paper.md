@@ -312,6 +312,7 @@ These are working result slots. Values should be updated only from artifact summ
 | Rescue-family analysis | `trm_gain_policy_rescue_families_arc_4seed_20260604` | completed | Splits hook rescues into shared versus isolated families; all three hook rescues are shared with controls, producing the next edit contract instead of a premature VPD claim. |
 | Family split scoring | `trm_gain_policy_family_split_score_arc_4seed_20260604` | completed | Scores the hook against controls on family, margin, and held-out score-file splits; finds five lower-touch specificity ties but zero promotion-ready splits. |
 | Conditional policy mining | `trm_gain_policy_condition_miner_arc_4seed_20260604` | completed | Mines stricter cached predicates and finds a higher-scoring `top_D runner_A margin<=1.0` condition with +0.064516 delta, 4/0 rescues/damages, and 0.064516 touch rate. |
+| Conditional policy cross-validation | `trm_gain_policy_condition_cv_arc_4seed_20260604` | completed | Leave-one-score-file-out validation rediscovers the same `top_D runner_A margin<=1.0` condition in every fold; all held-out folds accept, one beats fixed controls, and two tie controls with lower touch. |
 
 ## Current Thesis
 
@@ -1358,6 +1359,39 @@ negative set: correct D predictions, D-over-A wide-margin cases, and D-over-A mi
 feature target: module/component activity that separates wrong D-over-A commitment from valid D answers
 promotion gate: condition reward beats fixed-label controls on held-out split and feature-local edit reproduces the gain
 ```
+
+Leave-one-score-file-out validation now supports the controller predicate:
+
+```text
+run: D:\Research_Engine\runs\trm_gain_policy_condition_cv_arc_4seed_20260604
+folds: 4
+held-out accepted folds: 4
+beats-control folds: 1
+tie-lower-touch folds: 2
+best fold: trm_choice_constrained_arc_challenge_32_seed151_20260604
+prompt packet estimate: 169 tokens
+```
+
+In every fold, mining on the other three score files selected:
+
+```text
+cond_top_margin:top_D:runner_A:bucket_any:max_1_0:penalty_1_0
+```
+
+Best held-out fold:
+
+```text
+heldout: seed151
+heldout delta/reward: +0.09375 / 0.12375
+rescues/damages: 3/0
+touch rate: 0.09375
+best fixed control: fixed:D:penalty_1_0
+control delta/reward: +0.0625 / 0.0825
+control touch rate: 0.96875
+beats_control: true
+```
+
+This materially improves the evidence. The loop is no longer only finding a combined-cache optimum; it rediscovers the same condition under leave-one-score-file-out training, accepts on all held-out folds, beats fixed controls on one fold, and ties controls with much lower touch on two more. The remaining limitation is still important: this is cached score validation, not activation-level VPD editing. The next promotion step should generate feature candidates for the `D over A` positive set and test whether a feature-local edit can reproduce the held-out controller predicate.
 
 ### Edit Showcase and Decision Traces
 
