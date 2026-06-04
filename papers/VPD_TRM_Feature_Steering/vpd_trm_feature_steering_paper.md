@@ -316,6 +316,8 @@ These are working result slots. Values should be updated only from artifact summ
 | Feature-search packet | `trm_gain_policy_feature_search_packet_arc_20260604` | completed | Converts the validated `D over A` controller predicate into positive/negative contrast sets and an activation-local VPD feature-search contract. |
 | Activation contrast probe requests | `trm_gain_policy_activation_contrast_arc_20260604` | completed | Emits eight module activation probe requests for the `D over A` contrast packet; ranking remains pending until real activation stats are captured. |
 | Activation feature-map bridge | `trm_gain_policy_activation_feature_map_arc_20260604` | completed | Joins the contrast packet with the probe-request run and emits a probe-only activation feature map plus eight runtime edit trial requests. |
+| Activation-gated runtime proxy scoring | `trm_gain_policy_runtime_edit_score_arc_20260604` | completed | Scores ranked activation-map trials over the nine captured ARC contrast rows; best trial is positive but loses to fixed `D` suppression and fails the touch-rate promotion gate. |
+| Paper roundout artifacts | `vpd_trm_paper_roundout_20260604` | completed | Emits the final experiment manifest, compact metric table, and summary SVG for the conservative paper track while preserving activation-local runtime edits as open work. |
 
 ## Current Thesis
 
@@ -1493,6 +1495,34 @@ contrast: +0.00871
 ```
 
 The remaining top rows were similarly low-magnitude and the bridge still stops short of a runtime-edit claim. The important change is that the loop now has all three stages wired: contrast packet, activation capture, and ranked feature-map handoff.
+
+The ranked map was then scored as an activation-gated runtime proxy:
+
+```text
+run: D:\Research_Engine\runs\trm_gain_policy_runtime_edit_score_arc_20260604
+samples: 9
+trials: 8
+best trial: activation_edit_trial:0001:base_model.model.model.language_model.layers.19.self_attn.o_proj
+best trial delta/reward: +0.333333 / 0.363333
+best trial touch rate: 0.333333
+best control: control_fixed_label:D:penalty_1_0
+best control delta/reward: +0.444444 / 0.484444
+promotion_ready: false
+```
+
+This is a useful negative boundary. The activation-gated trial can rescue some captured contrast rows, but the broad fixed-label control still scores better and the touch rate exceeds the original controller predicate. The result should be reported as an implemented positive-track harness plus a failed promotion, not as a VPD runtime edit win.
+
+The conservative paper track now has deterministic roundout artifacts:
+
+```text
+run: D:\Research_Engine\runs\vpd_trm_paper_roundout_20260604
+manifest rows: 8
+metric rows: 27
+included main-claim runs: 3
+excluded runs: 1
+```
+
+This manifest separates `claim_support`, `boundary_result`, `open_positive_track`, and `excluded` artifacts so the paper figures can freeze around supported claims while the activation-local runtime edit work remains visibly open.
 
 ### Edit Showcase and Decision Traces
 
