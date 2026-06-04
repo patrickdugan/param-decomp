@@ -310,6 +310,7 @@ These are working result slots. Values should be updated only from artifact summ
 | Gain-policy VPD bridge | `trm_gain_policy_vpd_bridge_arc_20260604` | completed | Converts the trained selective top-margin policy into a claimable logit-hook analogue, matched broad-prior controls, and a non-claimable VPD feature-search plan. |
 | Gain-policy hook scoring | `trm_gain_policy_hook_score_arc_4seed_20260604` | completed | Selective hook remains positive on cached four-seed ARC scores, but ties the best broad-prior control; promotion to VPD feature search is blocked until it beats controls. |
 | Rescue-family analysis | `trm_gain_policy_rescue_families_arc_4seed_20260604` | completed | Splits hook rescues into shared versus isolated families; all three hook rescues are shared with controls, producing the next edit contract instead of a premature VPD claim. |
+| Family split scoring | `trm_gain_policy_family_split_score_arc_4seed_20260604` | completed | Scores the hook against controls on family, margin, and held-out score-file splits; finds five lower-touch specificity ties but zero promotion-ready splits. |
 
 ## Current Thesis
 
@@ -1300,6 +1301,33 @@ required next condition: isolated_hook_rescue_count > 0 or hook delta exceeds be
 ```
 
 This is the first clean form of the continuous-learning loop: score a candidate, compare it against controls, decompose the residual failure/gain families, emit a new edit contract, and only then search for a narrower VPD/TRM edit. The value is the edit-policy iteration, not the first hook.
+
+The next iteration scorer operationalizes the contract over held-out and family slices:
+
+```text
+run: D:\Research_Engine\runs\trm_gain_policy_family_split_score_arc_4seed_20260604
+splits scored: 22
+promotion-ready splits: 0
+touch-specificity ties: 5
+best split: heldout_score_file:trm_choice_constrained_arc_challenge_32_seed23_20260604
+prompt packet estimate: 151 tokens
+```
+
+Representative tied split:
+
+```text
+split: trm_choice_constrained_arc_challenge_32_seed23_20260604
+samples: 32
+hook delta/reward: +0.09375 / 0.12375
+hook rescues/damages: 3/0
+hook touch rate: 0.21875
+best control: control_fixed_label:B:penalty_0_25
+control delta/reward: +0.09375 / 0.12375
+control touch rate: 0.96875
+promotion_ready: false
+```
+
+This is exactly the kind of intermediate signal the continuous-learning loop needs. The current hook is not better than the broad prior in reward, but it is much more selective on every tied held-out score-file split. That means the controller should not promote the hook as a VPD edit, but it should preserve it as a compression of the broad prior into a lower-touch condition. The next edit search should look for an activation-local predicate that keeps the lower touch rate and breaks the reward tie.
 
 ### Edit Showcase and Decision Traces
 
