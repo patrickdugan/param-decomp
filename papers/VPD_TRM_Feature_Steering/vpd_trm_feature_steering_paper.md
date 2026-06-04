@@ -308,6 +308,7 @@ These are working result slots. Values should be updated only from artifact summ
 | Gain-function policy trainer | `trm_gain_function_memetic_arc_bootstrap_20260604` | completed | Trained `vpd_edit_policy_arc_bootstrap_v1` from ARC route-rule evidence; prefers selective top-margin suppression and downranks broad fixed-label priors. |
 | Gain-function fresh-card validation | `trm_gain_function_memetic_arc_4seed_20260604` | completed | Seed 151 kept the trained tight top-margin policy positive; four-seed aggregate keeps it best with +0.048387 delta, zero damages, and 0.16129 touch rate. |
 | Gain-policy VPD bridge | `trm_gain_policy_vpd_bridge_arc_20260604` | completed | Converts the trained selective top-margin policy into a claimable logit-hook analogue, matched broad-prior controls, and a non-claimable VPD feature-search plan. |
+| Gain-policy hook scoring | `trm_gain_policy_hook_score_arc_4seed_20260604` | completed | Selective hook remains positive on cached four-seed ARC scores, but ties the best broad-prior control; promotion to VPD feature search is blocked until it beats controls. |
 
 ## Current Thesis
 
@@ -1248,6 +1249,25 @@ claim boundary: logit-level route-rule analogue; not a VPD weight edit
 ```
 
 The matched controls are broad fixed-label priors against `B` and `D` with the same penalty, plus a no-edit control. The VPD search plan is deliberately non-claimable. It names the next mechanisms to try, `final_choice_logit_hook`, `decision-token_activation_suppression`, and `adapter_lora_row_vector_edit`, but it requires fresh scoring and feature/module mapping before any VPD edit claim can be made. This is the right next boundary: first prove the logit-hook analogue remains positive against matched controls, then search for the smallest VPD feature or adapter-row edit that reproduces it.
+
+The first bridge-score run gives a useful constraint rather than a clean promotion:
+
+```text
+run: D:\Research_Engine\runs\trm_gain_policy_hook_score_arc_4seed_20260604
+samples: 62 deduped from 128 cached four-seed ARC score rows
+logit hook: logit_hook:top_margin:max_0_25:penalty_0_25
+baseline score: 0.709677
+hook score: 0.758065
+hook delta: +0.048387
+rescues/damages: 3/0
+touch rate: 0.16129
+best control: control_fixed_label:B:penalty_0_25
+best control delta: +0.048387
+promotion_ready: false
+prompt packet estimate: 182 tokens
+```
+
+This result sharpens the claim boundary. The selective top-margin hook is accepted as a route-rule/logit-hook analogue because it improves the cached score with zero damage and low touch rate. It is not yet isolated as a VPD-search promotion because a broad `B` prior ties its delta, even though that broad control is less specific. The next experiment should split the four-seed cache into rescue families and ask whether the selective hook beats broad priors on close-margin subsets, held-out seeds, or activation-local feature candidates. If it only ties broad priors, the paper should treat it as a useful controller prior, not as a feature-local causal edit.
 
 ### Edit Showcase and Decision Traces
 
