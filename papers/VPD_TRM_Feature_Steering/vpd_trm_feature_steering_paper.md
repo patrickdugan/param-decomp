@@ -315,6 +315,7 @@ These are working result slots. Values should be updated only from artifact summ
 | Conditional policy cross-validation | `trm_gain_policy_condition_cv_arc_4seed_20260604` | completed | Leave-one-score-file-out validation rediscovers the same `top_D runner_A margin<=1.0` condition in every fold; all held-out folds accept, one beats fixed controls, and two tie controls with lower touch. |
 | Feature-search packet | `trm_gain_policy_feature_search_packet_arc_20260604` | completed | Converts the validated `D over A` controller predicate into positive/negative contrast sets and an activation-local VPD feature-search contract. |
 | Activation contrast probe requests | `trm_gain_policy_activation_contrast_arc_20260604` | completed | Emits eight module activation probe requests for the `D over A` contrast packet; ranking remains pending until real activation stats are captured. |
+| Activation feature-map bridge | `trm_gain_policy_activation_feature_map_arc_20260604` | completed | Joins the contrast packet with the probe-request run and emits a probe-only activation feature map plus eight runtime edit trial requests. |
 
 ## Current Thesis
 
@@ -1445,6 +1446,29 @@ layers 23,19,15,11 x {self_attn.o_proj, mlp.down_proj}
 ```
 
 Each request carries the same four positive rescue sample ids and five negative same-pair sample ids, with the metric `mean_abs_activation`. This is not yet evidence for a VPD edit. It is the ready-to-run activation capture plan. Once activation stats are available, the ranker will sort modules by absolute positive-vs-negative contrast and the next harness should test top runtime edits against fixed-label controls.
+
+The feature-map bridge is now staged too:
+
+```text
+run: D:\Research_Engine\runs\trm_gain_policy_activation_feature_map_arc_20260604
+status: probe_only
+contrast run: D:\Research_Engine\runs\trm_gain_policy_feature_search_packet_arc_20260604
+probe run: D:\Research_Engine\runs\trm_gain_policy_activation_contrast_arc_20260604
+feature map entries: 8
+edit trial requests: 8
+prompt packet estimate: 174 tokens
+```
+
+The emitted feature map is intentionally neutral:
+
+```text
+source: activation_probe_request
+scale: 1.0
+confidence: 0.0
+notes: probe_request=<id>; claim_boundary=probe_only
+```
+
+The accompanying `activation_edit_trials.jsonl` file gives the next runtime test contract without claiming a runtime gain. That is the right shape for now: one packet defines the contrast, one packet defines the probes, and one packet defines the feature-map/edit-trial handoff. When activation stats arrive, the same bridge can be rerun in ranked mode and the edit trials can be reprioritized by actual contrast instead of probe order.
 
 ### Edit Showcase and Decision Traces
 
