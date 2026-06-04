@@ -62,6 +62,12 @@ PAPER_RUNS = [
         "role": "ranked activation feature-map handoff",
     },
     {
+        "run_id": "trm_edit_bootstrap_microcycle_arc_20260604",
+        "summary": "bootstrap_summary.json",
+        "tier": "boundary_result",
+        "role": "stateful cached edit bootstrap microcycle",
+    },
+    {
         "run_id": "trm_feedback_loop_paper_20260601T115019Z",
         "summary": "outer_loop_summary.json",
         "tier": "excluded",
@@ -159,6 +165,11 @@ def metric_rows(run_root: Path) -> list[dict[str, Any]]:
         for metric in ("status", "feature_map_entry_count", "activation_stats_present", "prompt_packet_est_tokens"):
             rows.append({"result_family": "activation_runtime_track", "metric": metric, "value": activation.get(metric), "claim_tier": "open_positive_track"})
 
+    bootstrap = read_json(run_root / "trm_edit_bootstrap_microcycle_arc_20260604" / "bootstrap_summary.json")
+    if bootstrap:
+        for metric in ("accepted_edit_count", "baseline_score", "final_score", "cumulative_delta", "stacked_bootstrap_success"):
+            rows.append({"result_family": "edit_bootstrap_microcycle", "metric": metric, "value": bootstrap.get(metric), "claim_tier": "boundary_result"})
+
     return rows
 
 
@@ -190,6 +201,7 @@ def claim_ledger_rows(run_root: Path) -> list[dict[str, Any]]:
     feedback = read_json(run_root / "trm_feedback_loop_full_sweep_filtered_20260601T163437Z" / "outer_loop_summary.json")
     eval_aligned = read_json(run_root / "trm_eval_aligned_edits_intellect3_logic_20260602" / "eval_aligned_summary.json")
     runtime = read_json(run_root / "trm_gain_policy_runtime_edit_score_arc_20260604" / "runtime_edit_summary.json")
+    bootstrap = read_json(run_root / "trm_edit_bootstrap_microcycle_arc_20260604" / "bootstrap_summary.json")
     return [
         {
             "claim": "VPD components transfer between related TRM organelles under guardrails.",
@@ -214,6 +226,12 @@ def claim_ledger_rows(run_root: Path) -> list[dict[str, Any]]:
             "status": "not_supported_open_track",
             "primary_artifact": "trm_gain_policy_runtime_edit_score_arc_20260604",
             "evidence": f"promotion_ready={runtime.get('promotion_ready')}; best_trial_delta={runtime.get('best_trial_delta')}; best_control_delta={runtime.get('best_control_delta')}",
+        },
+        {
+            "claim": "Stateful cached edit search bootstraps ability through stacked accepted edits.",
+            "status": "supported_boundary" if bootstrap.get("stacked_bootstrap_success") else "not_supported_boundary",
+            "primary_artifact": "trm_edit_bootstrap_microcycle_arc_20260604",
+            "evidence": f"accepted_edit_count={bootstrap.get('accepted_edit_count')}; cumulative_delta={bootstrap.get('cumulative_delta')}; stop_reason={bootstrap.get('stop_reason')}",
         },
     ]
 

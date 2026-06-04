@@ -29,6 +29,10 @@ def test_roundout_builds_manifest_and_metric_table(tmp_path: Path) -> None:
         root / "trm_eval_aligned_edits_intellect3_logic_20260602" / "eval_aligned_summary.json",
         {"candidate_count": 10, "cluster_count": 2, "result_count": 4, "accepted_eval_aligned_count": 0},
     )
+    _write_json(
+        root / "trm_edit_bootstrap_microcycle_arc_20260604" / "bootstrap_summary.json",
+        {"accepted_edit_count": 1, "baseline_score": 0.7, "final_score": 0.77, "cumulative_delta": 0.07, "stacked_bootstrap_success": False},
+    )
 
     summary = run_roundout(Namespace(run_root=root, out_dir=tmp_path / "out"))
 
@@ -67,3 +71,18 @@ def test_claim_ledger_marks_runtime_edit_as_open_track(tmp_path: Path) -> None:
 
     assert "not_supported_open_track" in ledger
     assert "promotion_ready=False" in ledger
+
+
+def test_claim_ledger_marks_bootstrap_boundary(tmp_path: Path) -> None:
+    root = tmp_path / "runs"
+    _write_json(
+        root / "trm_edit_bootstrap_microcycle_arc_20260604" / "bootstrap_summary.json",
+        {"accepted_edit_count": 1, "cumulative_delta": 0.064517, "stacked_bootstrap_success": False, "stop_reason": "fixed_control_not_beaten"},
+    )
+
+    run_roundout(Namespace(run_root=root, out_dir=tmp_path / "out"))
+    ledger = (tmp_path / "out" / "paper_claim_ledger.csv").read_text(encoding="utf-8")
+
+    assert "Stateful cached edit search bootstraps ability" in ledger
+    assert "not_supported_boundary" in ledger
+    assert "fixed_control_not_beaten" in ledger

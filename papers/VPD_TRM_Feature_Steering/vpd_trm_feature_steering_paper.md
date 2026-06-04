@@ -243,6 +243,7 @@ This phase is the bridge from a promising mechanistic result to a credible learn
 | Proxy-positive VPD edits improve downstream eval behavior. | Pinned eval before/after improvement under guardrails. | Strict six-round hill climb found 0 non-targeted accepted eval edits; targeted retargeting found 36 probe accepts before controls, then 0 accepts with targeted random controls. | Not yet supported as full downstream claim; active boundary/result fork. |
 | A zero-accept eval-alignment run is useful evidence. | Clear separation between proxy and eval metrics. | Eval-aligned gate and strict hill climb rejected proxy candidates while preserving traceable rationale. | Supported as methodology / negative result. |
 | Targeted retargeting can rappel up the eval cliff. | Same-gate VPD evidence creates plausible target-cluster probes with provenance and guardrails. | Targeted format-commit run found 36 accepted targeted probes before controls; strict targeted controls collapsed accepted count to 0. | Useful falsification scaffold; not a positive result yet. |
+| Stateful edits bootstrap TRM ability across rounds. | At least two accepted edits, cumulative score gain, zero damage, and each edit beating fixed-label controls. | Cached ARC microcycle accepted one `D over A` edit, then stopped because the residual `B over D` edit lost to a broad fixed-label control. | Not yet supported; first-edit gain plus stacked-bootstrap boundary. |
 
 ## Method
 
@@ -317,6 +318,7 @@ These are working result slots. Values should be updated only from artifact summ
 | Activation contrast probe requests | `trm_gain_policy_activation_contrast_arc_20260604` | completed | Emits eight module activation probe requests for the `D over A` contrast packet; ranking remains pending until real activation stats are captured. |
 | Activation feature-map bridge | `trm_gain_policy_activation_feature_map_arc_20260604` | completed | Joins the contrast packet with the probe-request run and emits a probe-only activation feature map plus eight runtime edit trial requests. |
 | Activation-gated runtime proxy scoring | `trm_gain_policy_runtime_edit_score_arc_20260604` | completed | Scores ranked activation-map trials over the nine captured ARC contrast rows; best trial is positive but loses to fixed `D` suppression and fails the touch-rate promotion gate. |
+| Edit bootstrap microcycle | `trm_edit_bootstrap_microcycle_arc_20260604` | completed boundary | Stateful cached route-rule search accepts one `top_D runner_A margin<=1.0` edit, improving score from 0.709677 to 0.774194, then rejects the second residual edit because fixed `B` control has higher reward. |
 | Paper roundout artifacts | `vpd_trm_paper_roundout_20260604` | completed | Emits the final experiment manifest, compact metric table, and summary SVG for the conservative paper track while preserving activation-local runtime edits as open work. |
 
 ## Current Thesis
@@ -1512,14 +1514,51 @@ promotion_ready: false
 
 This is a useful negative boundary. The activation-gated trial can rescue some captured contrast rows, but the broad fixed-label control still scores better and the touch rate exceeds the original controller predicate. The result should be reported as an implemented positive-track harness plus a failed promotion, not as a VPD runtime edit win.
 
+The stateful edit-bootstrap microcycle now tests the more important learning question: after an accepted edit changes the current state, can the loop find another accepted residual edit and produce cumulative ability gain?
+
+```text
+run: D:\Research_Engine\runs\trm_edit_bootstrap_microcycle_arc_20260604
+samples: 62
+baseline score: 0.709677
+final score: 0.774194
+accepted edits: 1
+stacked bootstrap success: false
+stop reason: fixed_control_not_beaten
+prompt packet estimate: 173 tokens
+```
+
+Round 1 promoted the same validated controller predicate:
+
+```text
+cond_top_margin:top_D:runner_A:bucket_any:max_1_0:penalty_1_0
+delta/reward: +0.064517 / 0.104517
+rescues/damages: 4/0
+touch rate: 0.064516
+best fixed control: fixed:B:penalty_0_25
+control delta/reward: +0.048388 / 0.078388
+```
+
+After applying that edit as state, round 2 found a plausible residual condition:
+
+```text
+cond_top_margin:top_B:runner_D:bucket_any:max_0_25:penalty_0_25
+delta/reward: +0.032258 / 0.052258
+rescues/damages: 2/0
+touch rate: 0.064516
+best fixed control: fixed:B:penalty_0_25
+control delta/reward: +0.048387 / 0.078387
+```
+
+The second residual condition is positive and low-touch, but it does not beat the broad fixed-label control. The microcycle therefore records a first-edit gain, not an ability-bootstrap win. This is the clearest current answer to the "paydirt" question: the harness can iterate statefully, but the evidence has not yet shown stacked accepted edits under the control gate.
+
 The conservative paper track now has deterministic roundout artifacts:
 
 ```text
 run: D:\Research_Engine\runs\vpd_trm_paper_roundout_20260604
-manifest rows: 8
-metric rows: 27
+manifest rows: 9
+metric rows: 32
 policy rows: 5
-claim rows: 4
+claim rows: 5
 included main-claim runs: 3
 excluded runs: 1
 ```
