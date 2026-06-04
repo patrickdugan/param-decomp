@@ -313,6 +313,7 @@ These are working result slots. Values should be updated only from artifact summ
 | Family split scoring | `trm_gain_policy_family_split_score_arc_4seed_20260604` | completed | Scores the hook against controls on family, margin, and held-out score-file splits; finds five lower-touch specificity ties but zero promotion-ready splits. |
 | Conditional policy mining | `trm_gain_policy_condition_miner_arc_4seed_20260604` | completed | Mines stricter cached predicates and finds a higher-scoring `top_D runner_A margin<=1.0` condition with +0.064516 delta, 4/0 rescues/damages, and 0.064516 touch rate. |
 | Conditional policy cross-validation | `trm_gain_policy_condition_cv_arc_4seed_20260604` | completed | Leave-one-score-file-out validation rediscovers the same `top_D runner_A margin<=1.0` condition in every fold; all held-out folds accept, one beats fixed controls, and two tie controls with lower touch. |
+| Feature-search packet | `trm_gain_policy_feature_search_packet_arc_20260604` | completed | Converts the validated `D over A` controller predicate into positive/negative contrast sets and an activation-local VPD feature-search contract. |
 
 ## Current Thesis
 
@@ -1392,6 +1393,37 @@ beats_control: true
 ```
 
 This materially improves the evidence. The loop is no longer only finding a combined-cache optimum; it rediscovers the same condition under leave-one-score-file-out training, accepts on all held-out folds, beats fixed controls on one fold, and ties controls with much lower touch on two more. The remaining limitation is still important: this is cached score validation, not activation-level VPD editing. The next promotion step should generate feature candidates for the `D over A` positive set and test whether a feature-local edit can reproduce the held-out controller predicate.
+
+The feature-search packet now exists:
+
+```text
+run: D:\Research_Engine\runs\trm_gain_policy_feature_search_packet_arc_20260604
+condition: cond_top_margin:top_D:runner_A:bucket_any:max_1_0:penalty_1_0
+samples: 62
+positive rescues: 4
+negative contrast rows: 5
+contrast rows emitted: 9
+prompt packet estimate: 218 tokens
+```
+
+The positive set is the `D over A` rescue set:
+
+```text
+arc_challenge_34 | D -> A | margin 0.875 | seed23
+arc_challenge_49 | D -> A | margin 0.375 | seed23
+arc_challenge_19 | D -> A | margin 0.25  | seed37
+arc_challenge_39 | D -> A | margin 0.875 | seed101
+```
+
+The negative set contains same-pair `D over A` cases where the condition should not fire, mostly wide-margin correct `D` cases plus one wide-margin unresolved miss. This gives a clean activation contrast request:
+
+```text
+rank modules/components by positive-vs-negative activation contrast
+test runtime edits that suppress wrong top-action D only on positive-like states
+promotion gate: reproduce held-out condition reward, beat fixed-label controls on at least one held-out score file, damage_count == 0, touch_rate <= controller predicate touch_rate
+```
+
+This is the first point where the loop is ready to leave cached logit predicates and ask VPD for a mechanistic candidate. The immediate next run should not search the whole model blindly; it should rank candidate modules/components against this nine-row contrast packet and only then try runtime component edits.
 
 ### Edit Showcase and Decision Traces
 
