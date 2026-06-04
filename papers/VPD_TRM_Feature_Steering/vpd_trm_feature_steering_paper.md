@@ -26,6 +26,10 @@ This resembles reinforcement learning at the system level because behavior is im
 
 The key claim is not that a tiny TRM magically generalizes. The key claim is that a larger architecture can manage a population of tiny TRMs, use explicit feedback to discover where each one should specialize, and use VPD to make that specialization less blind than ordinary retraining.
 
+### Nomenclature
+
+This draft uses **Tesseract** as the name of our local training and benchmarking harness: the router, adapter banks, serialized benchmark runner, receipts, and data-root conventions used to evaluate task-specialist lanes. It is not introduced as a public benchmark name. The downstream tasks themselves are Prime Intellect-style environments, especially `intellect_3_logic`, `intellect_3_math`, and related normalized trajectory/eval rows. When we report "Intellect-3-Logic" results, the benchmark substrate is the Prime Intellect environment; when we report a "Tesseract scorer bridge," the term refers only to the local harness that reruns those Prime Intellect environment samples through routed adapter lanes.
+
 ## Development Phases
 
 The project has three separable phases. The paper should preserve that order because each phase tightened the experimental claim.
@@ -35,7 +39,7 @@ The project has three separable phases. The paper should preserve that order bec
 | 1 | Router gate | Can typed workflow traces produce a causal VPD steering benchmark? | false-commit rate, decision accuracy | completed as narrow keygate benchmark |
 | 2 | Repair optimization | Can a workflow be decomposed into auditable recursive repair gates? | repair preservation, false-commit avoidance | completed as Amalgam task graph |
 | 3 | Organelle transfer | Can VPD components transfer between related TRM organelles? | accepted graft count, guardrail pass, beats-random rate | strict replication completed |
-| 4 | Eval-aligned editing | Do proxy-positive VPD edits improve pinned downstream Intellect eval failures? | eval-aligned accept count, target eval delta, holdout/guardrail delta | first strict run completed; zero accepted |
+| 4 | Eval-aligned editing | Do proxy-positive VPD edits improve pinned downstream Intellect eval failures? | eval-aligned accept count, target eval delta, holdout/guardrail delta | strict cliff plus targeted-probe rappel completed |
 
 ### Phase 1: Router Gate
 
@@ -236,8 +240,9 @@ This phase is the bridge from a promising mechanistic result to a credible learn
 | Stable neutral grafts are successful steering. | Positive target movement. | Many stable grafts had no positive signal. | Reject; report separately. |
 | Runtime grafts prove checkpoint-level editing. | Persistent edited checkpoint with retained behavior. | Not attempted yet. | Not claimed. |
 | Results generalize to unrelated task families. | Cross-domain replication beyond current MeTTa/Intellect-3-Logic families. | Not available. | Not claimed. |
-| Proxy-positive VPD edits improve downstream eval behavior. | Pinned eval before/after improvement under guardrails. | First Intellect-3-Logic eval-aligned run found 12 candidates and 0 accepted. | Not yet supported; active boundary result. |
-| A zero-accept eval-alignment run is useful evidence. | Clear separation between proxy and eval metrics. | Eval-aligned gate rejected proxy candidates while preserving traceable rationale. | Supported as methodology / negative result. |
+| Proxy-positive VPD edits improve downstream eval behavior. | Pinned eval before/after improvement under guardrails. | Strict six-round hill climb found 0 non-targeted accepted eval edits; targeted retargeting found 36 probe accepts before controls, then 0 accepts with targeted random controls. | Not yet supported as full downstream claim; active boundary/result fork. |
+| A zero-accept eval-alignment run is useful evidence. | Clear separation between proxy and eval metrics. | Eval-aligned gate and strict hill climb rejected proxy candidates while preserving traceable rationale. | Supported as methodology / negative result. |
+| Targeted retargeting can rappel up the eval cliff. | Same-gate VPD evidence creates plausible target-cluster probes with provenance and guardrails. | Targeted format-commit run found 36 accepted targeted probes before controls; strict targeted controls collapsed accepted count to 0. | Useful falsification scaffold; not a positive result yet. |
 
 ## Method
 
@@ -293,6 +298,15 @@ These are working result slots. Values should be updated only from artifact summ
 | Filtered full-sweep run | `trm_feedback_loop_full_sweep_filtered_20260601T163437Z` | completed | Matched-random filtration collapses replay/random to zero filtered gain; VPD policies retain filtered accepted gain. |
 | VPD edit showcase | `vpd_edit_showcase` | completed | Dashboard-ready before/delta/after examples; separates accepted proxy edit, borderline edit, and no-edit decision. |
 | Eval-aligned Intellect-3-Logic gate | `trm_eval_aligned_edits_intellect3_logic_20260602` | completed | 7764 candidates, 3 clusters, 12 aligned candidate rows, 0 accepted eval-aligned edits. |
+| Strict eval hill climb | `trm_eval_hill_climb_intellect3_logic_full_20260602` | completed | 6 rounds, 1450 frontier rows, 24 near misses, 0 accepted eval-aligned edits; router candidates failed matched-random gate. |
+| Targeted format-commit rappel | `trm_eval_hill_climb_intellect3_logic_targeted_final_20260602` | completed | 6 rounds, 2458 frontier rows, 36 accepted targeted probes, 0 non-targeted accepts; all accepts lacked matched random controls. |
+| Targeted rappel with controls | `trm_eval_hill_climb_intellect3_logic_targeted_controls_strict_20260602` | completed | 6 rounds, 2506 frontier rows, 1056 targeted probes, 976 targeted random controls, 0 accepted eval-aligned edits. |
+| Logic-efficacy feature-map miner | `trm_logic_efficacy_feature_map_20260602` | completed | 9 vectorization hypotheses, 0 positive eval-margin components, 0 accepted components under strict controls. |
+| ARC Challenge reward-loop probe | `trm_choice_rl_feedback_arc_challenge_deduped_20260604` | completed | 48 deduped samples, 48 candidate policies, 21 accepted policies; best top-margin rule improved cached pass rate from 0.708333 to 0.791667. |
+| ARC Challenge fresh-seed rerun | `trm_choice_rl_feedback_arc_challenge_3seed_deduped_20260604` | completed | Fresh seed 101 preserved positive movement; three-card deduped aggregate has 56 unique samples and top-margin ties fixed-D reward while touching far fewer rows. |
+| ARC Challenge memetic rule search | `trm_choice_memetic_arc_challenge_3seed_20260604` | completed | Four generations over 56 deduped samples selected `top_margin:max_0_25:penalty_0_25`, preserving +0.053571 delta with zero damages and 0.160714 touch rate. |
+| Gain-function policy trainer | `trm_gain_function_memetic_arc_bootstrap_20260604` | completed | Trained `vpd_edit_policy_arc_bootstrap_v1` from ARC route-rule evidence; prefers selective top-margin suppression and downranks broad fixed-label priors. |
+| Gain-function fresh-card validation | `trm_gain_function_memetic_arc_4seed_20260604` | completed | Seed 151 kept the trained tight top-margin policy positive; four-seed aggregate keeps it best with +0.048387 delta, zero damages, and 0.16129 touch rate. |
 
 ## Current Thesis
 
@@ -532,6 +546,678 @@ This result means the project is past the easy demonstration stage. The current 
 
 This is why the current status is “over halfway” but not finished. The proxy/control-motif hill has been climbed. The eval-alignment hill may become a cliff, and that cliff would still define the publishable limit of the method.
 
+### Eval-Aligned Hill Climb and Targeted Rappel
+
+The first full hill-climb run kept the acceptance gate strict and did not add targeted retargeting:
+
+```text
+run: D:\Research_Engine\runs\trm_eval_hill_climb_intellect3_logic_full_20260602
+rounds: 6
+source_candidate_count: 7764
+frontier_row_count: 1450
+near_miss_count: 24
+accepted_eval_aligned_count: 0
+max_packet_tokens: 953
+```
+
+This is the clearest cliff result so far. The router-confusion candidates reached plausible deterministic eval deltas, but the matched random controls reached the same or better values. The best frontier stayed at `0.023148` estimated eval delta, and strict acceptance stayed at zero. This is not a harness failure; it is evidence that router/signature-route proxy movement is not yet enough to claim downstream Intellect-3-Logic steering.
+
+To rappel up the cliff rather than merely report it, the next run added a targeted candidate generator. When a cluster has too little direct frontier, the generator retargets same-gate VPD evidence into the missing Intellect cluster while preserving provenance:
+
+```text
+targeted gates: format_commit, candidate_verify
+variant type: targeted_gate_retarget
+acceptance: runtime only, deterministic estimate, no checkpoint mutation
+provenance: parent recipe, source gate, retargeted_from, targeted_probe flag
+```
+
+The targeted run produced the first accepted eval-aligned rows:
+
+```text
+run: D:\Research_Engine\runs\trm_eval_hill_climb_intellect3_logic_targeted_final_20260602
+rounds: 6
+source_candidate_count: 7764
+frontier_row_count: 2458
+targeted_probe_count: 1008
+accepted_eval_aligned_count: 36
+accepted_targeted_probe_count: 36
+accepted_non_targeted_count: 0
+accepted_without_matched_random_count: 36
+max_packet_tokens: 1212
+```
+
+Interpretation:
+
+- The cliff is real for non-targeted router transfer under matched random controls.
+- The targeted rappel finds format-commit candidates, but all accepted rows are targeted probes.
+- The accepted targeted probes clear guardrail and deterministic eval-alignment checks, but they do not yet clear a matched-random comparison because no matched random controls exist for that format-commit cluster.
+- Therefore this is a productive ascent step, not yet the final paper-grade positive result.
+
+The follow-up experiment generated matched random controls for the targeted format-commit/candidate-verify probes:
+
+```text
+run: D:\Research_Engine\runs\trm_eval_hill_climb_intellect3_logic_targeted_controls_strict_20260602
+rounds: 6
+source_candidate_count: 7764
+frontier_row_count: 2506
+targeted_probe_count: 1056
+targeted_random_control_count: 976
+accepted_eval_aligned_count: 0
+accepted_targeted_probe_count: 0
+accepted_without_matched_random_count: 0
+max_packet_tokens: 1193
+```
+
+The targeted controls collapse the apparent positive result. The first targeted run was still useful because it showed how to climb from a missing candidate surface into plausible format-commit probes. The controlled run is more important for the paper: once same-gate random controls are retargeted into the same missing cluster and the gate requires superiority over matched-random P95 on eval delta and efficiency, no targeted probe remains accepted.
+
+This sharpens the boundary claim. Current VPD evidence can find reusable gate motifs and can generate plausible retargeted probes, but it has not yet shown robust downstream Intellect-3-Logic hill climbing under controlled comparison. That is a publishable cliff if it holds under a live scorer or a richer candidate generator.
+
+### Feature-Map Status
+
+The current project has two different kinds of feature maps, and the paper should not conflate them.
+
+The HRM-text feature-map path is mechanically real. It produced chunked low-rank SVD refinements over 16 HRM-text chunks and writes coarse/refined feature-map JSON artifacts. Those maps show that the VPD editing stack can rank salient modules, split them into lower-rank slices, and produce measurable logit deltas. They are not, however, organelle TRM maps and they are not grounded in Intellect-3-Logic eval improvement.
+
+The organelle TRM evidence is stronger for proxy control than for eval-grounded logical efficacy. The Organelle Arena provides head-row and head-SVD components, transfer matrices, accepted proxy grafts, matched random controls, and decision-resonance artifacts. That is enough to rank candidate vectorization families. It is not yet enough to claim a trained semantic feature map for logical efficacy.
+
+Current vectorization hypotheses:
+
+- `head_svd:*` over `format_commit` and `repair_step`: strongest proxy family for repair/format preservation, but not yet an eval-proven logic edit.
+- `head_row:veto`, `head_row:repair`, `head_row:commit`: semantically aligned with verifier behavior and worth testing for format/commit failures.
+- `signature_route:head_row:route_plain`: tempting for router confusion, but currently a weak candidate because router near misses fail matched random eval gates.
+- Low-rank SVD slices of organelle heads: likely better than whole-component grafts because whole head/row edits appear too coarse under eval controls.
+
+The next artifact should therefore be an eval-grounded organelle feature-map miner, not a reuse of the HRM-text feature map. Its output should be treated as a hypothesis map:
+
+```text
+logic_efficacy_feature_map.json
+ranking = eval_delta - matched_random_p95
+filters = guardrail pass, specificity, recurrence, cluster alignment
+claim = candidate vectorizations to test, not proven controlled edit gains
+```
+
+The first mined artifact is:
+
+```text
+run: D:\Research_Engine\runs\trm_logic_efficacy_feature_map_20260602
+source: D:\Research_Engine\runs\trm_eval_hill_climb_intellect3_logic_targeted_controls_strict_20260602
+component_record_count: 9
+feature_map_entry_count: 9
+accepted_component_count: 0
+positive_eval_margin_count: 0
+```
+
+Top hypotheses are `signature_route:head_row:route_plain` for router confusion and `format_commit` components such as `head_svd:0001`, `head_row:repair`, and `head_row:veto` for format-commit failures. None has positive margin over matched random controls. The feature map is therefore a ranked hypothesis map, not an edit plan that should be applied as a claimed gain.
+
+### Edit-Discovery Protocol
+
+The next scaffold turns the negative-result boundary into a closed-loop edit-discovery protocol with four separated stages: eval problem isolation, feature correlation, bandit policy state, and controlled hill-climb validation. The exported protocol note is:
+
+```text
+C:\projects\VDP\papers\VPD_TRM_Feature_Steering\vpd_trm_hill_climb_protocol.md
+```
+
+The first artifact-driven protocol run is:
+
+```text
+run: D:\Research_Engine\runs\trm_edit_discovery_protocol_intellect3_logic_20260602
+eval_run: D:\Research_Engine\runs\trm_eval_feedback_loop_smoke_20260601_v3
+hill_climb_run: D:\Research_Engine\runs\trm_eval_hill_climb_intellect3_logic_targeted_controls_strict_20260602
+feature_map_run: D:\Research_Engine\runs\trm_logic_efficacy_feature_map_20260602
+problem_card_count: 7
+feature_scan_count: 9
+feature_family_count: 4
+edit_action_trial_count: 9
+accepted_controlled_edit_count: 0
+policy_packet_estimate: 725
+```
+
+This run emits `eval_problem_cards.jsonl`, `feature_correlation_scan.jsonl`, `feature_family_summary.jsonl`, `edit_action_trials.jsonl`, `reward_history.jsonl`, `rl_feature_policy_state.json`, and `self_model.json`. The top recommended trials are low-rank refinements over `format_commit` features: `head_svd:0000`, `head_row:repair`, `head_row:veto`, `head_svd:0002`, and `head_svd:0001`. Router-oriented `signature_route` rows are recorded as failed or abstain families because their mean eval margin stays below matched random controls.
+
+This is the first version of the "editable failures" loop in paper form. It does not mutate weights and does not claim a positive downstream edit. Its contribution is procedural: failures are now cards, feature hypotheses are ranked separately from edits, the policy state is compact enough for an 8K-context controller, and the next probes are machine-readable.
+
+The first focused follow-up tried low-rank blend refinements over the protocol-selected format-commit features:
+
+```text
+run: D:\Research_Engine\runs\trm_format_commit_refinement_intellect3_logic_20260602
+source_protocol: D:\Research_Engine\runs\trm_edit_discovery_protocol_intellect3_logic_20260602
+source_frontier: D:\Research_Engine\runs\trm_eval_hill_climb_intellect3_logic_targeted_controls_strict_20260602
+selected_components: head_svd:0000, head_row:repair, head_row:veto, head_svd:0002, head_svd:0001
+base_row_count: 34
+blend_count: 64
+strict_gate_pass_estimate_count: 0
+prompt_packet_estimate: 1140
+```
+
+This run is another useful negative result. Every generated blend cleared the eval-delta margin against its matched random P95, but every blend failed efficiency and specificity. The best blend, `head_svd:0001 + head_svd:0002`, had `target_eval_delta_margin = 0.011366`, but `efficiency_margin = -0.392342` and `specificity_margin = -0.000002`. This suggests that naive combination can increase the estimated target movement while making the edit too broad or too costly relative to matched random controls. The next positive route is therefore not "add more features"; it is either live scoring of the most efficient single-feature near misses, or a refinement method that explicitly optimizes efficiency and specificity rather than only target delta.
+
+The RL signal should come from live scoring, not from the offline feature map. The live-scoring scaffold now separates those roles:
+
+```text
+offline role: choose compact candidate probes and matched-control thresholds
+live role: score runtime edit on pinned eval/holdout cards and emit reward
+reward: live_eval_delta - matched_random_p95_delta + efficiency/specificity margins - guardrail/holdout penalties
+```
+
+The first live-RL queue is:
+
+```text
+run: D:\Research_Engine\runs\trm_live_rl_signal_intellect3_logic_20260602
+source_refinement: D:\Research_Engine\runs\trm_format_commit_refinement_intellect3_logic_20260602
+request_count: 12
+scored_count: 0
+pending_count: 12
+accepted_live_edit_count: 0
+prompt_packet_estimate: 4371
+```
+
+No live gain is claimed here because no real scorer rows have been written yet. A separate mock-positive run verifies that the reward path can accept scored candidates, but that run is harness-only and is excluded from the result claim. The next experimental step is to bind these `live_score_requests.jsonl` records to the actual Intellect-3-Logic scorer, then feed `live_score_results.jsonl` back into the policy state.
+
+The first scorer bridge into the local Tesseract harness is now prepared:
+
+```text
+run: D:\Research_Engine\runs\trm_tesseract_live_score_bridge_intellect3_logic_20260602
+live_run: D:\Research_Engine\runs\trm_live_rl_signal_intellect3_logic_20260602
+request_count: 12
+resolved_envs: intellect_3_logic = 1
+unresolved_sample_count: 0
+sample_receipt: tesseract_live_sample_receipt.json
+bench_output: tesseract_live_bench_output.json
+runtime_hook_status: template_without_concrete_hooks
+```
+
+The bridge recovers the pinned failed Prime Intellect environment sample as `intellect_3_logic_330`, the Mathador prompt with trace `e0587481-c4ac-4559-ae1b-324739bb1570`, and emits a local Tesseract `comprehensive_bench.py` command for the 2B routed adapter lane. This is still not an accepted live edit, because the current local harness can rerun the routed adapter on the Prime Intellect sample but cannot yet apply a VPD runtime candidate during generation. Running it now would produce an unedited calibration score, not a VPD intervention result. The immediate engineering blocker is therefore the runtime hook that applies a candidate feature edit inside the scorer call.
+
+The local harness now has a runtime-hook contract:
+
+```text
+benchmark args: --vpd-live-request, --vpd-runtime-hook
+supported concrete hook: module_path + mode=scale_output + scale
+per-sample output: routed_*_vpd_hook_status
+claimability: false unless concrete hooks are applied and manifest source is vpd_runtime_hook
+```
+
+The regenerated bridge command includes both hook arguments and writes:
+
+```text
+vpd_live_request.json
+vpd_runtime_hook_template.json
+```
+
+The current template is intentionally non-claimable:
+
+```text
+candidate_id: format_commit_refine:0304:head_svd:0001+head_svd:0002
+abstract_component_ids: head_svd:0001, head_svd:0002
+hooks: []
+claimable: false
+runtime_hook_status: template_without_concrete_hooks
+```
+
+This turns the remaining blocker into a precise mapping problem: map the abstract organelle VPD feature IDs (`head_svd:*`, `head_row:*`) into concrete Hugging Face module paths and output-scaling hooks for the routed adapter model. Until that mapping exists, live scorer runs remain calibration runs rather than accepted VPD edits.
+
+The first abstract-to-concrete mapping pass now emits candidate hook manifests from the routed adapter metadata:
+
+```text
+adapter: D:\Research_Engine\tesseract_persistent\data\models\adapters\2B\2026-03-12-overnight\intellect_3_logic
+base model: D:\Research_Engine\models\Qwen3.5\Qwen3.5-2B-Base-HF
+adapter target_modules: o_proj, out_proj, down_proj, plus other LoRA projections
+hook_candidate_manifest_count: 24
+hook_candidate_manifest_index: hook_candidate_manifest_index.jsonl
+hook_candidate_benchmark_commands: hook_candidate_benchmark_commands.jsonl
+```
+
+The first generated candidate maps `head_svd:0001` to:
+
+```text
+module_path: base_model.model.model.layers.23.self_attn.o_proj
+mode: scale_output
+scale: 1.1
+verification_status: unverified_module_path
+claimable: false
+```
+
+This is progress, but not yet evidence. These hook candidates let us run one concrete routed-model path probe at a time. They do not yet prove that the organelle feature and the Hugging Face module are the same causal object. A candidate can become claimable only after the runtime hook resolves, the mapping is reviewed, and live scorer rows clear the matched-random reward gates.
+
+The first resolved hook probe cleared the runtime blocker. The local 2B routed adapter accepted a concrete hook at:
+
+```text
+module_path: base_model.model.model.language_model.layers.23.self_attn.o_proj
+mode: scale_output
+scale: 1.1
+hook_status: applied
+hook_count: 1
+failed_hooks: 0
+```
+
+The corresponding Intellect-3-Logic one-sample run did not improve the task score, but it established that the scorer can now apply an edit during generation rather than merely replaying an unedited adapter. A follow-up simpler-eval probe used `wordle` because it has compact actions and dense near-miss structure. Unmasked Wordle saturated at 4/4 because several normalized trajectory prompts leak the target guess. The harness therefore added a non-destructive `--mask-wordle-target` mode that masks explicit mentions of the target guess in the prompt while preserving the same sampled records and target actions.
+
+Masked Wordle produced a non-saturated baseline:
+
+```text
+run: D:\Research_Engine\runs\trm_wordle_vpd_hook_probe_20260603
+samples: 4
+baseline_instruct_sr: 0.25
+routed_2b_sr: 0.50
+```
+
+A one-load masked Wordle hook sweep then tested resolvable runtime hooks over late attention/MLP projections:
+
+```text
+run: D:\Research_Engine\runs\trm_wordle_vpd_hook_probe_20260603\sweep_small_late_strong
+examples: 2
+candidate_count: 24
+resolvable_candidate_count: 24
+baseline_score: 0.50
+accepted_live_edit_count: 0
+best_delta: 0.0
+```
+
+The result is a useful negative control rather than a success claim. Extreme output scaling did perturb generations, including destructive changes, so the hook path is not inert. However, coarse layer-output scaling did not discover an exact-score-improving edit. The next candidate generator should therefore move from blanket module scaling to failure-correlated feature selection: identify features active on the failing masked Wordle case but not on preserved cases, then steer those vectors or LoRA subcomponents instead of scaling whole layer outputs.
+
+That failure-correlated pass has now been attempted. The first ranked sweep captured per-module mean activation magnitudes on the masked Wordle baseline and selected modules by failed-vs-passed contrast:
+
+```text
+run: D:\Research_Engine\runs\trm_wordle_vpd_hook_probe_20260603\sweep_activation_top4
+examples: 4
+selected_module_count: 4
+candidate_count: 20
+baseline_score: 0.50
+accepted_live_edit_count: 0
+top selected modules: layers 11, 19, 7, 15 self_attn.q_proj
+```
+
+This run showed that failure-correlated module selection can identify a coherent family, q-projection modules with slightly lower failed-case activation magnitude, but whole-module scaling of those ranked modules still did not produce a score gain.
+
+A second pass used mean activation vectors rather than scalar activation magnitude. It captured pass-minus-fail vectors, ranked modules by vector contrast, and applied additive activation-direction hooks:
+
+```text
+run: D:\Research_Engine\runs\trm_wordle_vpd_hook_probe_20260603\direction_top3_strong
+examples: 4
+selected_module_count: 3
+candidate_count: 18
+baseline_score: 0.50
+accepted_live_edit_count: 0
+top selected modules:
+  layer 23 mlp.gate_proj
+  layer 23 self_attn.q_proj
+  layer 19 self_attn.q_proj
+```
+
+Large additive alphas moved behavior, including malformed or degraded guesses, but did not improve exact Wordle accuracy. This narrows the next protocol change: the live edit path is operational, and failure-correlated feature ranking is measurable, but mean module-level activation edits are still too coarse. The next credible step is either token-position-specific steering at the decision token or direct LoRA subcomponent edits, especially `lora_A`/`lora_B` rows for the ranked q-projection and gate-projection modules.
+
+A first direct LoRA subcomponent diagnostic was then added. The run targeted the highest-contrast module from the direction sweep, layer 23 `mlp.gate_proj`, and scaled only its `lora_B.default` output branch:
+
+```text
+run: D:\Research_Engine\runs\trm_wordle_vpd_hook_probe_20260603\lora_B_gate23_diag
+examples: 2
+module_path: base_model.model.model.language_model.layers.23.mlp.gate_proj.lora_B.default
+scales: 0.0, 2.0, 4.0
+baseline_score: 0.50
+accepted_live_edit_count: 0
+predictions: [house], [crane] unchanged across tested scales
+```
+
+This result suggests that simply scaling the adapter output branch at this MLP gate is not enough to move the decision on the failing masked Wordle sample. It also explains why broad LoRA sweeps are not currently efficient on CPU: each candidate still requires autoregressive generation, and small branch-level edits may be inert unless selected at the correct token position or applied as a weight-space row/vector edit. The next experiment should therefore avoid more blind LoRA scale sweeps and instead instrument the final answer-token position, then test either logit-level constrained steering over legal Wordle guesses or persistent edits to the LoRA rows most associated with the target guess.
+
+The first constrained token-level probe produced a small positive diagnostic. Instead of free-form generation, the scorer evaluated a compact candidate action set and applied a generic penalty to the overused default action `[crane]`:
+
+```text
+run: D:\Research_Engine\runs\trm_wordle_vpd_hook_probe_20260603\constrained_anti_crane_4sample
+examples: 4
+candidate actions: [crane], [house], [flame], [grant], [slate]
+baseline constrained score: 0.50
+best policy: penalty 8.0 against [crane]
+best constrained score: 0.75
+accepted policy count: 2
+```
+
+Per-sample behavior:
+
+```text
+baseline: [house], [crane], [crane], [crane]
+targets:  [house], [flame], [grant], [crane]
+penalty:  [house], [flame], [grant], [flame]
+```
+
+This is the first positive live-scored hill-climb signal in the Wordle scaffold, but it is not yet a VPD weight-edit claim. The intervention is an action-level constrained decode policy derived from the observed over-selection failure mode. It improves the two stuck non-`[crane]` failures while sacrificing the true `[crane]` case, giving a net +0.25 on the four-sample card. The result is useful because it shows that the failure is not opaque: the correct alternatives already have relatively high likelihood, and a simple anti-default token policy can expose them. The next paper-grade step is to distill this policy into a model-internal edit, for example by steering only when the final-action distribution is dominated by `[crane]` and nearby legal candidates have compatible Wordle constraints.
+
+The first extrapolation check added a simple context gate: apply the anti-`[crane]` penalty only after the initial Wordle step. This preserves legitimate opening `[crane]` guesses while suppressing repeated defaulting later in the trajectory. On the original four-sample card, this improved the constrained score from `0.50` to `1.00`:
+
+```text
+run: D:\Research_Engine\runs\trm_wordle_vpd_hook_probe_20260603\constrained_post_initial_4sample
+mode: post_initial
+best policy: penalty 8.0 against [crane]
+baseline score: 0.50
+best score: 1.00
+best delta: +0.50
+control penalties accepted: 0
+```
+
+An 8-sample validation preserved the same pattern:
+
+```text
+run: D:\Research_Engine\runs\trm_wordle_vpd_hook_probe_20260603\constrained_post_initial_8sample
+examples: 8
+candidate actions: 7
+baseline score: 0.50
+best target policy: post_initial penalty 8.0 against [crane]
+best target score: 1.00
+best target delta: +0.50
+accepted target policy count: 2
+accepted control policy count: 0
+```
+
+This makes the pattern more than a one-off on the original pinned card. The extrapolatable hypothesis is now: **after an initial Wordle opener, the routed model over-defaults to `[crane]`; a gated anti-default policy can recover nearby legal alternatives without suppressing legitimate opener use.** The claim remains narrow because the action set is constrained and small, but the matched control result is encouraging: penalizing `[house]`, `[flame]`, `[grant]`, or `[slate]` did not beat baseline on the same 8-sample card.
+
+The policy was distilled into a reusable score-file artifact:
+
+```text
+run: D:\Research_Engine\runs\trm_wordle_vpd_hook_probe_20260603\policy_distill_post_initial_8sample
+input score file: constrained_post_initial_8sample\wordle_constrained_sample_scores.jsonl
+distilled policy: wordle_post_initial_anti_crane
+policy type: constrained_decode_penalty
+gate: post_initial
+penalized action: [crane]
+penalty: 8.0
+baseline score: 0.50
+best target score: 1.00
+best target delta: +0.50
+accepted target policy count: 45
+accepted control policy count: 0
+policy card: wordle_post_initial_anti_crane_policy.json
+```
+
+This gives the next stage a concrete object to distill into model internals. Rather than asking "can any VPD edit help?", the internal-edit target is now specific: reproduce the constrained policy `post_initial -> penalize [crane] by about 8 log-prob units` while preserving initial-step `[crane]` behavior. Candidate mechanisms include a final-action logit hook, a small auxiliary TRM route rule, or a LoRA row/vector edit targeted at the final answer-token distribution.
+
+The policy card was then exported into a compact TRM-style route rule:
+
+```text
+run: D:\Research_Engine\runs\trm_wordle_vpd_hook_probe_20260603\policy_card_apply_post_initial_8sample
+route rule: wordle_trm_route_rule.json
+rule_id: wordle_post_initial_anti_crane
+rule_type: post_initial_action_penalty
+condition: env_id=wordle, step > 0, candidate action [crane] present
+action: penalize [crane] by 8.0 log-prob units
+baseline score: 0.50
+policy score: 1.00
+delta: +0.50
+```
+
+This route rule is the first compact artifact suitable for the TRM/gym side of the loop. It is not a learned weight edit, but it is a distilled decision rule with explicit trigger, action, reward, and claim boundary. That makes it a candidate teacher label for a small route TRM, or a target behavior for a later VPD/logit-hook internalization experiment.
+
+The validation harness now supports cached score-card replay and matched-control evaluation without reloading the model:
+
+```text
+run: D:\Research_Engine\runs\trm_wordle_vpd_hook_probe_20260603\policy_validation_cached_4plus8
+cards: constrained_post_initial_4sample, constrained_post_initial_8sample
+aggregate samples: 12
+accepted cards: 2 / 2
+mean target delta: +0.50
+mean best-control delta: 0.0
+all cards accepted: true
+```
+
+The current validation is still small because fresh constrained score-card generation is CPU-bound. The harness therefore separates expensive score generation from cheap policy validation: future overnight runs should generate additional `wordle_constrained_sample_scores.jsonl` cards, then reuse the cached validator to test the route rule and controls instantly.
+
+The first larger cached validation completed on June 4, 2026 after a small-GPU retry. The initial overnight scorer failed because it materialized a full `float32` log-softmax tensor on the 4 GB RTX 3050 Laptop GPU. The scorer was patched to evaluate candidate actions in batch size 1 and gather only the target-token log-probabilities. That preserved the constrained scoring semantics while keeping the live scorer inside the available VRAM.
+
+```text
+run: D:\Research_Engine\runs\trm_wordle_vpd_hook_probe_20260603\overnight_validation_32x2_20260604_retry_smallgpu
+score cards: 4, 8, 32(seed 23), 32(seed 37)
+aggregate samples: 76
+accepted cards: 4 / 4
+all cards accepted: true
+mean target delta: +0.359375
+mean best-control delta: +0.007812
+policy card: wordle_post_initial_anti_crane_policy.json
+validation summary: policy_validation_4_8_32_32\wordle_policy_validation_summary.json
+```
+
+The two new 32-sample cards independently preserved positive target movement:
+
+```text
+seed 23: baseline 0.34375 -> policy 0.53125, target delta +0.1875, best-control delta +0.03125
+seed 37: baseline 0.28125 -> policy 0.53125, target delta +0.25, best-control delta 0.0
+```
+
+This is the strongest current evidence that the Wordle route rule is an extrapolatable failure-mode intervention rather than a one-off rescue. The result still should not be described as a VPD weight edit. It is a live-scored constrained decode policy with a compact TRM route-rule representation. The paper-grade claim is that the feedback loop has isolated a reproducible, measurable behavioral attractor and a gateable intervention target: post-initial over-defaulting to `[crane]`.
+
+After this result, a local constrained-env audit checked whether another normalized Tesseract environment could support the same short-candidate protocol without additional candidate extraction:
+
+```text
+run: D:\Research_Engine\runs\trm_constrained_env_audit_20260604_v3
+env count: 49
+short constrained-decode suitable envs: 0
+```
+
+This is an important boundary for the method. Several envs have fixed labels (`arc_easy`, `arc_challenge`, MMLU subsets), but their normalized prompts do not expose answer choices, so a constrained label scorer would be under-specified. Other envs expose replay-like response candidates but the actions are long free-form strings, not compact action tokens. The next replication step is therefore not to force a second Wordle-shaped policy onto those envs. It is to add a candidate-extraction stage that reconstructs explicit action alternatives from task metadata or original datasets, then reruns the same score-card, matched-control, and route-rule validation protocol.
+
+That candidate-extraction stage now exists for local ARC and MMLU choice environments. It rehydrates normalized trajectory rows from the raw Parquet files under `D:\Research_Engine\prime_envs`, reconstructs prompts with explicit choices, and emits compact candidate-card rows keyed by normalized `trajectory_id`:
+
+```text
+run: D:\Research_Engine\runs\trm_choice_candidate_cards_20260604
+envs: arc_easy, arc_challenge, mmlu_formal_logic
+candidate cards: 192
+matched target rows: 192
+mismatches: 0
+card file: choice_candidate_cards.jsonl
+```
+
+A first small ARC Easy live score then exercised the generic constrained-choice scorer:
+
+```text
+run: D:\Research_Engine\runs\trm_choice_constrained_arc_easy_8_20260604
+env: arc_easy
+examples: 8
+candidate action count: 4
+baseline constrained score: 0.875
+best policy: penalize B by 1.0
+best score: 1.0
+best delta: +0.125
+```
+
+This is a pilot signal, not a validated second-environment result. It repaired one near miss, `arc_easy_37`, where baseline chose `B` and the target was `A`; the small `B` penalty flipped that sample without breaking the other seven examples. The next validation step is to run additional ARC Easy seeds and matched action controls exactly as Wordle did before making an extrapolation claim.
+
+The next ARC rung used `arc_challenge` as the local "medium" choice environment. The 8-example pilot again found a small action-penalty gain:
+
+```text
+run: D:\Research_Engine\runs\trm_choice_constrained_arc_challenge_8_20260604
+env: arc_challenge
+examples: 8
+baseline constrained score: 0.625
+best policy: penalize B by 1.0
+best score: 0.75
+best delta: +0.125
+```
+
+Two 32-example cards preserved smaller positive movement:
+
+```text
+run: D:\Research_Engine\runs\trm_choice_constrained_arc_challenge_32_seed23_20260604
+baseline: 0.625
+best policy: penalize D by 1.0
+best score: 0.6875
+best delta: +0.0625
+
+run: D:\Research_Engine\runs\trm_choice_constrained_arc_challenge_32_seed37_20260604
+baseline: 0.78125
+best policy: penalize B by 1.0
+best score: 0.84375
+best delta: +0.0625
+```
+
+This is better than a single-card fluke, but weaker than the Wordle result because the best penalized action is not stable across 32-example seeds. The useful interpretation is that ARC Challenge has local over-selection near misses that the constrained scorer can expose, but it does not yet show one clean reusable route rule. The next ARC experiment should validate a family-level policy such as "small penalty on the current overconfident top choice when the second choice is close" rather than a fixed anti-`B` or anti-`D` rule.
+
+That family-level probe now exists as a tight cached reward loop. It loads cached constrained-choice score files, deduplicates overlapping `env_id:trajectory_id` rows, scores fixed-action and top-margin policies, and writes MCP-style state resources for the next live run. The reward is immediate rather than retrospective: `delta + 0.01 * (rescues - damages)`, where rescues are baseline misses repaired by the policy and damages are baseline hits broken by the policy.
+
+```text
+run: D:\Research_Engine\runs\trm_choice_rl_feedback_arc_challenge_deduped_20260604
+input score cards: arc_challenge_32_seed23, arc_challenge_32_seed37
+raw samples: 64
+deduped samples: 48
+candidates scored: 48
+accepted candidates: 21
+best policy: top_margin:max_0_5:penalty_0_5
+baseline pass rate: 0.708333
+policy pass rate: 0.791667
+best delta: +0.083333
+best reward: +0.123333
+rescues/damages: 6 / 2
+prompt packet estimate: 265 tokens
+```
+
+This is the first ARC Challenge result shaped like an RL-acute teaching loop rather than a manual analysis pass. The loop does not wait for a broad post-hoc report; it converts each cached score card into policy reward, updates `rl_policy_state.json`, writes `reward_history.jsonl` and `replay_candidates.jsonl`, and emits a compact `prompt_packet.txt` that tells the next harness step what to try. The current next action is clear and falsifiable: run one fresh-seed ARC Challenge live score card with the top-margin policy, then accept it only if the positive delta survives deduped scoring and matched fixed-action controls.
+
+The fresh-seed rerun completed on a new 32-example ARC Challenge card:
+
+```text
+score run: D:\Research_Engine\runs\trm_choice_constrained_arc_challenge_32_seed101_20260604
+env: arc_challenge
+examples: 32
+baseline constrained score: 0.71875
+best fixed-label policy: penalize D by 1.0
+best fixed-label score: 0.8125
+best fixed-label delta: +0.09375
+```
+
+When the same score card is fed through the RL feedback loop, the cached top-margin policy remains accepted:
+
+```text
+reward run: D:\Research_Engine\runs\trm_choice_rl_feedback_arc_challenge_seed101_20260604
+best policy: fixed:D:penalty_1_0
+best reward: +0.12375
+best delta: +0.09375
+top-margin policy: top_margin:max_0_5:penalty_0_5
+top-margin accepted: true
+top-margin score: 0.78125
+top-margin delta: +0.0625
+top-margin reward: +0.0825
+top-margin rescues/damages: 4 / 2
+top-margin touched samples: 7 / 32
+```
+
+The three-card deduped aggregate now has 56 unique ARC Challenge samples:
+
+```text
+run: D:\Research_Engine\runs\trm_choice_rl_feedback_arc_challenge_3seed_deduped_20260604
+raw samples: 96
+deduped samples: 56
+baseline pass rate: 0.714286
+best fixed-label policy: fixed:D:penalty_1_0
+best fixed-label pass rate: 0.767857
+best fixed-label delta: +0.053571
+top-margin policy: top_margin:max_0_5:penalty_0_5
+top-margin pass rate: 0.767857
+top-margin delta: +0.053571
+top-margin reward: +0.083571
+top-margin rescues/damages: 6 / 3
+top-margin touched samples: 11 / 56
+```
+
+This strengthens the family-rule interpretation. Fixed `D` and the top-margin rule tie on aggregate reward, but the top-margin policy touches far fewer samples (`11/56` versus `55/56` for fixed `D`). For a route-rule or TRM-teaching loop, that selectivity matters: it is closer to a causal failure-mode intervention and less like a global answer-label prior. The next acceptance gate should therefore include a selectivity term or tie-breaker, not only raw reward.
+
+The first memetic version of this search adds exactly that pressure. It treats candidate route rules as a population, locally refines each family over margin/penalty variants, then selects elites using a fitness that penalizes broad interventions:
+
+```text
+fitness = reward - touch_penalty * touch_rate - complexity_penalty * policy_complexity
+```
+
+The run:
+
+```text
+run: D:\Research_Engine\runs\trm_choice_memetic_arc_challenge_3seed_20260604
+input score cards: arc_challenge_32_seed23, arc_challenge_32_seed37, arc_challenge_32_seed101
+raw samples: 96
+deduped samples: 56
+generations: 4
+elite count: 8
+touch penalty: 0.02
+complexity penalty: 0.002
+best elite: top_margin:max_0_25:penalty_0_25
+baseline pass rate: 0.714286
+elite pass rate: 0.767857
+delta: +0.053571
+reward: +0.083571
+fitness: +0.076357
+rescues/damages: 3 / 0
+touch rate: 0.160714
+prompt packet estimate: 285 tokens
+```
+
+This is a better teaching signal than the raw fixed-label winner. The previous aggregate top-margin policy (`max_margin=0.5`, `penalty=0.5`) tied fixed `D` on reward but still caused three damages. The memetic local-refinement pass tightened the rule to `max_margin=0.25`, `penalty=0.25`, preserving the same score delta while reducing damage to zero and touching only nine of fifty-six samples. That is the local maximum we want the meta-skill to prefer: not the largest global label shove, but the most selective rule that repairs a recurring failure mode.
+
+The next layer converts that search result into a controller-trainable VPD edit-policy state. The trainer does not mutate model weights. It trains the gain-function policy over cached route-rule evidence, emits checkpoints and training events, and records the learned preference as a compact MCP resource:
+
+```text
+run: D:\Research_Engine\runs\trm_gain_function_memetic_arc_bootstrap_20260604
+trained object: vpd_edit_policy
+input score cards: arc_challenge_32_seed23, arc_challenge_32_seed37, arc_challenge_32_seed101
+raw samples: 96
+deduped samples: 56
+generations completed: 4
+ram cap: 8192 MB
+peak traced RAM: 1.424 MB
+checkpoint count: 4
+best candidate: gain:top_margin:max_0_25:penalty_0_25
+edit family: selective_top_margin_suppression
+preferred families: selective_top_margin_suppression
+downranked families: broad_fixed_label_prior
+fitness: +0.076357
+reward: +0.083571
+score delta: +0.053571
+rescues/damages: 3 / 0
+touch rate: 0.160714
+prompt packet estimate: 274 tokens
+```
+
+This is the first concrete version of the “controlled training regime” for the meta-skill. The gain function has been externalized into `vpd_edit_policy_state.json`: score delta and rescues are rewarded, damages and touch rate are penalized, and broad fixed-label priors are downranked when a selective rule reaches the same reward surface. The claim boundary is still narrow. This is controller-policy training from route-rule evidence, not a VPD weight-edit result. Its purpose is to teach the next harness step which edit families deserve live scorer budget before promoting them to VPD-hook or feature-map search.
+
+The first fresh-card validation of that trained gain policy used a new 32-example ARC Challenge card:
+
+```text
+score run: D:\Research_Engine\runs\trm_choice_constrained_arc_challenge_32_seed151_20260604
+env: arc_challenge
+examples: 32
+baseline constrained score: 0.6875
+best fixed-label policy: penalize D by 1.0
+best fixed-label score: 0.75
+best fixed-label delta: +0.0625
+```
+
+On this fresh card alone, a broader top-margin variant won the local search, but the trained tight policy remained positive and damage-free:
+
+```text
+run: D:\Research_Engine\runs\trm_gain_function_memetic_arc_seed151_20260604
+best seed-local policy: top_margin:max_1_0:penalty_1_0
+best seed-local fitness: +0.1335
+best seed-local delta: +0.125
+trained tight policy: top_margin:max_0_25:penalty_0_25
+trained tight fitness: +0.036
+trained tight reward: +0.04125
+trained tight delta: +0.03125
+trained tight rescues/damages: 1 / 0
+trained tight touch rate: 0.0625
+```
+
+After folding seed 151 into the aggregate, the trained tight policy remained the best controller-policy candidate:
+
+```text
+run: D:\Research_Engine\runs\trm_gain_function_memetic_arc_4seed_20260604
+raw samples: 128
+deduped samples: 62
+best policy: top_margin:max_0_25:penalty_0_25
+fitness: +0.071161
+reward: +0.078387
+score delta: +0.048387
+rescues/damages: 3 / 0
+touch rate: 0.16129
+preferred family: selective_top_margin_suppression
+downranked family: broad_fixed_label_prior
+```
+
+This is the first evidence that the gain function itself is beginning to generalize: the seed-local optimum can shift, but the lower-touch trained policy stays positive on a fresh card and remains the best four-seed aggregate choice. That is enough to promote the family to the next stage of search, but not enough to claim a VPD hook result. The next experiment should map `selective_top_margin_suppression` to a concrete VPD/logit-hook candidate and compare it against matched broad-prior and random-feature controls.
+
 ### Edit Showcase and Decision Traces
 
 A dashboard-ready edit showcase now exists:
@@ -627,6 +1313,9 @@ The paper should explicitly include:
 - Matched-random filtration is necessary: without it, random controls can look competitive on raw gain.
 - The first eval-aligned Intellect-3-Logic pass produced 12 candidate rows and zero accepted downstream edits.
 - Proxy-positive control motifs do not yet imply downstream task improvement.
+- The strict six-round eval hill climb found 24 near misses and zero non-targeted accepted eval edits.
+- Targeted format-commit retargeting produced 36 accepted probes, but all were targeted lineage and none had matched random controls.
+- After adding 976 targeted random controls, the targeted format-commit accepts collapsed from 36 to 0 under the strict matched-random gate.
 
 Negative-result handling:
 
@@ -640,8 +1329,8 @@ Do not bury these as caveats. They are part of the methodological contribution: 
 4. Phase 1 Router: post-repair keygate and false-commit boundary.
 5. Phase 2 Repair Optimization: task graph organelles and repair preservation.
 6. Phase 3 Organelle Transfer: runtime grafts and portability tests.
-7. Phase 4 Eval Alignment: downstream Intellect-3 gate and zero-accept boundary result.
-8. Results: accepted grafts, controls, hard-slice behavior, recurrence, eval-aligned rejection.
+7. Phase 4 Eval Alignment: downstream Intellect-3 gate, strict cliff result, and targeted rappel.
+8. Results: accepted grafts, controls, hard-slice behavior, recurrence, eval-aligned rejection, targeted-probe acceptance.
 9. Limitations: runtime-only, small models, deterministic eval estimates, synthetic/typed workflow rows, not full RL yet.
 10. Discussion: MCP/TRM context curation and future checkpoint-level steering.
 
@@ -651,8 +1340,9 @@ Do not bury these as caveats. They are part of the methodological contribution: 
 - Are repair-step gains a real transferable motif or a consequence of the hard-slice construction?
 - Can a graft selected in the arena improve a downstream MCP retrieval or context-curation harness?
 - Can the same component family be promoted from runtime graft to checkpoint edit without losing guardrails?
-- Can candidate generation be targeted enough to produce one eval-aligned Intellect-3-Logic accepted edit?
-- If eval-aligned accepts remain zero, is that a limitation of VPD, the organelle proxy task, or the current deterministic alignment estimate?
+- Can targeted format-commit and candidate-verify probes beat matched random controls under a live scorer or richer candidate generator?
+- Can non-targeted candidate generation produce an eval-aligned Intellect-3-Logic accepted edit, or is the router cliff a real transfer boundary?
+- Since targeted accepts collapsed under matched random controls, is that a limitation of VPD, the organelle proxy task, or the deterministic alignment estimate?
 - What minimum task diversity is needed before the result stops being an artifact of shared labels?
 - What is the right outer-loop policy for choosing between runtime grafting, checkpoint editing, and supervised retraining?
 - Can an LLM-managed controller reliably turn repeated failures into better TRM training slices without drifting away from guardrails?
