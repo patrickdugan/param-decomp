@@ -314,6 +314,7 @@ These are working result slots. Values should be updated only from artifact summ
 | Conditional policy mining | `trm_gain_policy_condition_miner_arc_4seed_20260604` | completed | Mines stricter cached predicates and finds a higher-scoring `top_D runner_A margin<=1.0` condition with +0.064516 delta, 4/0 rescues/damages, and 0.064516 touch rate. |
 | Conditional policy cross-validation | `trm_gain_policy_condition_cv_arc_4seed_20260604` | completed | Leave-one-score-file-out validation rediscovers the same `top_D runner_A margin<=1.0` condition in every fold; all held-out folds accept, one beats fixed controls, and two tie controls with lower touch. |
 | Feature-search packet | `trm_gain_policy_feature_search_packet_arc_20260604` | completed | Converts the validated `D over A` controller predicate into positive/negative contrast sets and an activation-local VPD feature-search contract. |
+| Activation contrast probe requests | `trm_gain_policy_activation_contrast_arc_20260604` | completed | Emits eight module activation probe requests for the `D over A` contrast packet; ranking remains pending until real activation stats are captured. |
 
 ## Current Thesis
 
@@ -1424,6 +1425,26 @@ promotion gate: reproduce held-out condition reward, beat fixed-label controls o
 ```
 
 This is the first point where the loop is ready to leave cached logit predicates and ask VPD for a mechanistic candidate. The immediate next run should not search the whole model blindly; it should rank candidate modules/components against this nine-row contrast packet and only then try runtime component edits.
+
+The activation contrast harness is now staged:
+
+```text
+run: D:\Research_Engine\runs\trm_gain_policy_activation_contrast_arc_20260604
+condition: cond_top_margin:top_D:runner_A:bucket_any:max_1_0:penalty_1_0
+positive/negative samples: 4/5
+module probe requests: 8
+ranked modules: 0
+status: probe_requests_ready
+prompt packet estimate: 137 tokens
+```
+
+The eight probe requests cover late and mid-layer attention/output and MLP/down-projection modules:
+
+```text
+layers 23,19,15,11 x {self_attn.o_proj, mlp.down_proj}
+```
+
+Each request carries the same four positive rescue sample ids and five negative same-pair sample ids, with the metric `mean_abs_activation`. This is not yet evidence for a VPD edit. It is the ready-to-run activation capture plan. Once activation stats are available, the ranker will sort modules by absolute positive-vs-negative contrast and the next harness should test top runtime edits against fixed-label controls.
 
 ### Edit Showcase and Decision Traces
 
