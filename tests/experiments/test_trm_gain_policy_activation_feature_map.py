@@ -63,6 +63,12 @@ def test_run_feature_map_probe_only_writes_probe_map(tmp_path) -> None:
     assert summary["feature_map_entry_count"] == 2
     assert (tmp_path / "out" / "activation_feature_map.json").exists()
     assert (tmp_path / "out" / "activation_edit_trials.jsonl").exists()
+    assert (tmp_path / "out" / "activation_capture_requests.jsonl").exists()
+    assert (tmp_path / "out" / "activation_capture_manifest.json").exists()
+
+    capture_rows = (tmp_path / "out" / "activation_capture_requests.jsonl").read_text(encoding="utf-8").splitlines()
+    assert len(capture_rows) == 2
+    assert "mean_abs_activation" in capture_rows[0]
 
 
 def test_run_feature_map_with_stats_ranks_modules(tmp_path) -> None:
@@ -94,3 +100,4 @@ def test_run_feature_map_with_stats_ranks_modules(tmp_path) -> None:
     assert summary["status"] == "ranked"
     assert summary["feature_map_entry_count"] == 2
     assert summary["edit_trial_count"] == 2
+    assert summary["activation_capture_request_count"] == 2

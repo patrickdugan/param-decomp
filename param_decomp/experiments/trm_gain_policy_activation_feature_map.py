@@ -150,6 +150,28 @@ def build_edit_trials(plan: FeatureMapPlan, *, source: str) -> list[dict[str, An
     return trials
 
 
+def build_capture_requests(
+    plan: FeatureMapPlan,
+    contrast_summary: dict[str, Any],
+    condition_id: str,
+) -> list[dict[str, Any]]:
+    requests = []
+    for index, entry in enumerate(plan.entries):
+        requests.append(
+            {
+                "request_id": f"activation_capture:{index:04d}:{entry.key}",
+                "module_path": entry.key,
+                "feature_name": entry.feature_name,
+                "condition_id": condition_id,
+                "metric": "mean_abs_activation",
+                "positive_sample_ids": contrast_summary["positive_sample_ids"],
+                "negative_sample_ids": contrast_summary["negative_sample_ids"],
+                "claim_boundary": "Capture request only; no activation stats have been recorded yet.",
+            }
+        )
+    return requests
+
+
 def compact_packet(summary: dict[str, Any], best: dict[str, Any] | None) -> str:
     lines = [
         "TASK: Turn activation contrast evidence into a feature-map plan.",
@@ -177,6 +199,7 @@ def run_feature_map(args: argparse.Namespace) -> dict[str, Any]:
     contrast_manifest = read_json(args.contrast_run / "feature_search_manifest.json")
     probe_rows = module_probe_rows(args.probe_run)
     contrast_rows = read_jsonl(args.contrast_run / "contrast_sets.jsonl")
+    contrast_summary_data = contrast_summary(contrast_rows)
     condition_id = str(contrast_manifest["condition_id"])
     activation_stats_present = args.activation_stats is not None
     ranking_rows: list[dict[str, Any]] = []
@@ -186,6 +209,7 @@ def run_feature_map(args: argparse.Namespace) -> dict[str, Any]:
         ranking_rows = rank_activation_contrast(stats, positive_ids=positive_ids, negative_ids=negative_ids)
     plan = build_ranked_map(ranking_rows[: args.top_k], condition_id) if ranking_rows else build_probe_map(probe_rows[: args.top_k], condition_id)
     trials = build_edit_trials(plan, source="activation_contrast_ranking" if ranking_rows else "activation_probe_request")
+    capture_requests = build_capture_requests(plan, contrast_summary_data, condition_id)
     summary = {
         "status": "ranked" if ranking_rows else "probe_only",
         "generated_at_utc": utc_now(),
@@ -193,15 +217,19 @@ def run_feature_map(args: argparse.Namespace) -> dict[str, Any]:
         "contrast_run": str(args.contrast_run),
         "probe_run": str(args.probe_run),
         "condition_id": condition_id,
+        **contrast_summary_data,
         "probe_row_count": len(probe_rows),
         "activation_stats_present": activation_stats_present,
         "feature_map_entry_count": len(plan.entries),
         "edit_trial_count": len(trials),
+        "activation_capture_request_count": len(capture_requests),
         "claim_boundary": "Feature-map bridge only; runtime VPD edit still untested.",
         "outputs": {
             "summary": str(args.out_dir / "activation_feature_map_summary.json"),
             "feature_map": str(args.out_dir / "activation_feature_map.json"),
             "edit_trials": str(args.out_dir / "activation_edit_trials.jsonl"),
+            "activation_capture_requests": str(args.out_dir / "activation_capture_requests.jsonl"),
+            "activation_capture_manifest": str(args.out_dir / "activation_capture_manifest.json"),
             "prompt_packet": str(args.out_dir / "prompt_packet.txt"),
         },
     }
@@ -210,6 +238,31 @@ def run_feature_map(args: argparse.Namespace) -> dict[str, Any]:
     packet = compact_packet(summary, plan.entries[0].__dict__ if plan.entries else None)
     save_feature_map(plan, args.out_dir / "activation_feature_map.json")
     write_jsonl(args.out_dir / "activation_edit_trials.jsonl", trials)
+    write_jsonl(args.out_dir / "activation_capture_requests.jsonl", capture_requests)
+    (args.out_dir / "activation_capture_manifest.json").write_text(
+        json.dumps(
+            {
+                "status": "ranked" if ranking_rows else "capture_ready",
+                "generated_at_utc": utc_now(),
+                "run_dir": str(args.out_dir),
+                "contrast_run": str(args.contrast_run),
+                "probe_run": str(args.probe_run),
+                "condition_id": condition_id,
+                **contrast_summary_data,
+                "feature_map_entry_count": len(plan.entries),
+                "activation_capture_request_count": len(capture_requests),
+                "capture_metric": "mean_abs_activation",
+                "claim_boundary": "Activation capture contract only; no runtime edit has been tested.",
+                "outputs": {
+                    "activation_capture_requests": str(args.out_dir / "activation_capture_requests.jsonl"),
+                },
+            },
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
     (args.out_dir / "prompt_packet.txt").write_text(packet, encoding="utf-8")
     (args.out_dir / "activation_feature_map_summary.json").write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return summary

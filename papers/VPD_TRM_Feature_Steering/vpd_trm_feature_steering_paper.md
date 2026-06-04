@@ -1456,6 +1456,7 @@ contrast run: D:\Research_Engine\runs\trm_gain_policy_feature_search_packet_arc_
 probe run: D:\Research_Engine\runs\trm_gain_policy_activation_contrast_arc_20260604
 feature map entries: 8
 edit trial requests: 8
+activation capture requests: 8
 prompt packet estimate: 174 tokens
 ```
 
@@ -1469,6 +1470,8 @@ notes: probe_request=<id>; claim_boundary=probe_only
 ```
 
 The accompanying `activation_edit_trials.jsonl` file gives the next runtime test contract without claiming a runtime gain. That is the right shape for now: one packet defines the contrast, one packet defines the probes, and one packet defines the feature-map/edit-trial handoff. When activation stats arrive, the same bridge can be rerun in ranked mode and the edit trials can be reprioritized by actual contrast instead of probe order.
+
+The bridge now also emits `activation_capture_requests.jsonl` and `activation_capture_manifest.json`, which makes the next runtime step explicit: capture `mean_abs_activation` for the probe modules over the positive and negative sample sets, then feed those stats back into the ranked bridge mode.
 
 ### Edit Showcase and Decision Traces
 
