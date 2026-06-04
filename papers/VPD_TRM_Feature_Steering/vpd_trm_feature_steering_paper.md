@@ -307,6 +307,7 @@ These are working result slots. Values should be updated only from artifact summ
 | ARC Challenge memetic rule search | `trm_choice_memetic_arc_challenge_3seed_20260604` | completed | Four generations over 56 deduped samples selected `top_margin:max_0_25:penalty_0_25`, preserving +0.053571 delta with zero damages and 0.160714 touch rate. |
 | Gain-function policy trainer | `trm_gain_function_memetic_arc_bootstrap_20260604` | completed | Trained `vpd_edit_policy_arc_bootstrap_v1` from ARC route-rule evidence; prefers selective top-margin suppression and downranks broad fixed-label priors. |
 | Gain-function fresh-card validation | `trm_gain_function_memetic_arc_4seed_20260604` | completed | Seed 151 kept the trained tight top-margin policy positive; four-seed aggregate keeps it best with +0.048387 delta, zero damages, and 0.16129 touch rate. |
+| Gain-policy VPD bridge | `trm_gain_policy_vpd_bridge_arc_20260604` | completed | Converts the trained selective top-margin policy into a claimable logit-hook analogue, matched broad-prior controls, and a non-claimable VPD feature-search plan. |
 
 ## Current Thesis
 
@@ -1217,6 +1218,36 @@ downranked family: broad_fixed_label_prior
 ```
 
 This is the first evidence that the gain function itself is beginning to generalize: the seed-local optimum can shift, but the lower-touch trained policy stays positive on a fresh card and remains the best four-seed aggregate choice. That is enough to promote the family to the next stage of search, but not enough to claim a VPD hook result. The next experiment should map `selective_top_margin_suppression` to a concrete VPD/logit-hook candidate and compare it against matched broad-prior and random-feature controls.
+
+That bridge now exists as a claim-safe artifact generator:
+
+```text
+run: D:\Research_Engine\runs\trm_gain_policy_vpd_bridge_arc_20260604
+source policy: D:\Research_Engine\runs\trm_gain_function_memetic_arc_4seed_20260604\vpd_edit_policy_state.json
+policy id: vpd_edit_policy_arc_bootstrap_v1
+logit-hook candidate: logit_hook:top_margin:max_0_25:penalty_0_25
+matched controls: 3
+prompt packet estimate: 196 tokens
+```
+
+The bridge emits three artifact classes:
+
+```text
+logit_hook_candidate.json
+matched_controls.jsonl
+vpd_search_plan.json
+```
+
+The logit-hook candidate is the direct analogue of the trained route rule:
+
+```text
+trigger: candidate_set_required, final_choice_action_scores, top_minus_runner_up_max_margin <= 0.25
+action: penalize current_top_action by 0.25
+expected behavior: suppress only close-call overselected top choices and preserve wider-margin predictions
+claim boundary: logit-level route-rule analogue; not a VPD weight edit
+```
+
+The matched controls are broad fixed-label priors against `B` and `D` with the same penalty, plus a no-edit control. The VPD search plan is deliberately non-claimable. It names the next mechanisms to try, `final_choice_logit_hook`, `decision-token_activation_suppression`, and `adapter_lora_row_vector_edit`, but it requires fresh scoring and feature/module mapping before any VPD edit claim can be made. This is the right next boundary: first prove the logit-hook analogue remains positive against matched controls, then search for the smallest VPD feature or adapter-row edit that reproduces it.
 
 ### Edit Showcase and Decision Traces
 
