@@ -311,6 +311,7 @@ These are working result slots. Values should be updated only from artifact summ
 | Gain-policy hook scoring | `trm_gain_policy_hook_score_arc_4seed_20260604` | completed | Selective hook remains positive on cached four-seed ARC scores, but ties the best broad-prior control; promotion to VPD feature search is blocked until it beats controls. |
 | Rescue-family analysis | `trm_gain_policy_rescue_families_arc_4seed_20260604` | completed | Splits hook rescues into shared versus isolated families; all three hook rescues are shared with controls, producing the next edit contract instead of a premature VPD claim. |
 | Family split scoring | `trm_gain_policy_family_split_score_arc_4seed_20260604` | completed | Scores the hook against controls on family, margin, and held-out score-file splits; finds five lower-touch specificity ties but zero promotion-ready splits. |
+| Conditional policy mining | `trm_gain_policy_condition_miner_arc_4seed_20260604` | completed | Mines stricter cached predicates and finds a higher-scoring `top_D runner_A margin<=1.0` condition with +0.064516 delta, 4/0 rescues/damages, and 0.064516 touch rate. |
 
 ## Current Thesis
 
@@ -1328,6 +1329,35 @@ promotion_ready: false
 ```
 
 This is exactly the kind of intermediate signal the continuous-learning loop needs. The current hook is not better than the broad prior in reward, but it is much more selective on every tied held-out score-file split. That means the controller should not promote the hook as a VPD edit, but it should preserve it as a compression of the broad prior into a lower-touch condition. The next edit search should look for an activation-local predicate that keeps the lower touch rate and breaks the reward tie.
+
+The next controller iteration mined stricter cached predicates:
+
+```text
+run: D:\Research_Engine\runs\trm_gain_policy_condition_miner_arc_4seed_20260604
+samples: 62
+candidates scored: 375
+accepted candidates: 45
+best condition: cond_top_margin:top_D:runner_A:bucket_any:max_1_0:penalty_1_0
+baseline score: 0.709677
+condition score: 0.774194
+delta: +0.064516
+reward: 0.104516
+efficiency reward: 0.09229
+rescues/damages: 4/0
+touch rate: 0.064516
+prompt packet estimate: 156 tokens
+```
+
+This is the first local hill-climb step beyond the initial hook. The original selective hook improved the cached score to 0.758065 with 3 rescues and 0.16129 touch rate. The mined condition improves the cached score to 0.774194 with 4 rescues and 0.064516 touch rate by targeting cases where the current top action is `D`, the runner-up is `A`, the margin is at most 1.0, and the penalty is 1.0. In plain terms, the loop discovered a different failure family: instead of only compressing broad `B` suppression, it found a low-touch `D over A` correction.
+
+The claim boundary still matters. This is a cached controller predicate, not a VPD feature edit. The next experiment should validate this condition on held-out score files or fresh cards, then map the positive set to activation-local candidates:
+
+```text
+positive set: top_action D, runner_up A, margin <= 1.0, baseline miss corrected to A
+negative set: correct D predictions, D-over-A wide-margin cases, and D-over-A misses not corrected by the condition
+feature target: module/component activity that separates wrong D-over-A commitment from valid D answers
+promotion gate: condition reward beats fixed-label controls on held-out split and feature-local edit reproduces the gain
+```
 
 ### Edit Showcase and Decision Traces
 
