@@ -1473,6 +1473,27 @@ The accompanying `activation_edit_trials.jsonl` file gives the next runtime test
 
 The bridge now also emits `activation_capture_requests.jsonl` and `activation_capture_manifest.json`, which makes the next runtime step explicit: capture `mean_abs_activation` for the probe modules over the positive and negative sample sets, then feed those stats back into the ranked bridge mode.
 
+That capture step has now run:
+
+```text
+run: D:\Research_Engine\runs\trm_gain_policy_activation_capture_arc_20260604
+sample_count: 9
+module_count: 8
+activation_row_count: 72
+status: completed
+```
+
+Feeding the resulting `activation_stats.jsonl` back into the bridge produced a ranked map. The strongest contrast was still small, but it was now real captured data rather than probe order:
+
+```text
+base_model.model.model.language_model.layers.23.mlp.down_proj
+positive_mean: 0.393123
+negative_mean: 0.384413
+contrast: +0.00871
+```
+
+The remaining top rows were similarly low-magnitude and the bridge still stops short of a runtime-edit claim. The important change is that the loop now has all three stages wired: contrast packet, activation capture, and ranked feature-map handoff.
+
 ### Edit Showcase and Decision Traces
 
 A dashboard-ready edit showcase now exists:
