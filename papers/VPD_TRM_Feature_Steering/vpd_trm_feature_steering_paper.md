@@ -244,6 +244,7 @@ This phase is the bridge from a promising mechanistic result to a credible learn
 | A zero-accept eval-alignment run is useful evidence. | Clear separation between proxy and eval metrics. | Eval-aligned gate and strict hill climb rejected proxy candidates while preserving traceable rationale. | Supported as methodology / negative result. |
 | Targeted retargeting can rappel up the eval cliff. | Same-gate VPD evidence creates plausible target-cluster probes with provenance and guardrails. | Targeted format-commit run found 36 accepted targeted probes before controls; strict targeted controls collapsed accepted count to 0. | Useful falsification scaffold; not a positive result yet. |
 | Stateful edits bootstrap TRM ability across rounds. | At least two accepted edits, cumulative score gain, zero damage, and each edit beating fixed-label controls. | Cached ARC microcycle accepted one `D over A` edit, then stopped because the residual `B over D` edit lost to a broad fixed-label control. | Not yet supported; first-edit gain plus stacked-bootstrap boundary. |
+| Broad failure-family search improves the feedback signal. | Multi-family sweep that distinguishes first-edit, stacked-edit, and control-blocked regions. | ARC sweep scored 15 families; 3 `D->A` families produced first-edit gains, 0 families produced stacked gains. | Supported as methodology; not yet ability bootstrap. |
 
 ## Method
 
@@ -319,6 +320,7 @@ These are working result slots. Values should be updated only from artifact summ
 | Activation feature-map bridge | `trm_gain_policy_activation_feature_map_arc_20260604` | completed | Joins the contrast packet with the probe-request run and emits a probe-only activation feature map plus eight runtime edit trial requests. |
 | Activation-gated runtime proxy scoring | `trm_gain_policy_runtime_edit_score_arc_20260604` | completed | Scores ranked activation-map trials over the nine captured ARC contrast rows; best trial is positive but loses to fixed `D` suppression and fails the touch-rate promotion gate. |
 | Edit bootstrap microcycle | `trm_edit_bootstrap_microcycle_arc_20260604` | completed boundary | Stateful cached route-rule search accepts one `top_D runner_A margin<=1.0` edit, improving score from 0.709677 to 0.774194, then rejects the second residual edit because fixed `B` control has higher reward. |
+| Multi-family bootstrap sweep | `trm_multi_family_bootstrap_sweep_arc_20260604` | completed boundary | Scores 15 failure families with the microcycle as inner gate; 3 first-edit families, 0 stacked-bootstrap families, best family `D->A:A:medium_1_0` with +0.076923 slice delta. |
 | Paper roundout artifacts | `vpd_trm_paper_roundout_20260604` | completed | Emits the final experiment manifest, compact metric table, and summary SVG for the conservative paper track while preserving activation-local runtime edits as open work. |
 
 ## Current Thesis
@@ -1551,14 +1553,40 @@ control delta/reward: +0.048387 / 0.078387
 
 The second residual condition is positive and low-touch, but it does not beat the broad fixed-label control. The microcycle therefore records a first-edit gain, not an ability-bootstrap win. This is the clearest current answer to the "paydirt" question: the harness can iterate statefully, but the evidence has not yet shown stacked accepted edits under the control gate.
 
+The broader multi-family sweep tests whether that failure is an artifact of zooming too closely into one residual path:
+
+```text
+run: D:\Research_Engine\runs\trm_multi_family_bootstrap_sweep_arc_20260604
+samples: 62
+families scored: 15
+first-edit families: 3
+stacked-bootstrap families: 0
+control-blocked families: 3
+best family: D->A:A:medium_1_0
+best cumulative delta: +0.076923
+prompt packet estimate: 123 tokens
+```
+
+This widened view is useful. It shows the gain region is not arbitrary: the successful first-edit families are all `D->A` with runner-up `A` and close or medium margins. The blocked regions are mostly `B`-top families, where local conditional edits either tie or lose to broad fixed-label controls. The resulting `gain_policy_training_rows.jsonl` file gives the next controller a small supervised/RL-style training table over family features:
+
+```text
+label: first_edit_gain | D->A:A:medium_1_0 | accepted_edit_count 1 | delta +0.076923
+label: first_edit_gain | D->A:A:close_0_25 | accepted_edit_count 1 | delta +0.04
+label: first_edit_gain | D->A:A:close_0_5 | accepted_edit_count 1 | delta +0.04
+label: blocked | B->D:D:close_0_25 | fixed_control_not_beaten
+label: blocked | B->C:C:close_0_25 | fixed_control_not_beaten
+```
+
+This answers the zoom question: the single-family loop was too narrow to learn a general edit policy, but the wider sweep still does not produce stacked ability bootstrap. Its value is that it identifies which family features are worth sending into activation-local VPD mapping and which should be treated as broad-prior artifacts.
+
 The conservative paper track now has deterministic roundout artifacts:
 
 ```text
 run: D:\Research_Engine\runs\vpd_trm_paper_roundout_20260604
-manifest rows: 9
-metric rows: 32
+manifest rows: 10
+metric rows: 37
 policy rows: 5
-claim rows: 5
+claim rows: 6
 included main-claim runs: 3
 excluded runs: 1
 ```

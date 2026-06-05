@@ -33,6 +33,10 @@ def test_roundout_builds_manifest_and_metric_table(tmp_path: Path) -> None:
         root / "trm_edit_bootstrap_microcycle_arc_20260604" / "bootstrap_summary.json",
         {"accepted_edit_count": 1, "baseline_score": 0.7, "final_score": 0.77, "cumulative_delta": 0.07, "stacked_bootstrap_success": False},
     )
+    _write_json(
+        root / "trm_multi_family_bootstrap_sweep_arc_20260604" / "multi_family_bootstrap_summary.json",
+        {"family_count": 3, "first_edit_family_count": 1, "stacked_bootstrap_family_count": 0, "control_blocked_family_count": 2, "best_cumulative_delta": 0.1},
+    )
 
     summary = run_roundout(Namespace(run_root=root, out_dir=tmp_path / "out"))
 
@@ -86,3 +90,18 @@ def test_claim_ledger_marks_bootstrap_boundary(tmp_path: Path) -> None:
     assert "Stateful cached edit search bootstraps ability" in ledger
     assert "not_supported_boundary" in ledger
     assert "fixed_control_not_beaten" in ledger
+
+
+def test_claim_ledger_marks_multi_family_methodology(tmp_path: Path) -> None:
+    root = tmp_path / "runs"
+    _write_json(
+        root / "trm_multi_family_bootstrap_sweep_arc_20260604" / "multi_family_bootstrap_summary.json",
+        {"family_count": 15, "first_edit_family_count": 3, "stacked_bootstrap_family_count": 0, "best_family_key": "D->A:A:medium_1_0"},
+    )
+
+    run_roundout(Namespace(run_root=root, out_dir=tmp_path / "out"))
+    ledger = (tmp_path / "out" / "paper_claim_ledger.csv").read_text(encoding="utf-8")
+
+    assert "Broadening the loop across failure families" in ledger
+    assert "supported_methodology" in ledger
+    assert "D->A:A:medium_1_0" in ledger

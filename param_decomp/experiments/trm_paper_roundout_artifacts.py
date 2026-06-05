@@ -68,6 +68,12 @@ PAPER_RUNS = [
         "role": "stateful cached edit bootstrap microcycle",
     },
     {
+        "run_id": "trm_multi_family_bootstrap_sweep_arc_20260604",
+        "summary": "multi_family_bootstrap_summary.json",
+        "tier": "boundary_result",
+        "role": "multi-family cached edit bootstrap sweep",
+    },
+    {
         "run_id": "trm_feedback_loop_paper_20260601T115019Z",
         "summary": "outer_loop_summary.json",
         "tier": "excluded",
@@ -170,6 +176,11 @@ def metric_rows(run_root: Path) -> list[dict[str, Any]]:
         for metric in ("accepted_edit_count", "baseline_score", "final_score", "cumulative_delta", "stacked_bootstrap_success"):
             rows.append({"result_family": "edit_bootstrap_microcycle", "metric": metric, "value": bootstrap.get(metric), "claim_tier": "boundary_result"})
 
+    multi_family = read_json(run_root / "trm_multi_family_bootstrap_sweep_arc_20260604" / "multi_family_bootstrap_summary.json")
+    if multi_family:
+        for metric in ("family_count", "first_edit_family_count", "stacked_bootstrap_family_count", "control_blocked_family_count", "best_cumulative_delta"):
+            rows.append({"result_family": "multi_family_bootstrap_sweep", "metric": metric, "value": multi_family.get(metric), "claim_tier": "boundary_result"})
+
     return rows
 
 
@@ -202,6 +213,7 @@ def claim_ledger_rows(run_root: Path) -> list[dict[str, Any]]:
     eval_aligned = read_json(run_root / "trm_eval_aligned_edits_intellect3_logic_20260602" / "eval_aligned_summary.json")
     runtime = read_json(run_root / "trm_gain_policy_runtime_edit_score_arc_20260604" / "runtime_edit_summary.json")
     bootstrap = read_json(run_root / "trm_edit_bootstrap_microcycle_arc_20260604" / "bootstrap_summary.json")
+    multi_family = read_json(run_root / "trm_multi_family_bootstrap_sweep_arc_20260604" / "multi_family_bootstrap_summary.json")
     return [
         {
             "claim": "VPD components transfer between related TRM organelles under guardrails.",
@@ -232,6 +244,12 @@ def claim_ledger_rows(run_root: Path) -> list[dict[str, Any]]:
             "status": "supported_boundary" if bootstrap.get("stacked_bootstrap_success") else "not_supported_boundary",
             "primary_artifact": "trm_edit_bootstrap_microcycle_arc_20260604",
             "evidence": f"accepted_edit_count={bootstrap.get('accepted_edit_count')}; cumulative_delta={bootstrap.get('cumulative_delta')}; stop_reason={bootstrap.get('stop_reason')}",
+        },
+        {
+            "claim": "Broadening the loop across failure families reveals a reusable gain region.",
+            "status": "supported_methodology",
+            "primary_artifact": "trm_multi_family_bootstrap_sweep_arc_20260604",
+            "evidence": f"families={multi_family.get('family_count')}; first_edit_families={multi_family.get('first_edit_family_count')}; stacked_families={multi_family.get('stacked_bootstrap_family_count')}; best_family={multi_family.get('best_family_key')}",
         },
     ]
 
