@@ -6,9 +6,9 @@ Working draft, started 2026-06-01.
 
 We study whether Vector/Variational/Virtual Parameter Decomposition (VPD) can expose reusable control features inside small task-recursive models (TRMs). The motivating use case is not broad language-model steering, but local workflow control: routing, verifier-aware repair, context curation, and transfer of compact decision motifs between related micro-models. We treat each TRM as a small organelle: a learned gate with explicit task state, a narrow action vocabulary, and a measurable safety or correctness boundary.
 
-The larger thesis is that TRMs may be powerful when trained well, but isolated TRM training is still ordinary supervised learning. The system becomes reinforcement-like only when TRMs are placed inside a feedback loop: a larger controller, such as an LLM-managed harness, proposes goals, evaluates failures, selects edits or new training slices, and specializes the TRMs toward better downstream behavior. In this view, VPD is the editing and attribution layer that lets the outer architecture turn broad generalization pressure into targeted specialization.
+The larger thesis is that TRMs may be powerful when trained well, but isolated TRM training is still ordinary supervised learning. The system becomes reinforcement-like only when TRMs are placed inside a feedback loop: a larger controller, such as an LLM-managed harness, proposes goals, evaluates failures, selects edits or new training slices, and specializes the TRMs toward better downstream behavior. In this view, VPD is the editing and attribution layer that could let the outer architecture turn broad generalization pressure into targeted specialization.
 
-The current evidence supports a limited claim. VPD can identify a small set of runtime-editable components that behave like portable control motifs across related TRM gates. These components sometimes improve hard-slice behavior while preserving guardrails and outperforming matched random controls. The evidence does not yet show general-purpose feature steering, permanent checkpoint-level skill transfer, or reliable transfer outside the current MeTTa-derived task families.
+The current evidence supports a bounded positive claim. VPD can identify a small set of runtime-editable components that behave like portable control motifs across related TRM gates. These components sometimes improve hard-slice behavior while preserving guardrails and outperforming matched random controls. The feedback-loop experiments also show why strict controls matter: proxy-positive edits, activation-local proxies, and stacked route-rule searches can all fail when compared against broad fixed-label or matched random controls. The evidence does not show broad-based reinforcement learning, permanent checkpoint-level skill transfer, or reliable transfer outside the current MeTTa-derived task families.
 
 ## Central Framing
 
@@ -22,9 +22,9 @@ general controller -> task/goal selection -> TRM execution -> scored outcome
   -> specialized TRM -> new evaluation
 ```
 
-This resembles reinforcement learning at the system level because behavior is improved through feedback over outcomes. The current implementation is not yet a full RL algorithm: there is no learned policy over edits and no long-horizon reward optimizer. The paper should therefore describe it as a reinforcement-style or goal-directed specialization loop, with VPD providing the mechanism for interpretable intervention.
+This resembles reinforcement learning at the system level because behavior is improved through feedback over outcomes. The current implementation is not a full RL algorithm: there is no learned policy over edits and no long-horizon reward optimizer. The paper therefore describes it as a reinforcement-style or goal-directed specialization loop, with VPD providing the mechanism for interpretable intervention.
 
-The key claim is not that a tiny TRM magically generalizes. The key claim is that a larger architecture can manage a population of tiny TRMs, use explicit feedback to discover where each one should specialize, and use VPD to make that specialization less blind than ordinary retraining.
+The key claim is not that a tiny TRM magically generalizes. The key claim is that a larger architecture can manage a population of tiny TRMs, use explicit feedback to discover where each one should specialize, and use VPD to make that specialization less blind than ordinary retraining. This paper closes the present phase at that bounded claim: the broader generalized editing methodology remains a research direction rather than a demonstrated result.
 
 ### Nomenclature
 
@@ -32,7 +32,7 @@ This draft uses **Tesseract** as the name of our local training and benchmarking
 
 ## Development Phases
 
-The project has three separable phases. The paper should preserve that order because each phase tightened the experimental claim.
+The project has three separable phases. The paper preserves that order because each phase tightened the experimental claim.
 
 | Phase | System | Main question | Primary metric | Current status |
 | --- | --- | --- | --- | --- |
@@ -316,7 +316,7 @@ These are working result slots. Values should be updated only from artifact summ
 | Conditional policy mining | `trm_gain_policy_condition_miner_arc_4seed_20260604` | completed | Mines stricter cached predicates and finds a higher-scoring `top_D runner_A margin<=1.0` condition with +0.064516 delta, 4/0 rescues/damages, and 0.064516 touch rate. |
 | Conditional policy cross-validation | `trm_gain_policy_condition_cv_arc_4seed_20260604` | completed | Leave-one-score-file-out validation rediscovers the same `top_D runner_A margin<=1.0` condition in every fold; all held-out folds accept, one beats fixed controls, and two tie controls with lower touch. |
 | Feature-search packet | `trm_gain_policy_feature_search_packet_arc_20260604` | completed | Converts the validated `D over A` controller predicate into positive/negative contrast sets and an activation-local VPD feature-search contract. |
-| Activation contrast probe requests | `trm_gain_policy_activation_contrast_arc_20260604` | completed | Emits eight module activation probe requests for the `D over A` contrast packet; ranking remains pending until real activation stats are captured. |
+| Activation contrast probe requests | `trm_gain_policy_activation_contrast_arc_20260604` | completed | Emits eight module activation probe requests for the `D over A` contrast packet; later activation capture and feature-map bridge consume this handoff. |
 | Activation feature-map bridge | `trm_gain_policy_activation_feature_map_arc_20260604` | completed | Joins the contrast packet with the probe-request run and emits a probe-only activation feature map plus eight runtime edit trial requests. |
 | Activation-gated runtime proxy scoring | `trm_gain_policy_runtime_edit_score_arc_20260604` | completed | Scores ranked activation-map trials over the nine captured ARC contrast rows; best trial is positive but loses to fixed `D` suppression and fails the touch-rate promotion gate. |
 | Edit bootstrap microcycle | `trm_edit_bootstrap_microcycle_arc_20260604` | completed boundary | Stateful cached route-rule search accepts one `top_D runner_A margin<=1.0` edit, improving score from 0.709677 to 0.774194, then rejects the second residual edit because fixed `B` control has higher reward. |
@@ -329,7 +329,7 @@ VDP is useful for TRM feature steering when the model family is small, the actio
 
 The broader architecture is a generalization-to-specialization loop. The larger controller supplies general goals and evaluation pressure; the TRMs supply cheap, auditable specialized decisions; VPD supplies a way to inspect and edit the specialization boundary.
 
-The strongest paper claim should remain:
+The strongest paper claim:
 
 ```text
 VPD identifies a small set of portable TRM control motifs that improve hard-slice behavior under guardrails and outperform matched random controls.
@@ -344,7 +344,45 @@ Claims to avoid for now:
 - The present harness is already full reinforcement learning.
 - Supervised TRMs alone solve goal-directed adaptation without an outer feedback loop.
 
-## Experiments Needed For Paper
+## Frozen Evidence Set
+
+The paper phase treats the following artifacts as the evidence freeze rather than as a staging area for more open-ended searches:
+
+```text
+D:\Research_Engine\runs\vpd_trm_paper_roundout_20260604
+```
+
+Roundout contents:
+
+```text
+paper_claim_ledger.csv
+paper_experiment_manifest.csv
+paper_metric_table.csv
+paper_policy_comparison.csv
+figures/roundout_summary.svg
+figures/filtered_feedback_policy_gain.svg
+figures/eval_alignment_collapse.svg
+```
+
+Current roundout summary:
+
+```text
+manifest rows: 10
+metric rows: 37
+policy rows: 5
+claim rows: 6
+included main-claim runs: 3
+excluded runs: 1
+```
+
+Paper posture:
+
+- Use the organelle transfer, filtered feedback-loop, and ARC condition-validation rows as the positive empirical backbone.
+- Use Intellect-3 eval alignment, activation-local runtime scoring, and stacked bootstrap searches as boundary evidence.
+- Do not add new exploratory runs unless a reproducibility hole is discovered.
+- Treat broad RL-style TRM editing as future work motivated by these results, not as the paper's demonstrated contribution.
+
+## Completed Experiment Evidence
 
 ### Replication
 
@@ -382,13 +420,13 @@ Interpretation:
 
 The stricter replication preserved a nonzero accepted-graft signal under more random-control pressure, but the accepted grafts were not evenly distributed across all six seeds. The result strengthens the narrow portability claim while keeping recurrence as an open robustness issue.
 
-Success criteria status:
+Acceptance status:
 
 - stderr empty: met
 - accepted VPD grafts remain nonzero: met
 - accepted grafts recur across seeds or gate families: partially met
 - stable grafts remain separated from accepted grafts: met
-- random-control positives are reported, not hidden: pending histogram/table extraction
+- random-control positives are reported, not hidden: met by roundout claim ledger and control figures
 
 ### Feedback-Loop Specialization
 
@@ -629,7 +667,7 @@ This sharpens the boundary claim. Current VPD evidence can find reusable gate mo
 
 ### Feature-Map Status
 
-The current project has two different kinds of feature maps, and the paper should not conflate them.
+The current project has two different kinds of feature maps, and the paper does not conflate them.
 
 The HRM-text feature-map path is mechanically real. It produced chunked low-rank SVD refinements over 16 HRM-text chunks and writes coarse/refined feature-map JSON artifacts. Those maps show that the VPD editing stack can rank salient modules, split them into lower-rank slices, and produce measurable logit deltas. They are not, however, organelle TRM maps and they are not grounded in Intellect-3-Logic eval improvement.
 
@@ -873,7 +911,7 @@ accepted_live_edit_count: 0
 predictions: [house], [crane] unchanged across tested scales
 ```
 
-This result suggests that simply scaling the adapter output branch at this MLP gate is not enough to move the decision on the failing masked Wordle sample. It also explains why broad LoRA sweeps are not currently efficient on CPU: each candidate still requires autoregressive generation, and small branch-level edits may be inert unless selected at the correct token position or applied as a weight-space row/vector edit. The next experiment should therefore avoid more blind LoRA scale sweeps and instead instrument the final answer-token position, then test either logit-level constrained steering over legal Wordle guesses or persistent edits to the LoRA rows most associated with the target guess.
+This result suggests that simply scaling the adapter output branch at this MLP gate is not enough to move the decision on the failing masked Wordle sample. It also explains why broad LoRA sweeps are not currently efficient on CPU: each candidate still requires autoregressive generation, and small branch-level edits may be inert unless selected at the correct token position or applied as a weight-space row/vector edit. The follow-up therefore avoided more blind LoRA scale sweeps and instrumented token-level constrained steering over legal Wordle guesses.
 
 The first constrained token-level probe produced a small positive diagnostic. Instead of free-form generation, the scorer evaluated a compact candidate action set and applied a generic penalty to the overused default action `[crane]`:
 
@@ -1231,7 +1269,7 @@ preferred family: selective_top_margin_suppression
 downranked family: broad_fixed_label_prior
 ```
 
-This is the first evidence that the gain function itself is beginning to generalize: the seed-local optimum can shift, but the lower-touch trained policy stays positive on a fresh card and remains the best four-seed aggregate choice. That is enough to promote the family to the next stage of search, but not enough to claim a VPD hook result. The next experiment should map `selective_top_margin_suppression` to a concrete VPD/logit-hook candidate and compare it against matched broad-prior and random-feature controls.
+This is the first evidence that the gain function itself is beginning to generalize: the seed-local optimum can shift, but the lower-touch trained policy stays positive on a fresh card and remains the best four-seed aggregate choice. That was enough to promote the family to the bridge stage, but not enough to claim a VPD hook result. The bridge maps `selective_top_margin_suppression` to a concrete VPD/logit-hook candidate and compares it against matched broad-prior and random-feature controls.
 
 That bridge now exists as a claim-safe artifact generator:
 
@@ -1280,7 +1318,7 @@ promotion_ready: false
 prompt packet estimate: 182 tokens
 ```
 
-This result sharpens the claim boundary. The selective top-margin hook is accepted as a route-rule/logit-hook analogue because it improves the cached score with zero damage and low touch rate. It is not yet isolated as a VPD-search promotion because a broad `B` prior ties its delta, even though that broad control is less specific. The next experiment should split the four-seed cache into rescue families and ask whether the selective hook beats broad priors on close-margin subsets, held-out seeds, or activation-local feature candidates. If it only ties broad priors, the paper should treat it as a useful controller prior, not as a feature-local causal edit.
+This result sharpens the claim boundary. The selective top-margin hook is accepted as a route-rule/logit-hook analogue because it improves the cached score with zero damage and low touch rate. It is not isolated as a VPD-search promotion because a broad `B` prior ties its delta, even though that broad control is less specific. The follow-up family split therefore treats it as a useful controller prior, not as a feature-local causal edit.
 
 That split now exists:
 
@@ -1360,7 +1398,7 @@ prompt packet estimate: 156 tokens
 
 This is the first local hill-climb step beyond the initial hook. The original selective hook improved the cached score to 0.758065 with 3 rescues and 0.16129 touch rate. The mined condition improves the cached score to 0.774194 with 4 rescues and 0.064516 touch rate by targeting cases where the current top action is `D`, the runner-up is `A`, the margin is at most 1.0, and the penalty is 1.0. In plain terms, the loop discovered a different failure family: instead of only compressing broad `B` suppression, it found a low-touch `D over A` correction.
 
-The claim boundary still matters. This is a cached controller predicate, not a VPD feature edit. The next experiment should validate this condition on held-out score files or fresh cards, then map the positive set to activation-local candidates:
+The claim boundary still matters. This is a cached controller predicate, not a VPD feature edit. The completed follow-up validates this condition on held-out score files and maps the positive set to activation-local candidates:
 
 ```text
 positive set: top_action D, runner_up A, margin <= 1.0, baseline miss corrected to A
@@ -1674,11 +1712,11 @@ Figure checklist:
 
 | Figure | Source artifact | Purpose | Status |
 | --- | --- | --- | --- |
-| Router component ablation bars | keygate scores | Show first causal component test. | pending extraction |
-| Repair-preservation tradeoff | Amalgam scores | Show why accuracy is insufficient. | pending extraction |
-| Accepted VPD vs random deltas | arena `graft_sweeps.jsonl` | Main control comparison. | pending six-seed run |
-| Transfer heatmap | arena `transfer_matrix.csv` / SVG | Show source-target structure. | available for strict full run |
-| Accepted recurrence by seed | arena summary + sweeps | Show robustness. | pending six-seed run |
+| Router component ablation bars | keygate scores | Show first causal component test. | supplemental, not in frozen roundout |
+| Repair-preservation tradeoff | Amalgam scores | Show why accuracy is insufficient. | supplemental, not in frozen roundout |
+| Accepted VPD vs random deltas | arena `graft_sweeps.jsonl` | Main control comparison. | covered by six-seed control histogram |
+| Transfer heatmap | arena `transfer_matrix.csv` / SVG | Show source-target structure. | available in six-seed figures |
+| Accepted recurrence by seed | arena summary + sweeps | Show robustness. | summarized by six-seed arena artifact |
 
 Six-seed run figures now available:
 
@@ -1690,7 +1728,7 @@ D:\Research_Engine\runs\metta_organelle_arena_paper_20260601T024147Z\figures\tra
 
 ### Negative Results
 
-The paper should explicitly include:
+The paper explicitly includes:
 
 - Loose early acceptance over-counted neutral grafts.
 - Random controls can produce positive movement on some hard slices.
@@ -1705,10 +1743,13 @@ The paper should explicitly include:
 - The strict six-round eval hill climb found 24 near misses and zero non-targeted accepted eval edits.
 - Targeted format-commit retargeting produced 36 accepted probes, but all were targeted lineage and none had matched random controls.
 - After adding 976 targeted random controls, the targeted format-commit accepts collapsed from 36 to 0 under the strict matched-random gate.
+- Activation-gated runtime proxy scoring produced a positive trial delta, but it lost to broad fixed-label control and failed promotion.
+- The stateful edit-bootstrap microcycle accepted one cached route-rule edit, then stopped when the second residual edit lost to fixed-label control.
+- The multi-family sweep found three first-edit `D->A` gain families, but zero stacked-bootstrap families.
 
 Negative-result handling:
 
-Do not bury these as caveats. They are part of the methodological contribution: the harness became useful only after neutral stable grafts, random-derived candidates, and loose acceptance were separated from true accepted VPD grafts.
+Do not bury these as caveats. They are part of the methodological contribution: the harness became useful only after neutral stable grafts, random-derived candidates, broad-prior artifacts, and loose acceptance were separated from true accepted VPD grafts.
 
 ## Paper Structure
 
@@ -1719,14 +1760,14 @@ Do not bury these as caveats. They are part of the methodological contribution: 
 5. Phase 2 Repair Optimization: task graph organelles and repair preservation.
 6. Phase 3 Organelle Transfer: runtime grafts and portability tests.
 7. Phase 4 Eval Alignment: downstream Intellect-3 gate, strict cliff result, and targeted rappel.
-8. Results: accepted grafts, controls, hard-slice behavior, recurrence, eval-aligned rejection, targeted-probe acceptance.
-9. Limitations: runtime-only, small models, deterministic eval estimates, synthetic/typed workflow rows, not full RL yet.
-10. Discussion: MCP/TRM context curation and future checkpoint-level steering.
+8. Results: accepted grafts, controls, hard-slice behavior, filtered feedback, ARC gain-region mapping, and eval-aligned rejection.
+9. Limitations: runtime-only, small models, deterministic eval estimates, synthetic/typed workflow rows, no broad RL/editing breakthrough.
+10. Discussion: why VPD/TRM feedback loops are a promising research field despite the failed stacked-bootstrap and eval-transfer gates.
 
 ## Open Questions
 
-- Do accepted grafts recur under the expanded six-seed run?
-- Are repair-step gains a real transferable motif or a consequence of the hard-slice construction?
+- How much recurrence should be required beyond the current six-seed accepted-graft signal?
+- Are repair-step gains a real transferable motif or partly a consequence of the hard-slice construction?
 - Can a graft selected in the arena improve a downstream MCP retrieval or context-curation harness?
 - Can the same component family be promoted from runtime graft to checkpoint edit without losing guardrails?
 - Can targeted format-commit and candidate-verify probes beat matched random controls under a live scorer or richer candidate generator?
@@ -1735,6 +1776,7 @@ Do not bury these as caveats. They are part of the methodological contribution: 
 - What minimum task diversity is needed before the result stops being an artifact of shared labels?
 - What is the right outer-loop policy for choosing between runtime grafting, checkpoint editing, and supervised retraining?
 - Can an LLM-managed controller reliably turn repeated failures into better TRM training slices without drifting away from guardrails?
+- Can the `D->A` ARC gain region be promoted from cached route rule to activation-local VPD edit without losing to broad fixed-label controls?
 
 ## Live Artifact Index
 
