@@ -247,8 +247,26 @@ wrapper cap: 2048 MB
 block: blocked_model_size_exceeds_safe_cap
 ```
 
-This records the first non-placeholder attempt. It did not load model weights;
-the size guard prevented an unsafe run under the current cap.
+This records the first non-placeholder local systems attempt. It did not load
+model weights, and it is not a scientific negative result; the size guard only
+showed that the original 2048 MB local wrapper cap was too low for the selected
+model path.
+
+Raised-cap preflight:
+
+```text
+run: D:\Research_Engine\runs\trm_tinylora_peft_4gb_probe_20260606
+model: D:\Research_Engine\models\HRM-Text-1B
+backend: peft_train_one
+candidate: tiny_lora:g1:0001
+model size estimate: 2261 MB
+wrapper cap: 4096 MB
+safe model threshold: 3072 MB
+block: blocked_peft_training_body_not_enabled_after_preflight
+```
+
+The 4096 MB cap clears the local size gate. The remaining block is the missing
+PEFT training body, not a model-capacity result.
 
 Top proxy organism:
 

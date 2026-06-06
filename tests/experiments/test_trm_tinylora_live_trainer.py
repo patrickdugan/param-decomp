@@ -153,6 +153,7 @@ def test_live_trainer_peft_preflight_records_fully_specified_backend_gap(tmp_pat
     assert request["model_path"] == str(model_path)
     assert request["eval_spec"] == str(eval_spec)
     assert summary["backend_probe"]["model_size_mb"] >= 1
+    assert summary["backend_probe"]["safe_model_mb"] == 768
 
 
 def test_live_trainer_peft_preflight_blocks_missing_model_path(tmp_path: Path, monkeypatch: object) -> None:
@@ -168,3 +169,23 @@ def test_live_trainer_peft_preflight_blocks_missing_model_path(tmp_path: Path, m
 
     assert summary["status"] == "blocked"
     assert summary["block_reason"] == "blocked_model_path_not_found"
+
+
+def test_live_trainer_peft_preflight_blocks_when_model_exceeds_fractional_cap(tmp_path: Path, monkeypatch: object) -> None:
+    manifest_path = _write_manifest(tmp_path)
+    model_path = tmp_path / "model"
+    eval_spec = tmp_path / "eval.json"
+    model_path.mkdir()
+    (model_path / "weights.bin").write_bytes(b"0" * 2 * 1024 * 1024)
+    eval_spec.write_text("{}", encoding="utf-8")
+    monkeypatch.setenv("TINYLORA_JOB_OBJECT", "1")
+    monkeypatch.setenv("TINYLORA_ENABLE_MODEL_LOAD", "1")
+    monkeypatch.setenv("TINYLORA_MODEL_PATH", str(model_path))
+    monkeypatch.setenv("TINYLORA_EVAL_SPEC", str(eval_spec))
+    monkeypatch.setenv("TINYLORA_MODEL_SIZE_SAFETY_FRACTION", "0.0001")
+
+    summary = run_trainer(type("Args", (), {"manifest": manifest_path, "out_dir": None, "mode": "train_one", "backend": "peft_train_one", "max_candidates": 0, "candidate_id": None})())
+
+    assert summary["status"] == "blocked"
+    assert summary["block_reason"] == "blocked_model_size_exceeds_safe_cap"
+    assert summary["backend_probe"]["safe_model_mb"] == 1

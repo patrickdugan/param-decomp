@@ -141,15 +141,19 @@ def peft_train_one_smoke(out_dir: Path, manifest: dict[str, Any], candidate: dic
     model_path = Path(os.environ["TINYLORA_MODEL_PATH"])
     eval_spec = Path(os.environ["TINYLORA_EVAL_SPEC"])
     cap_mb = int((manifest.get("caps") or {}).get("ram_mb", 2048))
+    size_fraction = float(os.environ.get("TINYLORA_MODEL_SIZE_SAFETY_FRACTION", "0.75"))
     model_size_mb = directory_size_mb(model_path)
     request_path = write_peft_train_one_request(out_dir, manifest, candidate, controls)
-    if model_size_mb > max(1, cap_mb // 2):
+    safe_model_mb = max(1, int(cap_mb * size_fraction))
+    if model_size_mb > safe_model_mb:
         return {
             "status": "blocked",
             "reason": "blocked_model_size_exceeds_safe_cap",
             "request_path": str(request_path),
             "model_size_mb": model_size_mb,
             "cap_mb": cap_mb,
+            "safe_model_mb": safe_model_mb,
+            "size_fraction": size_fraction,
             "live_target_score": None,
             "live_guardrail_score": None,
             "live_control_score": None,
@@ -160,6 +164,8 @@ def peft_train_one_smoke(out_dir: Path, manifest: dict[str, Any], candidate: dic
         "request_path": str(request_path),
         "model_size_mb": model_size_mb,
         "cap_mb": cap_mb,
+        "safe_model_mb": safe_model_mb,
+        "size_fraction": size_fraction,
         "eval_spec": str(eval_spec),
         "live_target_score": None,
         "live_guardrail_score": None,

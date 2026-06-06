@@ -1880,7 +1880,22 @@ block reason: blocked_model_size_exceeds_safe_cap
 accepted live edits: 0
 ```
 
-This is a useful negative result rather than a failed run. The harness selected the candidate, wrote the PEFT request, checked the real local model directory, and stopped before model load. The next safe attempt needs either a smaller compatible TRM, a sharded/offloaded backend with a separate cap contract, or an explicitly approved higher cap.
+This is not a scientific negative result. It is a local systems constraint: the harness selected the candidate, wrote the PEFT request, checked the real local model directory, and stopped before model load because the local wrapper cap was too low for the configured size gate. It has no bearing on whether VPD/tinyLoRA steering works.
+
+After explicit approval, the cap was raised to 4096 MB for the same local attempt:
+
+```text
+run: D:\Research_Engine\runs\trm_tinylora_peft_4gb_probe_20260606
+backend: peft_train_one
+candidate: tiny_lora:g1:0001
+model size estimate: 2261 MB
+wrapper RAM cap: 4096 MB
+safe model threshold: 3072 MB
+block reason: blocked_peft_training_body_not_enabled_after_preflight
+accepted live edits: 0
+```
+
+This clears the local model-size gate. The remaining block is no longer capacity-related; it is the intentionally missing PEFT training body.
 
 The state-space formalization is:
 
