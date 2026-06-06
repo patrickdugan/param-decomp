@@ -115,3 +115,35 @@ def test_live_trainer_scorecard_rehearsal_accepts_inside_wrapper(tmp_path: Path,
     assert results[0]["accepted"] is True
     assert results[0]["decision_reason"] == "scorecard_rehearsal_accept"
     assert results[0]["live_target_score"] == 0.2
+
+
+def test_live_trainer_peft_preflight_blocks_without_model_load_opt_in(tmp_path: Path, monkeypatch: object) -> None:
+    manifest_path = _write_manifest(tmp_path)
+    monkeypatch.setenv("TINYLORA_JOB_OBJECT", "1")
+
+    summary = run_trainer(type("Args", (), {"manifest": manifest_path, "out_dir": None, "mode": "train_one", "backend": "peft_train_one", "max_candidates": 0, "candidate_id": None})())
+
+    assert summary["status"] == "blocked"
+    assert summary["backend"] == "peft_train_one"
+    assert summary["block_reason"] == "blocked_model_load_not_enabled"
+    request_path = Path(summary["outputs"]["backend_request"])
+    assert request_path.exists()
+    request = json.loads(request_path.read_text(encoding="utf-8"))
+    assert request["candidate_id"] == "task:candidate:001"
+    assert request["required_runtime"]["model_load_marker"] == "TINYLORA_ENABLE_MODEL_LOAD=1"
+
+
+def test_live_trainer_peft_preflight_records_fully_specified_backend_gap(tmp_path: Path, monkeypatch: object) -> None:
+    manifest_path = _write_manifest(tmp_path)
+    monkeypatch.setenv("TINYLORA_JOB_OBJECT", "1")
+    monkeypatch.setenv("TINYLORA_ENABLE_MODEL_LOAD", "1")
+    monkeypatch.setenv("TINYLORA_MODEL_PATH", "D:/models/trm")
+    monkeypatch.setenv("TINYLORA_EVAL_SPEC", "D:/evals/arc.json")
+
+    summary = run_trainer(type("Args", (), {"manifest": manifest_path, "out_dir": None, "mode": "train_one", "backend": "peft_train_one", "max_candidates": 0, "candidate_id": None})())
+
+    assert summary["status"] == "blocked"
+    assert summary["block_reason"] == "blocked_peft_backend_not_implemented"
+    request = json.loads(Path(summary["outputs"]["backend_request"]).read_text(encoding="utf-8"))
+    assert request["model_path"] == "D:/models/trm"
+    assert request["eval_spec"] == "D:/evals/arc.json"

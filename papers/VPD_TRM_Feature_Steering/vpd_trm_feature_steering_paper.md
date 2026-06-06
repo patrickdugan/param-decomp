@@ -1854,6 +1854,21 @@ rehearsal target/control/guardrail: 0.132614 / 0.0 / 0.935484
 
 This closes the orchestration loop without overclaiming. The agent can now execute the full candidate-selection, control-comparison, accept/reject, state-update, and next-packet flow. However, the acceptance is explicitly a score-card rehearsal acceptance, not evidence that a trained adapter changed benchmark behavior. The next paper-valid milestone remains a real single-candidate adapter backend under the same wrapper.
 
+The `peft_train_one` backend contract is now scaffolded:
+
+```text
+wrapper preflight request: D:\Research_Engine\runs\trm_tinylora_scorecard_rehearsal_probe_20260606\cycle_001\handoff\dry_run_execution\peft_train_one_request.json
+auto-loop preflight: D:\Research_Engine\runs\trm_tinylora_auto_research_peft_preflight_loop_20260606
+backend: peft_train_one
+block reason: blocked_peft_backend_not_implemented
+candidate: tiny_lora:g1:0001
+model path env: TINYLORA_MODEL_PATH
+eval spec env: TINYLORA_EVAL_SPEC
+model-load opt-in: TINYLORA_ENABLE_MODEL_LOAD=1
+```
+
+This turns the next implementation from an open-ended training task into a single-candidate PEFT body: load the declared model and eval spec only inside the generated wrapper, attach the declared rank-1 adapter to the declared module, checkpoint, score against random controls, release model state, and accept only if the live benchmark gate passes.
+
 The state-space formalization is:
 
 ```text

@@ -48,7 +48,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--top-n", type=int, default=8)
     parser.add_argument("--random-control-count", type=int, default=8)
     parser.add_argument("--trainer-mode", choices=["dry_run", "train_one"], default="dry_run")
-    parser.add_argument("--trainer-backend", choices=["none", "scorecard_rehearsal"], default="none")
+    parser.add_argument("--trainer-backend", choices=["none", "scorecard_rehearsal", "peft_train_one"], default="none")
     parser.add_argument("--ram-mb", type=int, default=2048)
     parser.add_argument("--cpu-pct", type=int, default=50)
     parser.add_argument("--io-mb-s", type=int, default=50)

@@ -215,6 +215,27 @@ This is useful as a harness milestone because the full agent-managed
 accept/reject loop is now operational. It is not yet evidence of a model-weight
 gain.
 
+PEFT backend preflight:
+
+```text
+request artifact: D:\Research_Engine\runs\trm_tinylora_scorecard_rehearsal_probe_20260606\cycle_001\handoff\dry_run_execution\peft_train_one_request.json
+auto-loop preflight: D:\Research_Engine\runs\trm_tinylora_auto_research_peft_preflight_loop_20260606
+backend: peft_train_one
+block: blocked_peft_backend_not_implemented
+```
+
+The request artifact fixes the real backend contract:
+
+```text
+load model from TINYLORA_MODEL_PATH only when TINYLORA_ENABLE_MODEL_LOAD=1
+load eval spec from TINYLORA_EVAL_SPEC
+attach the candidate adapter config to the declared target module
+checkpoint under the wrapper caps
+score candidate and random controls
+release model state and CUDA state
+accept only on live target/control/guardrail pass
+```
+
 Top proxy organism:
 
 ```text

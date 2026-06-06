@@ -31,7 +31,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--manifest", type=Path, required=True)
     parser.add_argument("--out-dir", type=Path, default=None)
     parser.add_argument("--mode", choices=["dry_run", "train_one"], default="dry_run")
-    parser.add_argument("--backend", choices=["none", "scorecard_rehearsal"], default="none")
+    parser.add_argument("--backend", choices=["none", "scorecard_rehearsal", "peft_train_one"], default="none")
     parser.add_argument("--max-candidates", type=int, default=0, help="0 means all candidates.")
     parser.add_argument("--candidate-id", default=None, help="Optional candidate id for train_one mode.")
     return parser.parse_args()
@@ -102,6 +102,45 @@ def train_one_block_reason() -> str | None:
     return "blocked_missing_adapter_training_backend"
 
 
+def peft_train_one_block_reason() -> str | None:
+    if os.environ.get("TINYLORA_JOB_OBJECT") != "1":
+        return "blocked_not_inside_generated_jobobject_wrapper"
+    if os.environ.get("TINYLORA_ENABLE_MODEL_LOAD") != "1":
+        return "blocked_model_load_not_enabled"
+    if not os.environ.get("TINYLORA_MODEL_PATH"):
+        return "blocked_missing_model_path"
+    if not os.environ.get("TINYLORA_EVAL_SPEC"):
+        return "blocked_missing_eval_spec"
+    return "blocked_peft_backend_not_implemented"
+
+
+def write_peft_train_one_request(out_dir: Path, manifest: dict[str, Any], candidate: dict[str, Any], controls: list[dict[str, Any]]) -> Path:
+    request = {
+        "training_task_id": manifest["training_task_id"],
+        "candidate_id": candidate["candidate_id"],
+        "organism_id": candidate["organism_id"],
+        "model_path": os.environ.get("TINYLORA_MODEL_PATH"),
+        "eval_spec": os.environ.get("TINYLORA_EVAL_SPEC"),
+        "caps": manifest["caps"],
+        "checkpoint_interval": manifest.get("checkpoint_interval"),
+        "adapter_config": candidate["adapter_config"],
+        "target_module": candidate["target_module"],
+        "trigger": candidate.get("trigger"),
+        "acceptance_gate": candidate.get("acceptance_gate"),
+        "random_control_ids": [control["candidate_id"] for control in controls],
+        "required_runtime": {
+            "wrapper_marker": "TINYLORA_JOB_OBJECT=1",
+            "model_load_marker": "TINYLORA_ENABLE_MODEL_LOAD=1",
+            "model_path_env": "TINYLORA_MODEL_PATH",
+            "eval_spec_env": "TINYLORA_EVAL_SPEC",
+        },
+        "claim_boundary": "PEFT train-one request artifact only; this run did not load model weights.",
+    }
+    path = out_dir / "peft_train_one_request.json"
+    path.write_text(json.dumps(request, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return path
+
+
 def scorecard_rehearsal(candidate: dict[str, Any], controls: list[dict[str, Any]]) -> dict[str, Any]:
     proxy = candidate.get("proxy_score") or {}
     best_control = max((float((control.get("proxy_score") or {}).get("fitness", 0.0)) for control in controls), default=0.0)
@@ -133,6 +172,8 @@ def run_trainer(args: argparse.Namespace) -> dict[str, Any]:
     backend = getattr(args, "backend", "none")
     if args.mode == "train_one" and backend == "scorecard_rehearsal" and os.environ.get("TINYLORA_JOB_OBJECT") == "1":
         train_one_reason = None
+    if args.mode == "train_one" and backend == "peft_train_one":
+        train_one_reason = peft_train_one_block_reason()
     if args.mode == "train_one" and not candidates:
         train_one_reason = "blocked_candidate_not_found"
     events: list[dict[str, Any]] = [
@@ -149,6 +190,7 @@ def run_trainer(args: argparse.Namespace) -> dict[str, Any]:
     results: list[dict[str, Any]] = []
     if train_one_reason:
         events.append(event("train_one_blocked", reason=train_one_reason, inside_jobobject=os.environ.get("TINYLORA_JOB_OBJECT") == "1"))
+    backend_request_path: Path | None = None
     for index, candidate in enumerate(candidates, start=1):
         events.append(event("candidate_start", candidate_id=candidate["candidate_id"], index=index, kind="vpd_seeded"))
         events.append(event("checkpoint", candidate_id=candidate["candidate_id"], step=0, path=str(out_dir / "checkpoints" / candidate["candidate_id"].replace(":", "_")), ram_mb=0, cpu_pct=0))
@@ -157,13 +199,20 @@ def run_trainer(args: argparse.Namespace) -> dict[str, Any]:
         if args.mode == "train_one" and backend == "scorecard_rehearsal" and not train_one_reason:
             rehearsal = scorecard_rehearsal(candidate, controls)
             reason = rehearsal["reason"]
+        if args.mode == "train_one" and backend == "peft_train_one":
+            backend_request_path = write_peft_train_one_request(out_dir, manifest, candidate, controls)
+            events.append(event("backend_preflight", backend=backend, candidate_id=candidate["candidate_id"], request_path=str(backend_request_path), block_reason=train_one_reason))
         claim = (
             "Train-one request blocked before model load; no adapter weights were trained, merged, or scored."
             if train_one_reason
             else (
                 "Scorecard rehearsal only; no adapter weights were loaded, trained, merged, or live-scored."
                 if rehearsal
-                else "Dry-run validation only; no model weights were loaded, trained, or merged."
+                else (
+                    "PEFT train-one preflight only; no model weights were loaded, trained, merged, or scored."
+                    if backend == "peft_train_one"
+                    else "Dry-run validation only; no model weights were loaded, trained, or merged."
+                )
             )
         )
         result = candidate_result(
@@ -220,6 +269,7 @@ def run_trainer(args: argparse.Namespace) -> dict[str, Any]:
             "summary": str(out_dir / summary_name),
             "events": str(out_dir / "tinylora_training_events.jsonl"),
             "candidate_results": str(out_dir / "tinylora_training_candidate_results.jsonl"),
+            "backend_request": str(backend_request_path) if backend_request_path else None,
         },
     }
     events.append(event("summary", status=summary["status"], accepted_count=accepted_count, candidate_count=len(candidates), block_reason=train_one_reason, backend=backend))
