@@ -48,6 +48,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--top-n", type=int, default=8)
     parser.add_argument("--random-control-count", type=int, default=8)
     parser.add_argument("--trainer-mode", choices=["dry_run", "train_one"], default="dry_run")
+    parser.add_argument("--trainer-backend", choices=["none", "scorecard_rehearsal"], default="none")
     parser.add_argument("--ram-mb", type=int, default=2048)
     parser.add_argument("--cpu-pct", type=int, default=50)
     parser.add_argument("--io-mb-s", type=int, default=50)
@@ -78,6 +79,7 @@ def compact_packet(summary: dict[str, Any], cycles: list[dict[str, Any]]) -> str
         f"- cycles_completed: {summary['cycle_count']}",
         f"- best_proxy_fitness: {summary.get('best_proxy_fitness', 0.0)}",
         f"- accepted_live_edits: {summary.get('accepted_live_edit_count', 0)}",
+        f"- accepted_rehearsal_edits: {summary.get('accepted_rehearsal_edit_count', 0)}",
         f"- status: {status}",
         f"- block_reason: {last.get('trainer_block_reason')}",
         "BEST CYCLE:",
@@ -109,8 +111,10 @@ def cycle_record(cycle_id: str, swarm_summary: dict[str, Any], handoff_summary: 
         "accepted_proxy_organisms": swarm_summary.get("accepted_organism_count", 0),
         "candidate_count": handoff_summary.get("candidate_count", 0),
         "random_control_count": trainer_summary.get("random_control_count", 0),
-        "accepted_live_edits": trainer_summary.get("accepted_count", 0),
+        "accepted_live_edits": trainer_summary.get("accepted_count", 0) if trainer_summary.get("backend") != "scorecard_rehearsal" else 0,
+        "accepted_rehearsal_edits": trainer_summary.get("accepted_count", 0) if trainer_summary.get("backend") == "scorecard_rehearsal" else 0,
         "trainer_status": trainer_summary.get("status"),
+        "trainer_backend": trainer_summary.get("backend"),
         "trainer_block_reason": trainer_summary.get("block_reason"),
         "claim_boundary": trainer_summary.get("claim_boundary", ""),
     }
@@ -160,7 +164,9 @@ def run_cycle(args: argparse.Namespace, cycle_index: int) -> dict[str, Any]:
             manifest=Path(handoff_summary["outputs"]["manifest"]),
             out_dir=trainer_dir,
             mode=args.trainer_mode,
+            backend=args.trainer_backend,
             max_candidates=0,
+            candidate_id=None,
         )
     )
     return cycle_record(cycle_id, swarm_summary, handoff_summary, trainer_summary)
@@ -174,6 +180,7 @@ def run_auto_research_loop(args: argparse.Namespace) -> dict[str, Any]:
             "event": "start",
             "cycles_requested": args.cycles,
             "trainer_mode": args.trainer_mode,
+            "trainer_backend": args.trainer_backend,
             "caps": {"ram_mb": args.ram_mb, "cpu_pct": args.cpu_pct, "io_mb_s": args.io_mb_s},
         }
     ]
@@ -194,17 +201,20 @@ def run_auto_research_loop(args: argparse.Namespace) -> dict[str, Any]:
                 "accepted_live_edits": record["accepted_live_edits"],
             }
         )
-    accepted_live = sum(int(record["accepted_live_edits"]) for record in cycles)
+    accepted_rehearsal = sum(int(record["accepted_rehearsal_edits"]) for record in cycles)
+    accepted_live = 0 if args.trainer_backend == "scorecard_rehearsal" else sum(int(record["accepted_live_edits"]) for record in cycles)
     summary = {
         "status": "completed",
         "generated_at_utc": utc_now(),
         "run_dir": str(args.out_dir),
         "cycle_count": len(cycles),
         "trainer_mode": args.trainer_mode,
+        "trainer_backend": args.trainer_backend,
         "best_cycle": best_cycle,
         "best_proxy_fitness": best_cycle["best_proxy_fitness"] if best_cycle else 0.0,
         "accepted_live_edit_count": accepted_live,
-        "research_state": "ready_for_train_one_backend" if accepted_live == 0 else "live_hill_climb_signal_observed",
+        "accepted_rehearsal_edit_count": accepted_rehearsal,
+        "research_state": "scorecard_rehearsal_signal_observed" if accepted_rehearsal else ("ready_for_train_one_backend" if accepted_live == 0 else "live_hill_climb_signal_observed"),
         "claim_boundary": "Auto-research manager loop only; blocked or dry-run trainer modes do not prove model-weight gains.",
         "outputs": {
             "summary": str(args.out_dir / "tinylora_auto_research_summary.json"),
@@ -221,7 +231,7 @@ def run_auto_research_loop(args: argparse.Namespace) -> dict[str, Any]:
         "acceptance_rule": "accept only if live target score beats fixed-label and random tinyLoRA controls with guardrail preservation",
         "caps": {"ram_mb": args.ram_mb, "cpu_pct": args.cpu_pct, "io_mb_s": args.io_mb_s},
     }
-    events.append({"ts": utc_now(), "event": "summary", "status": summary["status"], "accepted_live_edit_count": accepted_live})
+    events.append({"ts": utc_now(), "event": "summary", "status": summary["status"], "accepted_live_edit_count": accepted_live, "accepted_rehearsal_edit_count": accepted_rehearsal})
     packet = compact_packet(summary, cycles)
     summary["agent_packet_est_tokens"] = len(packet) // 4
     write_jsonl(args.out_dir / "tinylora_auto_research_events.jsonl", events)

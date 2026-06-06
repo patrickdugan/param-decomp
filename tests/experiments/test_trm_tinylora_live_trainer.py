@@ -17,6 +17,7 @@ def test_live_trainer_dry_run_emits_events_and_results(tmp_path: Path) -> None:
         "proxy_score": {"delta": 0.1, "control_margin": 0.05, "fitness": 0.2},
     }
     control = {**candidate, "candidate_id": "task:random_control:001", "organism_id": "random_tinylora:001"}
+    control["proxy_score"] = {"delta": 0.0, "control_margin": 0.0, "fitness": 0.0}
     write_jsonl(tmp_path / "candidates.jsonl", [candidate])
     write_jsonl(tmp_path / "controls.jsonl", [control])
     manifest = {
@@ -34,7 +35,7 @@ def test_live_trainer_dry_run_emits_events_and_results(tmp_path: Path) -> None:
     manifest_path = tmp_path / "manifest.json"
     manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
 
-    summary = run_trainer(type("Args", (), {"manifest": manifest_path, "out_dir": None, "mode": "dry_run", "max_candidates": 0, "candidate_id": None})())
+    summary = run_trainer(type("Args", (), {"manifest": manifest_path, "out_dir": None, "mode": "dry_run", "backend": "none", "max_candidates": 0, "candidate_id": None})())
 
     assert summary["status"] == "completed"
     assert summary["accepted_count"] == 0
@@ -55,6 +56,7 @@ def _write_manifest(tmp_path: Path) -> Path:
         "proxy_score": {"delta": 0.1, "control_margin": 0.05, "fitness": 0.2},
     }
     control = {**candidate, "candidate_id": "task:random_control:001", "organism_id": "random_tinylora:001"}
+    control["proxy_score"] = {"delta": 0.0, "control_margin": 0.0, "fitness": 0.0}
     write_jsonl(tmp_path / "candidates.jsonl", [candidate])
     write_jsonl(tmp_path / "controls.jsonl", [control])
     manifest = {
@@ -76,7 +78,7 @@ def _write_manifest(tmp_path: Path) -> Path:
 
 def test_live_trainer_train_one_blocks_outside_wrapper(tmp_path: Path) -> None:
     manifest_path = _write_manifest(tmp_path)
-    summary = run_trainer(type("Args", (), {"manifest": manifest_path, "out_dir": None, "mode": "train_one", "max_candidates": 0, "candidate_id": None})())
+    summary = run_trainer(type("Args", (), {"manifest": manifest_path, "out_dir": None, "mode": "train_one", "backend": "none", "max_candidates": 0, "candidate_id": None})())
 
     assert summary["status"] == "blocked"
     assert summary["candidate_count"] == 1
@@ -91,9 +93,25 @@ def test_live_trainer_train_one_inside_wrapper_blocks_for_missing_backend(tmp_pa
     manifest_path = _write_manifest(tmp_path)
     monkeypatch.setenv("TINYLORA_JOB_OBJECT", "1")
 
-    summary = run_trainer(type("Args", (), {"manifest": manifest_path, "out_dir": None, "mode": "train_one", "max_candidates": 0, "candidate_id": None})())
+    summary = run_trainer(type("Args", (), {"manifest": manifest_path, "out_dir": None, "mode": "train_one", "backend": "none", "max_candidates": 0, "candidate_id": None})())
 
     assert summary["status"] == "blocked"
     assert summary["block_reason"] == "blocked_missing_adapter_training_backend"
     results = [json.loads(line) for line in (tmp_path / "out" / "tinylora_training_candidate_results.jsonl").read_text(encoding="utf-8").splitlines()]
     assert results[0]["decision_reason"] == "blocked_missing_adapter_training_backend"
+
+
+def test_live_trainer_scorecard_rehearsal_accepts_inside_wrapper(tmp_path: Path, monkeypatch: object) -> None:
+    manifest_path = _write_manifest(tmp_path)
+    monkeypatch.setenv("TINYLORA_JOB_OBJECT", "1")
+
+    summary = run_trainer(type("Args", (), {"manifest": manifest_path, "out_dir": None, "mode": "train_one", "backend": "scorecard_rehearsal", "max_candidates": 0, "candidate_id": None})())
+
+    assert summary["status"] == "completed"
+    assert summary["backend"] == "scorecard_rehearsal"
+    assert summary["accepted_count"] == 1
+    assert "not a trained model-edit gain" in summary["claim_boundary"]
+    results = [json.loads(line) for line in (tmp_path / "out" / "tinylora_training_candidate_results.jsonl").read_text(encoding="utf-8").splitlines()]
+    assert results[0]["accepted"] is True
+    assert results[0]["decision_reason"] == "scorecard_rehearsal_accept"
+    assert results[0]["live_target_score"] == 0.2

@@ -44,6 +44,7 @@ def test_auto_research_loop_emits_agent_manageable_state(tmp_path: Path) -> None
             top_n=1,
             random_control_count=1,
             trainer_mode="dry_run",
+            trainer_backend="none",
             ram_mb=1024,
             cpu_pct=25,
             io_mb_s=20,

@@ -1840,6 +1840,20 @@ wrapper output: cycle_001\handoff\dry_run_execution\tinylora_training_train_one_
 
 This is the correct pre-training safety posture: direct execution is rejected before model load, while wrapper execution proves the cap marker is propagated and then stops at the missing adapter backend. The remaining engineering task is therefore narrow: implement the backend body for a single reversible adapter candidate, not redesign the loop.
 
+A score-card rehearsal backend is now available for the same `train_one` bridge:
+
+```text
+wrapper rehearsal: D:\Research_Engine\runs\trm_tinylora_scorecard_rehearsal_probe_20260606
+auto-loop rehearsal: D:\Research_Engine\runs\trm_tinylora_auto_research_scorecard_rehearsal_loop_20260606
+backend: scorecard_rehearsal
+accepted rehearsal edits: 1
+accepted live edits: 0
+candidate: tiny_lora:g1:0001
+rehearsal target/control/guardrail: 0.132614 / 0.0 / 0.935484
+```
+
+This closes the orchestration loop without overclaiming. The agent can now execute the full candidate-selection, control-comparison, accept/reject, state-update, and next-packet flow. However, the acceptance is explicitly a score-card rehearsal acceptance, not evidence that a trained adapter changed benchmark behavior. The next paper-valid milestone remains a real single-candidate adapter backend under the same wrapper.
+
 The state-space formalization is:
 
 ```text

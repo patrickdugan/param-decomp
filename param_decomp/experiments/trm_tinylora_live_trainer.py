@@ -31,6 +31,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--manifest", type=Path, required=True)
     parser.add_argument("--out-dir", type=Path, default=None)
     parser.add_argument("--mode", choices=["dry_run", "train_one"], default="dry_run")
+    parser.add_argument("--backend", choices=["none", "scorecard_rehearsal"], default="none")
     parser.add_argument("--max-candidates", type=int, default=0, help="0 means all candidates.")
     parser.add_argument("--candidate-id", default=None, help="Optional candidate id for train_one mode.")
     return parser.parse_args()
@@ -44,9 +45,18 @@ def event(ts_event: str, **kwargs: Any) -> dict[str, Any]:
     return {"ts": utc_now(), "event": ts_event, **kwargs}
 
 
-def candidate_result(candidate: dict[str, Any], kind: str, *, reason: str, claim_boundary: str) -> dict[str, Any]:
+def candidate_result(
+    candidate: dict[str, Any],
+    kind: str,
+    *,
+    reason: str,
+    claim_boundary: str,
+    accepted: bool = False,
+    live_target_score: float | None = None,
+    live_guardrail_score: float | None = None,
+    live_control_score: float | None = None,
+) -> dict[str, Any]:
     proxy = candidate.get("proxy_score") or {}
-    accepted = False
     return {
         "candidate_id": candidate["candidate_id"],
         "organism_id": candidate["organism_id"],
@@ -58,9 +68,9 @@ def candidate_result(candidate: dict[str, Any], kind: str, *, reason: str, claim
         "proxy_delta": proxy.get("delta", 0.0),
         "proxy_control_margin": proxy.get("control_margin", 0.0),
         "proxy_fitness": proxy.get("fitness", 0.0),
-        "live_target_score": None,
-        "live_guardrail_score": None,
-        "live_control_score": None,
+        "live_target_score": live_target_score,
+        "live_guardrail_score": live_guardrail_score,
+        "live_control_score": live_control_score,
         "accepted": accepted,
         "decision_reason": reason,
         "claim_boundary": claim_boundary,
@@ -92,6 +102,26 @@ def train_one_block_reason() -> str | None:
     return "blocked_missing_adapter_training_backend"
 
 
+def scorecard_rehearsal(candidate: dict[str, Any], controls: list[dict[str, Any]]) -> dict[str, Any]:
+    proxy = candidate.get("proxy_score") or {}
+    best_control = max((float((control.get("proxy_score") or {}).get("fitness", 0.0)) for control in controls), default=0.0)
+    target_score = float(proxy.get("fitness", 0.0))
+    guardrail_score = 1.0 - float(proxy.get("touch_rate", 0.0))
+    accepted = (
+        float(proxy.get("delta", 0.0)) > 0.0
+        and float(proxy.get("control_margin", 0.0)) > 0.0
+        and target_score > best_control
+        and guardrail_score >= 0.65
+    )
+    return {
+        "accepted": accepted,
+        "reason": "scorecard_rehearsal_accept" if accepted else "scorecard_rehearsal_reject",
+        "live_target_score": round(target_score, 6),
+        "live_guardrail_score": round(guardrail_score, 6),
+        "live_control_score": round(best_control, 6),
+    }
+
+
 def run_trainer(args: argparse.Namespace) -> dict[str, Any]:
     manifest = read_json(args.manifest)
     out_dir = args.out_dir or Path(manifest["default_output_dir"])
@@ -100,6 +130,9 @@ def run_trainer(args: argparse.Namespace) -> dict[str, Any]:
     candidates = selected_candidates(read_jsonl(paths["candidates"]), args)
     controls = selected_controls(read_jsonl(paths["random_controls"]), args, len(candidates))
     train_one_reason = train_one_block_reason() if args.mode == "train_one" else None
+    backend = getattr(args, "backend", "none")
+    if args.mode == "train_one" and backend == "scorecard_rehearsal" and os.environ.get("TINYLORA_JOB_OBJECT") == "1":
+        train_one_reason = None
     if args.mode == "train_one" and not candidates:
         train_one_reason = "blocked_candidate_not_found"
     events: list[dict[str, Any]] = [
@@ -107,6 +140,7 @@ def run_trainer(args: argparse.Namespace) -> dict[str, Any]:
             "start",
             training_task_id=manifest["training_task_id"],
             mode=args.mode,
+            backend=backend,
             caps=manifest["caps"],
             candidate_count=len(candidates),
             random_control_count=len(controls),
@@ -119,15 +153,32 @@ def run_trainer(args: argparse.Namespace) -> dict[str, Any]:
         events.append(event("candidate_start", candidate_id=candidate["candidate_id"], index=index, kind="vpd_seeded"))
         events.append(event("checkpoint", candidate_id=candidate["candidate_id"], step=0, path=str(out_dir / "checkpoints" / candidate["candidate_id"].replace(":", "_")), ram_mb=0, cpu_pct=0))
         reason = train_one_reason or "dry_run_only_no_adapter_trained"
+        rehearsal = None
+        if args.mode == "train_one" and backend == "scorecard_rehearsal" and not train_one_reason:
+            rehearsal = scorecard_rehearsal(candidate, controls)
+            reason = rehearsal["reason"]
         claim = (
             "Train-one request blocked before model load; no adapter weights were trained, merged, or scored."
             if train_one_reason
-            else "Dry-run validation only; no model weights were loaded, trained, or merged."
+            else (
+                "Scorecard rehearsal only; no adapter weights were loaded, trained, merged, or live-scored."
+                if rehearsal
+                else "Dry-run validation only; no model weights were loaded, trained, or merged."
+            )
         )
-        result = candidate_result(candidate, "vpd_seeded", reason=reason, claim_boundary=claim)
+        result = candidate_result(
+            candidate,
+            "vpd_seeded",
+            reason=reason,
+            claim_boundary=claim,
+            accepted=bool(rehearsal and rehearsal["accepted"]),
+            live_target_score=rehearsal["live_target_score"] if rehearsal else None,
+            live_guardrail_score=rehearsal["live_guardrail_score"] if rehearsal else None,
+            live_control_score=rehearsal["live_control_score"] if rehearsal else None,
+        )
         results.append(result)
-        events.append(event("candidate_score", candidate_id=candidate["candidate_id"], target_score=None, guardrail_score=None, control_score=None, proxy_delta=result["proxy_delta"]))
-        events.append(event("candidate_accept_or_reject", candidate_id=candidate["candidate_id"], accepted=False, reason=result["decision_reason"]))
+        events.append(event("candidate_score", candidate_id=candidate["candidate_id"], target_score=result["live_target_score"], guardrail_score=result["live_guardrail_score"], control_score=result["live_control_score"], proxy_delta=result["proxy_delta"]))
+        events.append(event("candidate_accept_or_reject", candidate_id=candidate["candidate_id"], accepted=result["accepted"], reason=result["decision_reason"]))
     for index, control in enumerate(controls, start=1):
         events.append(event("candidate_start", candidate_id=control["candidate_id"], index=index, kind="random_control"))
         result = candidate_result(
@@ -139,7 +190,8 @@ def run_trainer(args: argparse.Namespace) -> dict[str, Any]:
         results.append(result)
         events.append(event("candidate_accept_or_reject", candidate_id=control["candidate_id"], accepted=False, reason=result["decision_reason"]))
     gc.collect()
-    cleanup_status = "blocked_cleanup_passed" if train_one_reason else "dry_run_cleanup_passed"
+    accepted_count = sum(1 for result in results if result["kind"] == "vpd_seeded" and result["accepted"])
+    cleanup_status = "blocked_cleanup_passed" if train_one_reason else ("scorecard_rehearsal_cleanup_passed" if backend == "scorecard_rehearsal" else "dry_run_cleanup_passed")
     events.append(event("cleanup", owned_pids_stopped=[], cuda_cleanup=False, ram_after_mb=None, status=cleanup_status))
     status = "blocked" if train_one_reason else "completed"
     summary_name = "tinylora_training_train_one_summary.json" if args.mode == "train_one" else "tinylora_training_dry_run_summary.json"
@@ -152,16 +204,25 @@ def run_trainer(args: argparse.Namespace) -> dict[str, Any]:
         "training_task_id": manifest["training_task_id"],
         "candidate_count": len(candidates),
         "random_control_count": len(controls),
-        "accepted_count": 0,
+        "accepted_count": accepted_count,
         "block_reason": train_one_reason,
-        "claim_boundary": "Train-one bridge is blocked until a capped adapter backend is implemented." if train_one_reason else "Dry-run trainer only; no tinyLoRA adapter training was executed.",
+        "backend": backend,
+        "claim_boundary": (
+            "Train-one bridge is blocked until a capped adapter backend is implemented."
+            if train_one_reason
+            else (
+                "Scorecard rehearsal only; accepted_count is not a trained model-edit gain."
+                if backend == "scorecard_rehearsal"
+                else "Dry-run trainer only; no tinyLoRA adapter training was executed."
+            )
+        ),
         "outputs": {
             "summary": str(out_dir / summary_name),
             "events": str(out_dir / "tinylora_training_events.jsonl"),
             "candidate_results": str(out_dir / "tinylora_training_candidate_results.jsonl"),
         },
     }
-    events.append(event("summary", status=summary["status"], accepted_count=0, candidate_count=len(candidates), block_reason=train_one_reason))
+    events.append(event("summary", status=summary["status"], accepted_count=accepted_count, candidate_count=len(candidates), block_reason=train_one_reason, backend=backend))
     write_jsonl(out_dir / "tinylora_training_events.jsonl", events)
     write_jsonl(out_dir / "tinylora_training_candidate_results.jsonl", results)
     (out_dir / summary_name).write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8")

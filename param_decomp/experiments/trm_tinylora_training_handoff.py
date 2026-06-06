@@ -200,7 +200,8 @@ def wrapper_script(caps: dict[str, Any]) -> str:
     return f"""param(
   [Parameter(Mandatory=$true)][string]$PythonExe,
   [Parameter(Mandatory=$true)][string]$TrainingScript,
-  [Parameter(Mandatory=$true)][string]$ManifestPath
+  [Parameter(Mandatory=$true)][string]$ManifestPath,
+  [string]$Backend = "none"
 )
 
 $ErrorActionPreference = "Stop"
@@ -254,7 +255,7 @@ $ptr2 = [System.Runtime.InteropServices.Marshal]::AllocHGlobal($size2)
 [System.Runtime.InteropServices.Marshal]::FreeHGlobal($ptr2)
 
 $env:TINYLORA_JOB_OBJECT = "1"
-$args = @($TrainingScript, "--manifest", $ManifestPath, "--mode", "train_one")
+$args = @($TrainingScript, "--manifest", $ManifestPath, "--mode", "train_one", "--backend", $Backend)
 $proc = Start-Process -FilePath $PythonExe -ArgumentList $args -PassThru -WindowStyle Hidden
 [JobObject]::AssignProcessToJobObject($job, $proc.Handle) | Out-Null
 $proc.WaitForExit()

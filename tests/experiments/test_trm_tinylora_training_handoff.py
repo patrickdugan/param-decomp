@@ -53,6 +53,7 @@ def test_handoff_emits_candidates_and_wrapper(tmp_path: Path) -> None:
     wrapper = (tmp_path / "out" / "run_tinylora_jobobject.ps1").read_text(encoding="utf-8")
     assert '$env:TINYLORA_JOB_OBJECT = "1"' in wrapper
     assert '"--mode", "train_one"' in wrapper
+    assert '"--backend", $Backend' in wrapper
     candidates = [json.loads(line) for line in (tmp_path / "out" / "tinylora_training_candidates.jsonl").read_text(encoding="utf-8").splitlines()]
     assert candidates[0]["organism_id"] == "b"
     assert candidates[0]["adapter_config"]["rank"] == 1

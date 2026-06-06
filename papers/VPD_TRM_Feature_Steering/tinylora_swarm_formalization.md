@@ -199,6 +199,22 @@ outside wrapper -> reject before model load
 inside wrapper  -> proceed only as far as the missing train_one adapter backend
 ```
 
+Score-card rehearsal backend:
+
+```text
+wrapper rehearsal: D:\Research_Engine\runs\trm_tinylora_scorecard_rehearsal_probe_20260606
+auto-loop rehearsal: D:\Research_Engine\runs\trm_tinylora_auto_research_scorecard_rehearsal_loop_20260606
+backend: scorecard_rehearsal
+accepted_rehearsal_edit_count: 1
+accepted_live_edit_count: 0
+candidate: tiny_lora:g1:0001
+target/control/guardrail: 0.132614 / 0.0 / 0.935484
+```
+
+This is useful as a harness milestone because the full agent-managed
+accept/reject loop is now operational. It is not yet evidence of a model-weight
+gain.
+
 Top proxy organism:
 
 ```text
