@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import gc
+import importlib.util
 import json
 import os
 import sys
@@ -107,11 +108,63 @@ def peft_train_one_block_reason() -> str | None:
         return "blocked_not_inside_generated_jobobject_wrapper"
     if os.environ.get("TINYLORA_ENABLE_MODEL_LOAD") != "1":
         return "blocked_model_load_not_enabled"
-    if not os.environ.get("TINYLORA_MODEL_PATH"):
+    model_path = os.environ.get("TINYLORA_MODEL_PATH")
+    eval_spec = os.environ.get("TINYLORA_EVAL_SPEC")
+    if not model_path:
         return "blocked_missing_model_path"
-    if not os.environ.get("TINYLORA_EVAL_SPEC"):
+    if not Path(model_path).exists():
+        return "blocked_model_path_not_found"
+    if not eval_spec:
         return "blocked_missing_eval_spec"
-    return "blocked_peft_backend_not_implemented"
+    if not Path(eval_spec).exists():
+        return "blocked_eval_spec_not_found"
+    missing = [name for name in ("torch", "transformers", "peft", "accelerate") if importlib.util.find_spec(name) is None]
+    if missing:
+        return "blocked_missing_python_packages:" + ",".join(missing)
+    return None
+
+
+def directory_size_mb(path: Path) -> int:
+    if path.is_file():
+        return max(1, path.stat().st_size // (1024 * 1024))
+    total = 0
+    for child in path.rglob("*"):
+        if child.is_file():
+            try:
+                total += child.stat().st_size
+            except OSError:
+                continue
+    return max(1, total // (1024 * 1024))
+
+
+def peft_train_one_smoke(out_dir: Path, manifest: dict[str, Any], candidate: dict[str, Any], controls: list[dict[str, Any]]) -> dict[str, Any]:
+    model_path = Path(os.environ["TINYLORA_MODEL_PATH"])
+    eval_spec = Path(os.environ["TINYLORA_EVAL_SPEC"])
+    cap_mb = int((manifest.get("caps") or {}).get("ram_mb", 2048))
+    model_size_mb = directory_size_mb(model_path)
+    request_path = write_peft_train_one_request(out_dir, manifest, candidate, controls)
+    if model_size_mb > max(1, cap_mb // 2):
+        return {
+            "status": "blocked",
+            "reason": "blocked_model_size_exceeds_safe_cap",
+            "request_path": str(request_path),
+            "model_size_mb": model_size_mb,
+            "cap_mb": cap_mb,
+            "live_target_score": None,
+            "live_guardrail_score": None,
+            "live_control_score": None,
+        }
+    return {
+        "status": "blocked",
+        "reason": "blocked_peft_training_body_not_enabled_after_preflight",
+        "request_path": str(request_path),
+        "model_size_mb": model_size_mb,
+        "cap_mb": cap_mb,
+        "eval_spec": str(eval_spec),
+        "live_target_score": None,
+        "live_guardrail_score": None,
+        "live_control_score": None,
+    }
 
 
 def write_peft_train_one_request(out_dir: Path, manifest: dict[str, Any], candidate: dict[str, Any], controls: list[dict[str, Any]]) -> Path:
@@ -191,6 +244,7 @@ def run_trainer(args: argparse.Namespace) -> dict[str, Any]:
     if train_one_reason:
         events.append(event("train_one_blocked", reason=train_one_reason, inside_jobobject=os.environ.get("TINYLORA_JOB_OBJECT") == "1"))
     backend_request_path: Path | None = None
+    backend_probe: dict[str, Any] | None = None
     for index, candidate in enumerate(candidates, start=1):
         events.append(event("candidate_start", candidate_id=candidate["candidate_id"], index=index, kind="vpd_seeded"))
         events.append(event("checkpoint", candidate_id=candidate["candidate_id"], step=0, path=str(out_dir / "checkpoints" / candidate["candidate_id"].replace(":", "_")), ram_mb=0, cpu_pct=0))
@@ -200,8 +254,15 @@ def run_trainer(args: argparse.Namespace) -> dict[str, Any]:
             rehearsal = scorecard_rehearsal(candidate, controls)
             reason = rehearsal["reason"]
         if args.mode == "train_one" and backend == "peft_train_one":
-            backend_request_path = write_peft_train_one_request(out_dir, manifest, candidate, controls)
-            events.append(event("backend_preflight", backend=backend, candidate_id=candidate["candidate_id"], request_path=str(backend_request_path), block_reason=train_one_reason))
+            if train_one_reason:
+                backend_request_path = write_peft_train_one_request(out_dir, manifest, candidate, controls)
+                reason = train_one_reason
+            else:
+                backend_probe = peft_train_one_smoke(out_dir, manifest, candidate, controls)
+                backend_request_path = Path(backend_probe["request_path"])
+                train_one_reason = backend_probe["reason"]
+                reason = train_one_reason
+            events.append(event("backend_preflight", backend=backend, candidate_id=candidate["candidate_id"], request_path=str(backend_request_path), block_reason=train_one_reason, probe=backend_probe))
         claim = (
             "Train-one request blocked before model load; no adapter weights were trained, merged, or scored."
             if train_one_reason
@@ -256,6 +317,7 @@ def run_trainer(args: argparse.Namespace) -> dict[str, Any]:
         "accepted_count": accepted_count,
         "block_reason": train_one_reason,
         "backend": backend,
+        "backend_probe": backend_probe,
         "claim_boundary": (
             "Train-one bridge is blocked until a capped adapter backend is implemented."
             if train_one_reason

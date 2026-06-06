@@ -236,6 +236,20 @@ release model state and CUDA state
 accept only on live target/control/guardrail pass
 ```
 
+First real local-model attempt:
+
+```text
+model: D:\Research_Engine\models\HRM-Text-1B
+backend: peft_train_one
+candidate: tiny_lora:g1:0001
+model size estimate: 2261 MB
+wrapper cap: 2048 MB
+block: blocked_model_size_exceeds_safe_cap
+```
+
+This records the first non-placeholder attempt. It did not load model weights;
+the size guard prevented an unsafe run under the current cap.
+
 Top proxy organism:
 
 ```text

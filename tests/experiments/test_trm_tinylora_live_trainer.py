@@ -135,15 +135,36 @@ def test_live_trainer_peft_preflight_blocks_without_model_load_opt_in(tmp_path: 
 
 def test_live_trainer_peft_preflight_records_fully_specified_backend_gap(tmp_path: Path, monkeypatch: object) -> None:
     manifest_path = _write_manifest(tmp_path)
+    model_path = tmp_path / "model"
+    eval_spec = tmp_path / "eval.json"
+    model_path.mkdir()
+    (model_path / "config.json").write_text("{}", encoding="utf-8")
+    eval_spec.write_text("{}", encoding="utf-8")
     monkeypatch.setenv("TINYLORA_JOB_OBJECT", "1")
     monkeypatch.setenv("TINYLORA_ENABLE_MODEL_LOAD", "1")
-    monkeypatch.setenv("TINYLORA_MODEL_PATH", "D:/models/trm")
-    monkeypatch.setenv("TINYLORA_EVAL_SPEC", "D:/evals/arc.json")
+    monkeypatch.setenv("TINYLORA_MODEL_PATH", str(model_path))
+    monkeypatch.setenv("TINYLORA_EVAL_SPEC", str(eval_spec))
 
     summary = run_trainer(type("Args", (), {"manifest": manifest_path, "out_dir": None, "mode": "train_one", "backend": "peft_train_one", "max_candidates": 0, "candidate_id": None})())
 
     assert summary["status"] == "blocked"
-    assert summary["block_reason"] == "blocked_peft_backend_not_implemented"
+    assert summary["block_reason"] == "blocked_peft_training_body_not_enabled_after_preflight"
     request = json.loads(Path(summary["outputs"]["backend_request"]).read_text(encoding="utf-8"))
-    assert request["model_path"] == "D:/models/trm"
-    assert request["eval_spec"] == "D:/evals/arc.json"
+    assert request["model_path"] == str(model_path)
+    assert request["eval_spec"] == str(eval_spec)
+    assert summary["backend_probe"]["model_size_mb"] >= 1
+
+
+def test_live_trainer_peft_preflight_blocks_missing_model_path(tmp_path: Path, monkeypatch: object) -> None:
+    manifest_path = _write_manifest(tmp_path)
+    eval_spec = tmp_path / "eval.json"
+    eval_spec.write_text("{}", encoding="utf-8")
+    monkeypatch.setenv("TINYLORA_JOB_OBJECT", "1")
+    monkeypatch.setenv("TINYLORA_ENABLE_MODEL_LOAD", "1")
+    monkeypatch.setenv("TINYLORA_MODEL_PATH", str(tmp_path / "missing-model"))
+    monkeypatch.setenv("TINYLORA_EVAL_SPEC", str(eval_spec))
+
+    summary = run_trainer(type("Args", (), {"manifest": manifest_path, "out_dir": None, "mode": "train_one", "backend": "peft_train_one", "max_candidates": 0, "candidate_id": None})())
+
+    assert summary["status"] == "blocked"
+    assert summary["block_reason"] == "blocked_model_path_not_found"

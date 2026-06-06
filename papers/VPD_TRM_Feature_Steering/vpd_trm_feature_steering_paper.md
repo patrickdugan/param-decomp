@@ -1869,6 +1869,19 @@ model-load opt-in: TINYLORA_ENABLE_MODEL_LOAD=1
 
 This turns the next implementation from an open-ended training task into a single-candidate PEFT body: load the declared model and eval spec only inside the generated wrapper, attach the declared rank-1 adapter to the declared module, checkpoint, score against random controls, release model state, and accept only if the live benchmark gate passes.
 
+The first real local-model attempt was run against `D:\Research_Engine\models\HRM-Text-1B` under the existing 2048 MB wrapper cap:
+
+```text
+backend: peft_train_one
+candidate: tiny_lora:g1:0001
+model size estimate: 2261 MB
+wrapper RAM cap: 2048 MB
+block reason: blocked_model_size_exceeds_safe_cap
+accepted live edits: 0
+```
+
+This is a useful negative result rather than a failed run. The harness selected the candidate, wrote the PEFT request, checked the real local model directory, and stopped before model load. The next safe attempt needs either a smaller compatible TRM, a sharded/offloaded backend with a separate cap contract, or an explicitly approved higher cap.
+
 The state-space formalization is:
 
 ```text
