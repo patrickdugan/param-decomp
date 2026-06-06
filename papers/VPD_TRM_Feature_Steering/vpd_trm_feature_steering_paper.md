@@ -1828,6 +1828,18 @@ next packet: next_agent_packet.txt
 
 This adds an agent-operable loop around the experiment: each cycle runs cached swarm search, emits a hard-capped training handoff, calls the trainer bridge, updates cycle state, and writes a compact next-agent packet. The loop is useful because it makes the hill-climbing protocol explicit and repeatable. It is not yet a positive model-edit result because the trainer bridge is still in dry-run mode. The next evidence-bearing step is a `train_one` adapter backend that can train a single candidate inside the generated Job Object wrapper and compare the live benchmark score against random tinyLoRA controls.
 
+The guarded `train_one` path has also been tested:
+
+```text
+run: D:\Research_Engine\runs\trm_tinylora_auto_research_train_one_probe_full_20260606_v3
+top candidate: tiny_lora:g1:0001
+direct Python block: blocked_not_inside_generated_jobobject_wrapper
+generated wrapper block: blocked_missing_adapter_training_backend
+wrapper output: cycle_001\handoff\dry_run_execution\tinylora_training_train_one_summary.json
+```
+
+This is the correct pre-training safety posture: direct execution is rejected before model load, while wrapper execution proves the cap marker is propagated and then stops at the missing adapter backend. The remaining engineering task is therefore narrow: implement the backend body for a single reversible adapter candidate, not redesign the loop.
+
 The state-space formalization is:
 
 ```text

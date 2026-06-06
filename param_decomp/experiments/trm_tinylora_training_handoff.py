@@ -237,7 +237,7 @@ $job = [JobObject]::CreateJobObject([IntPtr]::Zero, "tinylora-swarm-training")
 
 $limit = New-Object JobObject+JOBOBJECT_EXTENDED_LIMIT_INFORMATION
 $limit.BasicLimitInformation.LimitFlags = [JobObject]::JOB_OBJECT_LIMIT_PROCESS_MEMORY
-$limit.ProcessMemoryLimit = [UIntPtr]$MemoryLimitBytes
+$limit.ProcessMemoryLimit = [UIntPtr]::new([UInt64]$MemoryLimitBytes)
 $size = [System.Runtime.InteropServices.Marshal]::SizeOf($limit)
 $ptr = [System.Runtime.InteropServices.Marshal]::AllocHGlobal($size)
 [System.Runtime.InteropServices.Marshal]::StructureToPtr($limit, $ptr, $false)
@@ -253,7 +253,8 @@ $ptr2 = [System.Runtime.InteropServices.Marshal]::AllocHGlobal($size2)
 [JobObject]::SetInformationJobObject($job, [JobObject]::JobObjectCpuRateControlInformation, $ptr2, $size2) | Out-Null
 [System.Runtime.InteropServices.Marshal]::FreeHGlobal($ptr2)
 
-$args = @($TrainingScript, "--manifest", $ManifestPath)
+$env:TINYLORA_JOB_OBJECT = "1"
+$args = @($TrainingScript, "--manifest", $ManifestPath, "--mode", "train_one")
 $proc = Start-Process -FilePath $PythonExe -ArgumentList $args -PassThru -WindowStyle Hidden
 [JobObject]::AssignProcessToJobObject($job, $proc.Handle) | Out-Null
 $proc.WaitForExit()

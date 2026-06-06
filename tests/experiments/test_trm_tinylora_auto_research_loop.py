@@ -66,3 +66,4 @@ def test_auto_research_loop_emits_agent_manageable_state(tmp_path: Path) -> None
     cycles = [json.loads(line) for line in (tmp_path / "loop" / "tinylora_auto_research_cycles.jsonl").read_text(encoding="utf-8").splitlines()]
     assert cycles[0]["accepted_proxy_organisms"] >= 1
     assert cycles[0]["accepted_live_edits"] == 0
+    assert cycles[0]["trainer_status"] == "completed"

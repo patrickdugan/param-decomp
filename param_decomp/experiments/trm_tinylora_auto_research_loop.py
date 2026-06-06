@@ -47,7 +47,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--margins", default="0.25,0.5,1")
     parser.add_argument("--top-n", type=int, default=8)
     parser.add_argument("--random-control-count", type=int, default=8)
-    parser.add_argument("--trainer-mode", choices=["dry_run"], default="dry_run")
+    parser.add_argument("--trainer-mode", choices=["dry_run", "train_one"], default="dry_run")
     parser.add_argument("--ram-mb", type=int, default=2048)
     parser.add_argument("--cpu-pct", type=int, default=50)
     parser.add_argument("--io-mb-s", type=int, default=50)
@@ -79,6 +79,7 @@ def compact_packet(summary: dict[str, Any], cycles: list[dict[str, Any]]) -> str
         f"- best_proxy_fitness: {summary.get('best_proxy_fitness', 0.0)}",
         f"- accepted_live_edits: {summary.get('accepted_live_edit_count', 0)}",
         f"- status: {status}",
+        f"- block_reason: {last.get('trainer_block_reason')}",
         "BEST CYCLE:",
         f"- cycle_id: {best.get('cycle_id')}",
         f"- swarm_dir: {best.get('swarm_dir')}",
@@ -86,7 +87,7 @@ def compact_packet(summary: dict[str, Any], cycles: list[dict[str, Any]]) -> str
         "NEXT ACTION:",
         "- run the generated trainer wrapper for one top candidate when a real adapter backend is available",
         "- compare live target score against random tinyLoRA controls before accepting any edit",
-        "- if dry_run_only_no_adapter_trained persists, implement train_one backend rather than claiming model gain",
+        "- if blocked_missing_adapter_training_backend persists, implement train_one backend rather than claiming model gain",
         "LAST CYCLE:",
         f"- trainer_summary: {last.get('trainer_summary_path')}",
     ]
@@ -109,6 +110,8 @@ def cycle_record(cycle_id: str, swarm_summary: dict[str, Any], handoff_summary: 
         "candidate_count": handoff_summary.get("candidate_count", 0),
         "random_control_count": trainer_summary.get("random_control_count", 0),
         "accepted_live_edits": trainer_summary.get("accepted_count", 0),
+        "trainer_status": trainer_summary.get("status"),
+        "trainer_block_reason": trainer_summary.get("block_reason"),
         "claim_boundary": trainer_summary.get("claim_boundary", ""),
     }
 
@@ -202,7 +205,7 @@ def run_auto_research_loop(args: argparse.Namespace) -> dict[str, Any]:
         "best_proxy_fitness": best_cycle["best_proxy_fitness"] if best_cycle else 0.0,
         "accepted_live_edit_count": accepted_live,
         "research_state": "ready_for_train_one_backend" if accepted_live == 0 else "live_hill_climb_signal_observed",
-        "claim_boundary": "Auto-research manager loop only; dry-run mode does not prove model-weight gains.",
+        "claim_boundary": "Auto-research manager loop only; blocked or dry-run trainer modes do not prove model-weight gains.",
         "outputs": {
             "summary": str(args.out_dir / "tinylora_auto_research_summary.json"),
             "events": str(args.out_dir / "tinylora_auto_research_events.jsonl"),

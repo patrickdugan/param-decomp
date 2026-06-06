@@ -182,6 +182,23 @@ hill climb requires `accepted_live_edits > 0`, where a live edit is accepted onl
 after a trained adapter beats fixed-label controls and random tinyLoRA controls
 while preserving guardrails.
 
+Guarded `train_one` probe:
+
+```text
+D:\Research_Engine\runs\trm_tinylora_auto_research_train_one_probe_full_20260606_v3
+candidate: tiny_lora:g1:0001
+direct run block: blocked_not_inside_generated_jobobject_wrapper
+wrapper run block: blocked_missing_adapter_training_backend
+wrapper summary: cycle_001\handoff\dry_run_execution\tinylora_training_train_one_summary.json
+```
+
+This separates two failure modes that matter for agent-managed research:
+
+```text
+outside wrapper -> reject before model load
+inside wrapper  -> proceed only as far as the missing train_one adapter backend
+```
+
 Top proxy organism:
 
 ```text
