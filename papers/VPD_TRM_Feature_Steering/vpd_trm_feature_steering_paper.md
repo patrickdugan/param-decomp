@@ -1815,6 +1815,19 @@ proxy delta/control margin/fitness: +0.064517 / +0.052259 / 0.132614
 
 This handoff makes the next phase decision-complete: train one candidate at a time inside the generated Windows Job Object wrapper, checkpoint every generation or 120 seconds, log aborts as valid outcomes, and accept no adapter unless it beats fixed-label and random tinyLoRA controls under live scoring.
 
+The auto-research manager loop is now staged as well:
+
+```text
+run: D:\Research_Engine\runs\trm_tinylora_auto_research_arc_20260606
+cycles: 2
+trainer mode: dry_run
+best proxy fitness: 0.132614
+accepted live edits: 0
+next packet: next_agent_packet.txt
+```
+
+This adds an agent-operable loop around the experiment: each cycle runs cached swarm search, emits a hard-capped training handoff, calls the trainer bridge, updates cycle state, and writes a compact next-agent packet. The loop is useful because it makes the hill-climbing protocol explicit and repeatable. It is not yet a positive model-edit result because the trainer bridge is still in dry-run mode. The next evidence-bearing step is a `train_one` adapter backend that can train a single candidate inside the generated Job Object wrapper and compare the live benchmark score against random tinyLoRA controls.
+
 The state-space formalization is:
 
 ```text

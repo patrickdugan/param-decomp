@@ -155,6 +155,33 @@ Training handoff:
 D:\Research_Engine\runs\trm_tinylora_training_handoff_arc_20260606
 ```
 
+Auto-research manager loop:
+
+```text
+D:\Research_Engine\runs\trm_tinylora_auto_research_arc_20260606
+cycles: 2
+trainer mode: dry_run
+best proxy fitness: 0.132614
+accepted live edits: 0
+next agent packet: next_agent_packet.txt
+```
+
+The manager loop is now:
+
+```text
+for cycle k:
+  P_k = cached_tinyLoRA_swarm(score_cards, VPD_failure_families)
+  H_k = hard_cap_training_handoff(top(P_k), random_controls)
+  R_k = trainer_bridge(H_k)
+  S_{k+1} = update_research_state(S_k, R_k)
+  emit_next_agent_packet(S_{k+1})
+```
+
+In dry-run mode this proves orchestration, not model improvement. A paper-valid
+hill climb requires `accepted_live_edits > 0`, where a live edit is accepted only
+after a trained adapter beats fixed-label controls and random tinyLoRA controls
+while preserving guardrails.
+
 Top proxy organism:
 
 ```text
