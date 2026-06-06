@@ -1764,6 +1764,36 @@ Do not bury these as caveats. They are part of the methodological contribution: 
 9. Limitations: runtime-only, small models, deterministic eval estimates, synthetic/typed workflow rows, no broad RL/editing breakthrough.
 10. Discussion: why VPD/TRM feedback loops are a promising research field despite the failed stacked-bootstrap and eval-transfer gates.
 
+## Post-Freeze Direction: TinyLoRA Swarms
+
+The next research direction is to replace ad hoc edit units with a formal tinyLoRA organism:
+
+```text
+tinyLoRA organism =
+  target module
+  low-rank rank/alpha/scale
+  task-family trigger
+  adapter seed
+  mutation lineage
+  scorer fitness
+  guardrail and control status
+```
+
+The first cached scaffold exists as a proxy-only run:
+
+```text
+run: D:\Research_Engine\runs\trm_tinylora_swarm_arc_20260606
+generations: 4
+organisms scored: 96
+accepted proxy organisms: 46
+best organism: tiny_lora:g1:0001
+best module: base_model.model.model.language_model.layers.19.self_attn.o_proj
+rank/scale: 1 / 1.0
+delta/control margin/fitness: +0.064517 / +0.052259 / 0.132614
+```
+
+This does not change the frozen evidence claim because no adapter weights were trained or merged. Its value is structural: it turns the next phase into a memetic search over reversible tinyLoRA organisms rather than a sequence of one-off route rules, hooks, and replay slices. Any real tinyLoRA run must use hard resource caps, checkpointing, chunked scoring, and PID-owned cleanup before it can become paper evidence.
+
 ## Open Questions
 
 - How much recurrence should be required beyond the current six-seed accepted-graft signal?
@@ -1777,6 +1807,7 @@ Do not bury these as caveats. They are part of the methodological contribution: 
 - What is the right outer-loop policy for choosing between runtime grafting, checkpoint editing, and supervised retraining?
 - Can an LLM-managed controller reliably turn repeated failures into better TRM training slices without drifting away from guardrails?
 - Can the `D->A` ARC gain region be promoted from cached route rule to activation-local VPD edit without losing to broad fixed-label controls?
+- Can a hard-capped tinyLoRA swarm turn the `D->A` gain region into a real adapter-delta population that beats route-rule and random tinyLoRA controls?
 
 ## Live Artifact Index
 
