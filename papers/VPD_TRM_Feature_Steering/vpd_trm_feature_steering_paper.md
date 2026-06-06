@@ -1794,6 +1794,27 @@ delta/control margin/fitness: +0.064517 / +0.052259 / 0.132614
 
 This does not change the frozen evidence claim because no adapter weights were trained or merged. Its value is structural: it turns the next phase into a memetic search over reversible tinyLoRA organisms rather than a sequence of one-off route rules, hooks, and replay slices. Any real tinyLoRA run must use hard resource caps, checkpointing, chunked scoring, and PID-owned cleanup before it can become paper evidence.
 
+The real-training handoff is also staged, still without executing training:
+
+```text
+run: D:\Research_Engine\runs\trm_tinylora_training_handoff_arc_20260606
+candidates: 8
+source swarm: D:\Research_Engine\runs\trm_tinylora_swarm_arc_20260606
+caps: 2048 MB RAM, 50% CPU, 50 MB/s IO
+checkpoint cadence: generation_or_120s
+wrapper: run_tinylora_jobobject.ps1
+```
+
+The top candidate is a rank-1 adapter organism targeting:
+
+```text
+base_model.model.model.language_model.layers.19.self_attn.o_proj
+trigger: D over A, max margin 1.0
+proxy delta/control margin/fitness: +0.064517 / +0.052259 / 0.132614
+```
+
+This handoff makes the next phase decision-complete: train one candidate at a time inside the generated Windows Job Object wrapper, checkpoint every generation or 120 seconds, log aborts as valid outcomes, and accept no adapter unless it beats fixed-label and random tinyLoRA controls under live scoring.
+
 ## Open Questions
 
 - How much recurrence should be required beyond the current six-seed accepted-graft signal?
