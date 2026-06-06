@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 from param_decomp.experiments.trm_choice_rl_feedback_loop import write_jsonl
+import param_decomp.experiments.trm_tinylora_live_trainer as live_trainer
 from param_decomp.experiments.trm_tinylora_live_trainer import run_trainer
 
 
@@ -189,3 +190,177 @@ def test_live_trainer_peft_preflight_blocks_when_model_exceeds_fractional_cap(tm
     assert summary["status"] == "blocked"
     assert summary["block_reason"] == "blocked_model_size_exceeds_safe_cap"
     assert summary["backend_probe"]["safe_model_mb"] == 1
+
+
+def test_live_trainer_peft_preflight_blocks_missing_target_module(tmp_path: Path, monkeypatch: object) -> None:
+    manifest_path = _write_manifest(tmp_path)
+    model_path = tmp_path / "model"
+    eval_spec = tmp_path / "eval.json"
+    model_path.mkdir()
+    (model_path / "config.json").write_text("{}", encoding="utf-8")
+    eval_spec.write_text("{}", encoding="utf-8")
+    monkeypatch.setenv("TINYLORA_JOB_OBJECT", "1")
+    monkeypatch.setenv("TINYLORA_ENABLE_MODEL_LOAD", "1")
+    monkeypatch.setenv("TINYLORA_MODEL_PATH", str(model_path))
+    monkeypatch.setenv("TINYLORA_EVAL_SPEC", str(eval_spec))
+    monkeypatch.setenv("TINYLORA_VALIDATE_TARGET_MODULES", "1")
+    monkeypatch.setattr(
+        live_trainer,
+        "inspect_target_modules",
+        lambda _model_path, target_modules: {
+            "all_found": False,
+            "requested": target_modules,
+            "found": [],
+            "missing": target_modules,
+            "suggestions": ["model.L_module.layers.0.self_attn.o_proj"],
+        },
+    )
+
+    summary = run_trainer(type("Args", (), {"manifest": manifest_path, "out_dir": None, "mode": "train_one", "backend": "peft_train_one", "max_candidates": 0, "candidate_id": None})())
+
+    assert summary["status"] == "blocked"
+    assert summary["block_reason"] == "blocked_target_module_not_found"
+    assert summary["backend_probe"]["target_probe"]["suggestions"] == ["model.L_module.layers.0.self_attn.o_proj"]
+
+
+def test_static_hrm_target_probe_suggests_native_modules(tmp_path: Path) -> None:
+    model_path = tmp_path / "hrm"
+    model_path.mkdir()
+    (model_path / "config.json").write_text(
+        json.dumps({"model_type": "hrm_text", "num_hidden_layers": 2}),
+        encoding="utf-8",
+    )
+
+    probe = live_trainer.inspect_target_modules(
+        model_path,
+        ["base_model.model.model.language_model.layers.19.self_attn.o_proj"],
+    )
+
+    assert probe["all_found"] is False
+    assert probe["source"] == "static_hrm_text_config"
+    assert "model.L_module.layers.0.self_attn.o_proj" in probe["suggestions"]
+
+
+def test_transformers_interval_compat_installs_missing_helper(monkeypatch: object) -> None:
+    import transformers.utils.type_validators as type_validators
+
+    original = getattr(type_validators, "interval", None)
+    if hasattr(type_validators, "interval"):
+        monkeypatch.delattr(type_validators, "interval")
+
+    live_trainer.ensure_transformers_interval_compat()
+
+    assert type_validators.interval(min=0.0, max=1.0)(default=0.02) == 0.02
+    if original is not None:
+        monkeypatch.setattr(type_validators, "interval", original)
+
+
+def test_live_trainer_peft_preflight_remaps_target_when_enabled(tmp_path: Path, monkeypatch: object) -> None:
+    manifest_path = _write_manifest(tmp_path)
+    model_path = tmp_path / "model"
+    eval_spec = tmp_path / "eval.json"
+    model_path.mkdir()
+    (model_path / "config.json").write_text("{}", encoding="utf-8")
+    eval_spec.write_text("{}", encoding="utf-8")
+    monkeypatch.setenv("TINYLORA_JOB_OBJECT", "1")
+    monkeypatch.setenv("TINYLORA_ENABLE_MODEL_LOAD", "1")
+    monkeypatch.setenv("TINYLORA_MODEL_PATH", str(model_path))
+    monkeypatch.setenv("TINYLORA_EVAL_SPEC", str(eval_spec))
+    monkeypatch.setenv("TINYLORA_VALIDATE_TARGET_MODULES", "1")
+    monkeypatch.setenv("TINYLORA_TARGET_REMAP", "first_suffix")
+    monkeypatch.setattr(
+        live_trainer,
+        "inspect_target_modules",
+        lambda _model_path, target_modules: {
+            "all_found": False,
+            "requested": target_modules,
+            "found": [],
+            "missing": target_modules,
+            "suggestions": ["model.L_module.layers.0.self_attn.o_proj"],
+        },
+    )
+
+    summary = run_trainer(type("Args", (), {"manifest": manifest_path, "out_dir": None, "mode": "train_one", "backend": "peft_train_one", "max_candidates": 0, "candidate_id": None})())
+
+    assert summary["status"] == "blocked"
+    assert summary["block_reason"] == "blocked_target_remap_ready_adapter_smoke_not_enabled"
+    request = json.loads(Path(summary["outputs"]["backend_request"]).read_text(encoding="utf-8"))
+    assert request["target_module"] == "model.L_module.layers.0.self_attn.o_proj"
+
+
+def test_live_trainer_peft_adapter_smoke_completed_path(tmp_path: Path, monkeypatch: object) -> None:
+    manifest_path = _write_manifest(tmp_path)
+    model_path = tmp_path / "model"
+    eval_spec = tmp_path / "eval.json"
+    model_path.mkdir()
+    (model_path / "config.json").write_text("{}", encoding="utf-8")
+    eval_spec.write_text("{}", encoding="utf-8")
+    monkeypatch.setenv("TINYLORA_JOB_OBJECT", "1")
+    monkeypatch.setenv("TINYLORA_ENABLE_MODEL_LOAD", "1")
+    monkeypatch.setenv("TINYLORA_MODEL_PATH", str(model_path))
+    monkeypatch.setenv("TINYLORA_EVAL_SPEC", str(eval_spec))
+    monkeypatch.setenv("TINYLORA_ENABLE_ADAPTER_SMOKE", "1")
+    monkeypatch.setattr(
+        live_trainer,
+        "run_peft_adapter_smoke",
+        lambda out_dir, _model_path, _manifest, candidate, controls: {
+            "status": "completed",
+            "reason": "adapter_smoke_completed",
+            "adapter_dir": str(out_dir / "adapter_smoke" / candidate["candidate_id"].replace(":", "_")),
+            "trainable_parameters": [2, 10],
+            "random_control_count": len(controls),
+        },
+    )
+
+    summary = run_trainer(type("Args", (), {"manifest": manifest_path, "out_dir": None, "mode": "train_one", "backend": "peft_train_one", "max_candidates": 0, "candidate_id": None})())
+
+    assert summary["status"] == "completed"
+    assert summary["block_reason"] is None
+    assert summary["backend_probe"]["reason"] == "adapter_smoke_completed"
+    assert "Adapter smoke only" in summary["claim_boundary"]
+    results = [json.loads(line) for line in (tmp_path / "out" / "tinylora_training_candidate_results.jsonl").read_text(encoding="utf-8").splitlines()]
+    assert results[0]["decision_reason"] == "adapter_smoke_completed"
+
+
+def test_live_trainer_peft_remap_can_reach_adapter_smoke(tmp_path: Path, monkeypatch: object) -> None:
+    manifest_path = _write_manifest(tmp_path)
+    model_path = tmp_path / "model"
+    eval_spec = tmp_path / "eval.json"
+    model_path.mkdir()
+    (model_path / "config.json").write_text("{}", encoding="utf-8")
+    eval_spec.write_text("{}", encoding="utf-8")
+    monkeypatch.setenv("TINYLORA_JOB_OBJECT", "1")
+    monkeypatch.setenv("TINYLORA_ENABLE_MODEL_LOAD", "1")
+    monkeypatch.setenv("TINYLORA_MODEL_PATH", str(model_path))
+    monkeypatch.setenv("TINYLORA_EVAL_SPEC", str(eval_spec))
+    monkeypatch.setenv("TINYLORA_VALIDATE_TARGET_MODULES", "1")
+    monkeypatch.setenv("TINYLORA_TARGET_REMAP", "first_suffix")
+    monkeypatch.setenv("TINYLORA_ENABLE_ADAPTER_SMOKE", "1")
+    monkeypatch.setattr(
+        live_trainer,
+        "inspect_target_modules",
+        lambda _model_path, target_modules: {
+            "all_found": False,
+            "requested": target_modules,
+            "found": [],
+            "missing": target_modules,
+            "suggestions": ["model.L_module.layers.0.self_attn.o_proj"],
+        },
+    )
+    monkeypatch.setattr(
+        live_trainer,
+        "run_peft_adapter_smoke",
+        lambda out_dir, _model_path, _manifest, candidate, controls: {
+            "status": "completed",
+            "reason": "adapter_smoke_completed",
+            "adapter_dir": str(out_dir / "adapter_smoke" / candidate["candidate_id"].replace(":", "_")),
+            "trainable_parameters": [2, 10],
+            "random_control_count": len(controls),
+            "target_module": candidate["target_module"],
+        },
+    )
+
+    summary = run_trainer(type("Args", (), {"manifest": manifest_path, "out_dir": None, "mode": "train_one", "backend": "peft_train_one", "max_candidates": 0, "candidate_id": None})())
+
+    assert summary["status"] == "completed"
+    assert summary["backend_probe"]["target_module"] == "model.L_module.layers.0.self_attn.o_proj"

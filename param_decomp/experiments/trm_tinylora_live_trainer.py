@@ -158,6 +158,76 @@ def peft_train_one_smoke(out_dir: Path, manifest: dict[str, Any], candidate: dic
             "live_guardrail_score": None,
             "live_control_score": None,
         }
+    target_probe = None
+    if os.environ.get("TINYLORA_VALIDATE_TARGET_MODULES") == "1":
+        target_modules = candidate.get("adapter_config", {}).get("target_modules") or [candidate["target_module"]]
+        target_probe = inspect_target_modules(model_path, target_modules)
+        if not target_probe["all_found"]:
+            remapped = remap_target_modules(target_probe)
+            if remapped:
+                candidate = json.loads(json.dumps(candidate))
+                candidate["target_module"] = remapped[0]
+                candidate.setdefault("adapter_config", {})["target_modules"] = remapped
+                target_probe["remapped_to"] = remapped
+                request_path = write_peft_train_one_request(out_dir, manifest, candidate, controls)
+            else:
+                return {
+                    "status": "blocked",
+                    "reason": "blocked_target_module_not_found",
+                    "request_path": str(request_path),
+                    "model_size_mb": model_size_mb,
+                    "cap_mb": cap_mb,
+                    "safe_model_mb": safe_model_mb,
+                    "size_fraction": size_fraction,
+                    "target_probe": target_probe,
+                    "live_target_score": None,
+                    "live_guardrail_score": None,
+                    "live_control_score": None,
+                }
+        if target_probe and target_probe.get("remapped_to") and os.environ.get("TINYLORA_ENABLE_ADAPTER_SMOKE") != "1":
+            return {
+                "status": "blocked",
+                "reason": "blocked_target_remap_ready_adapter_smoke_not_enabled",
+                "request_path": str(request_path),
+                "model_size_mb": model_size_mb,
+                "cap_mb": cap_mb,
+                "safe_model_mb": safe_model_mb,
+                "size_fraction": size_fraction,
+                "target_probe": target_probe,
+                "live_target_score": None,
+                "live_guardrail_score": None,
+                "live_control_score": None,
+            }
+        if not target_probe["all_found"] and not target_probe.get("remapped_to"):
+            return {
+                "status": "blocked",
+                "reason": "blocked_target_module_not_found",
+                "request_path": str(request_path),
+                "model_size_mb": model_size_mb,
+                "cap_mb": cap_mb,
+                "safe_model_mb": safe_model_mb,
+                "size_fraction": size_fraction,
+                "target_probe": target_probe,
+                "live_target_score": None,
+                "live_guardrail_score": None,
+                "live_control_score": None,
+            }
+    if os.environ.get("TINYLORA_ENABLE_ADAPTER_SMOKE") == "1":
+        smoke = run_peft_adapter_smoke(out_dir, model_path, manifest, candidate, controls)
+        smoke.update(
+            {
+                "request_path": str(request_path),
+                "model_size_mb": model_size_mb,
+                "cap_mb": cap_mb,
+                "safe_model_mb": safe_model_mb,
+                "size_fraction": size_fraction,
+                "target_probe": target_probe,
+                "live_target_score": None,
+                "live_guardrail_score": None,
+                "live_control_score": None,
+            }
+        )
+        return smoke
     return {
         "status": "blocked",
         "reason": "blocked_peft_training_body_not_enabled_after_preflight",
@@ -166,10 +236,178 @@ def peft_train_one_smoke(out_dir: Path, manifest: dict[str, Any], candidate: dic
         "cap_mb": cap_mb,
         "safe_model_mb": safe_model_mb,
         "size_fraction": size_fraction,
+        "target_probe": target_probe,
         "eval_spec": str(eval_spec),
         "live_target_score": None,
         "live_guardrail_score": None,
         "live_control_score": None,
+    }
+
+
+def run_peft_adapter_smoke(out_dir: Path, model_path: Path, manifest: dict[str, Any], candidate: dict[str, Any], controls: list[dict[str, Any]]) -> dict[str, Any]:
+    model = None
+    adapter_dir = out_dir / "adapter_smoke" / candidate["candidate_id"].replace(":", "_")
+    try:
+        import torch
+        from peft import LoraConfig, TaskType, get_peft_model
+        from transformers import AutoModelForCausalLM
+
+        ensure_transformers_interval_compat()
+        adapter = candidate["adapter_config"]
+        model = AutoModelForCausalLM.from_pretrained(
+            model_path,
+            trust_remote_code=True,
+            torch_dtype=torch.float16,
+            low_cpu_mem_usage=True,
+            device_map={"": "cpu"},
+        )
+        config = LoraConfig(
+            r=int(adapter["rank"]),
+            lora_alpha=float(adapter.get("alpha", adapter["rank"])),
+            target_modules=list(adapter["target_modules"]),
+            lora_dropout=0.0,
+            bias="none",
+            task_type=TaskType.CAUSAL_LM,
+        )
+        model = get_peft_model(model, config)
+        adapter_dir.mkdir(parents=True, exist_ok=True)
+        model.save_pretrained(adapter_dir)
+        trainable = model.get_nb_trainable_parameters() if hasattr(model, "get_nb_trainable_parameters") else None
+        return {
+            "status": "completed",
+            "reason": "adapter_smoke_completed",
+            "adapter_dir": str(adapter_dir),
+            "trainable_parameters": trainable,
+            "random_control_count": len(controls),
+            "claim_boundary": "Adapter smoke only; model was loaded and LoRA adapter was attached/saved, but no optimizer step or live scoring was run.",
+        }
+    except Exception as exc:  # pragma: no cover - integration path depends on local model stack.
+        return {
+            "status": "blocked",
+            "reason": "blocked_adapter_smoke_exception",
+            "adapter_dir": str(adapter_dir),
+            "exception": f"{type(exc).__name__}: {exc}",
+        }
+    finally:
+        if model is not None:
+            del model
+        gc.collect()
+        try:
+            import torch
+
+            if torch.cuda.is_available():
+                torch.cuda.synchronize()
+                torch.cuda.empty_cache()
+                if hasattr(torch.cuda, "ipc_collect"):
+                    torch.cuda.ipc_collect()
+        except Exception:
+            pass
+
+
+def ensure_transformers_interval_compat() -> None:
+    import transformers.utils.type_validators as type_validators
+
+    if hasattr(type_validators, "interval"):
+        return
+
+    def interval(**_bounds: Any):
+        def default_value(*, default: Any = None) -> Any:
+            return default
+
+        return default_value
+
+    type_validators.interval = interval
+
+
+def remap_target_modules(target_probe: dict[str, Any]) -> list[str] | None:
+    if os.environ.get("TINYLORA_TARGET_REMAP") != "first_suffix":
+        return None
+    suggestions = target_probe.get("suggestions") or []
+    if not suggestions:
+        return None
+    return [suggestions[0]]
+
+
+def inspect_target_modules(model_path: Path, target_modules: list[str]) -> dict[str, Any]:
+    static_probe = inspect_target_modules_static(model_path, target_modules)
+    if static_probe is not None:
+        return static_probe
+    try:
+        from accelerate import init_empty_weights
+        from transformers import AutoConfig, AutoModelForCausalLM
+
+        config = AutoConfig.from_pretrained(model_path, trust_remote_code=True)
+        with init_empty_weights():
+            model = AutoModelForCausalLM.from_config(config, trust_remote_code=True)
+        module_names = [name for name, _module in model.named_modules()]
+    except Exception as exc:  # pragma: no cover - exercised by integration probes.
+        return {
+            "all_found": False,
+            "error": f"{type(exc).__name__}: {exc}",
+            "requested": target_modules,
+            "found": [],
+            "missing": target_modules,
+            "suggestions": [],
+        }
+    requested = list(target_modules)
+    found = [target for target in requested if target in module_names]
+    missing = [target for target in requested if target not in module_names]
+    suffixes = [target.split(".")[-2:] for target in missing]
+    suggestions: list[str] = []
+    for suffix in suffixes:
+        suffix_text = ".".join(suffix)
+        suggestions.extend(name for name in module_names if name.endswith(suffix_text))
+    return {
+        "all_found": not missing,
+        "requested": requested,
+        "found": found,
+        "missing": missing,
+        "suggestions": suggestions[:16],
+        "module_count": len(module_names),
+    }
+
+
+def inspect_target_modules_static(model_path: Path, target_modules: list[str]) -> dict[str, Any] | None:
+    config_path = model_path / "config.json"
+    if not config_path.exists():
+        return None
+    try:
+        config = json.loads(config_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return None
+    if config.get("model_type") != "hrm_text":
+        return None
+    per_stack = int(config.get("num_layers_per_stack") or config.get("num_hidden_layers") or 0)
+    module_names = []
+    for stack in ("L_module", "H_module"):
+        for layer in range(per_stack):
+            for suffix in (
+                "self_attn.q_proj",
+                "self_attn.k_proj",
+                "self_attn.v_proj",
+                "self_attn.o_proj",
+                "self_attn.gate_proj",
+                "mlp.gate_proj",
+                "mlp.up_proj",
+                "mlp.down_proj",
+            ):
+                module_names.append(f"model.{stack}.layers.{layer}.{suffix}")
+    module_names.append("lm_head")
+    requested = list(target_modules)
+    found = [target for target in requested if target in module_names]
+    missing = [target for target in requested if target not in module_names]
+    suggestions: list[str] = []
+    for target in missing:
+        suffix = ".".join(target.split(".")[-2:])
+        suggestions.extend(name for name in module_names if name.endswith(suffix))
+    return {
+        "all_found": not missing,
+        "requested": requested,
+        "found": found,
+        "missing": missing,
+        "suggestions": suggestions[:16],
+        "module_count": len(module_names),
+        "source": "static_hrm_text_config",
     }
 
 
@@ -266,8 +504,11 @@ def run_trainer(args: argparse.Namespace) -> dict[str, Any]:
             else:
                 backend_probe = peft_train_one_smoke(out_dir, manifest, candidate, controls)
                 backend_request_path = Path(backend_probe["request_path"])
-                train_one_reason = backend_probe["reason"]
-                reason = train_one_reason
+                if backend_probe["status"] == "blocked":
+                    train_one_reason = backend_probe["reason"]
+                    reason = train_one_reason
+                else:
+                    reason = backend_probe["reason"]
             events.append(event("backend_preflight", backend=backend, candidate_id=candidate["candidate_id"], request_path=str(backend_request_path), block_reason=train_one_reason, probe=backend_probe))
         claim = (
             "Train-one request blocked before model load; no adapter weights were trained, merged, or scored."
@@ -307,7 +548,15 @@ def run_trainer(args: argparse.Namespace) -> dict[str, Any]:
         events.append(event("candidate_accept_or_reject", candidate_id=control["candidate_id"], accepted=False, reason=result["decision_reason"]))
     gc.collect()
     accepted_count = sum(1 for result in results if result["kind"] == "vpd_seeded" and result["accepted"])
-    cleanup_status = "blocked_cleanup_passed" if train_one_reason else ("scorecard_rehearsal_cleanup_passed" if backend == "scorecard_rehearsal" else "dry_run_cleanup_passed")
+    cleanup_status = (
+        "blocked_cleanup_passed"
+        if train_one_reason
+        else (
+            "scorecard_rehearsal_cleanup_passed"
+            if backend == "scorecard_rehearsal"
+            else ("adapter_smoke_cleanup_passed" if backend_probe and backend_probe.get("reason") == "adapter_smoke_completed" else "dry_run_cleanup_passed")
+        )
+    )
     events.append(event("cleanup", owned_pids_stopped=[], cuda_cleanup=False, ram_after_mb=None, status=cleanup_status))
     status = "blocked" if train_one_reason else "completed"
     summary_name = "tinylora_training_train_one_summary.json" if args.mode == "train_one" else "tinylora_training_dry_run_summary.json"
@@ -330,7 +579,11 @@ def run_trainer(args: argparse.Namespace) -> dict[str, Any]:
             else (
                 "Scorecard rehearsal only; accepted_count is not a trained model-edit gain."
                 if backend == "scorecard_rehearsal"
-                else "Dry-run trainer only; no tinyLoRA adapter training was executed."
+                else (
+                    "Adapter smoke only; no optimizer step or live scoring was executed."
+                    if backend_probe and backend_probe.get("reason") == "adapter_smoke_completed"
+                    else "Dry-run trainer only; no tinyLoRA adapter training was executed."
+                )
             )
         ),
         "outputs": {

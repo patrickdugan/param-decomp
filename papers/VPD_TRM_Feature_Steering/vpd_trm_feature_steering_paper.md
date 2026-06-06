@@ -1897,6 +1897,22 @@ accepted live edits: 0
 
 This clears the local model-size gate. The remaining block is no longer capacity-related; it is the intentionally missing PEFT training body.
 
+The next adapter-smoke step succeeded under the same 4096 MB wrapper cap:
+
+```text
+run: D:\Research_Engine\runs\trm_tinylora_peft_4gb_probe_20260606
+backend: peft_train_one
+model: D:\Research_Engine\models\HRM-Text-1B
+original target: base_model.model.model.language_model.layers.19.self_attn.o_proj
+explicit remap: model.L_module.layers.0.self_attn.o_proj
+adapter output: cycle_001\handoff\dry_run_execution\adapter_smoke\tinylora-auto-research-cycle_001_candidate_001
+adapter file: adapter_model.safetensors
+trainable / total parameters: 3072 / 1182798336
+accepted live edits: 0
+```
+
+This is still not an eval result. It is an engineering milestone: the local harness can load HRM-Text-1B under the cap, attach a reversible rank-1 LoRA adapter to an explicitly remapped HRM module, save the adapter, and clean up. The next scientific milestone is a one-batch training/scoring step against the random-control gate.
+
 The state-space formalization is:
 
 ```text

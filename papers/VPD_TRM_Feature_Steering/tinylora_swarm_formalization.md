@@ -268,6 +268,21 @@ block: blocked_peft_training_body_not_enabled_after_preflight
 The 4096 MB cap clears the local size gate. The remaining block is the missing
 PEFT training body, not a model-capacity result.
 
+Adapter smoke:
+
+```text
+run: D:\Research_Engine\runs\trm_tinylora_peft_4gb_probe_20260606
+model: D:\Research_Engine\models\HRM-Text-1B
+original target: base_model.model.model.language_model.layers.19.self_attn.o_proj
+remapped target: model.L_module.layers.0.self_attn.o_proj
+adapter: cycle_001\handoff\dry_run_execution\adapter_smoke\tinylora-auto-research-cycle_001_candidate_001\adapter_model.safetensors
+trainable / total parameters: 3072 / 1182798336
+```
+
+This proves local adapter attachment, not learning. It gives the next loop a
+real adapter artifact to train or score, but the accepted live edit count remains
+zero until an eval-gated training/scoring step passes.
+
 Top proxy organism:
 
 ```text
