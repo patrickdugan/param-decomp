@@ -37,6 +37,7 @@ def test_handoff_emits_candidates_and_wrapper(tmp_path: Path) -> None:
             swarm_dir=swarm,
             out_dir=tmp_path / "out",
             top_n=1,
+            random_control_count=1,
             ram_mb=2048,
             cpu_pct=50,
             io_mb_s=50,
@@ -53,6 +54,8 @@ def test_handoff_emits_candidates_and_wrapper(tmp_path: Path) -> None:
     assert candidates[0]["organism_id"] == "b"
     assert candidates[0]["adapter_config"]["rank"] == 1
     assert candidates[0]["acceptance_gate"]["must_beat_random_tinylora_control"] is True
+    assert (tmp_path / "out" / "tinylora_random_controls.jsonl").exists()
+    assert (tmp_path / "out" / "tinylora_training_comparison.csv").exists()
 
 
 def test_handoff_records_abort_as_valid_status(tmp_path: Path) -> None:
@@ -65,6 +68,7 @@ def test_handoff_records_abort_as_valid_status(tmp_path: Path) -> None:
             swarm_dir=swarm,
             out_dir=tmp_path / "out",
             top_n=1,
+            random_control_count=1,
             ram_mb=1024,
             cpu_pct=25,
             io_mb_s=20,

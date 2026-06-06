@@ -7,6 +7,7 @@ organisms into a capped training manifest and wrapper plan.
 from __future__ import annotations
 
 import argparse
+import csv
 import json
 import sys
 from datetime import UTC, datetime
@@ -32,6 +33,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--swarm-dir", type=Path, default=DEFAULT_SWARM_DIR)
     parser.add_argument("--out-dir", type=Path, default=DEFAULT_OUT_DIR)
     parser.add_argument("--top-n", type=int, default=8)
+    parser.add_argument("--random-control-count", type=int, default=8)
     parser.add_argument("--ram-mb", type=int, default=2048)
     parser.add_argument("--cpu-pct", type=int, default=50)
     parser.add_argument("--io-mb-s", type=int, default=50)
@@ -109,6 +111,65 @@ def candidate_row(row: dict[str, Any], rank_index: int, task_id: str) -> dict[st
         },
         "claim_boundary": "Training candidate only; no adapter has been trained, merged, or accepted by live score.",
     }
+
+
+def random_control_row(candidate: dict[str, Any], control_index: int, modules: list[str], task_id: str) -> dict[str, Any]:
+    module = modules[control_index % len(modules)] if modules else candidate["target_module"]
+    control = json.loads(json.dumps(candidate))
+    control["candidate_id"] = f"{task_id}:random_control:{control_index:03d}"
+    control["organism_id"] = f"random_tinylora:{control_index:03d}"
+    control["parent_ids"] = []
+    control["target_module"] = module
+    control["adapter_config"]["target_modules"] = [module]
+    control["adapter_config"]["adapter_seed"] = 900000 + control_index
+    control["adapter_config"]["merge_policy"] = "runtime_only_random_control"
+    control["proxy_score"] = {"delta": 0.0, "control_margin": 0.0, "fitness": 0.0, "rescue_count": 0, "damage_count": 0, "touch_rate": 0.0}
+    control["claim_boundary"] = "Random tinyLoRA control candidate; no adapter has been trained, merged, or accepted by live score."
+    return control
+
+
+def write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
+    fieldnames = [
+        "candidate_id",
+        "organism_id",
+        "kind",
+        "source_family_key",
+        "target_module",
+        "rank",
+        "alpha",
+        "scale",
+        "adapter_seed",
+        "trigger",
+        "proxy_delta",
+        "proxy_control_margin",
+        "proxy_fitness",
+        "acceptance_gate",
+    ]
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fieldnames)
+        writer.writeheader()
+        for row in rows:
+            adapter = row["adapter_config"]
+            proxy = row["proxy_score"]
+            writer.writerow(
+                {
+                    "candidate_id": row["candidate_id"],
+                    "organism_id": row["organism_id"],
+                    "kind": "random_control" if row["organism_id"].startswith("random_tinylora") else "vpd_seeded",
+                    "source_family_key": row["source_family_key"],
+                    "target_module": row["target_module"],
+                    "rank": adapter["rank"],
+                    "alpha": adapter["alpha"],
+                    "scale": adapter["scale"],
+                    "adapter_seed": adapter["adapter_seed"],
+                    "trigger": json.dumps(row["trigger"], sort_keys=True),
+                    "proxy_delta": proxy.get("delta", 0.0),
+                    "proxy_control_margin": proxy.get("control_margin", 0.0),
+                    "proxy_fitness": proxy.get("fitness", 0.0),
+                    "acceptance_gate": json.dumps(row["acceptance_gate"], sort_keys=True),
+                }
+            )
 
 
 def event_schema() -> dict[str, Any]:
@@ -221,12 +282,19 @@ def run_handoff(args: argparse.Namespace) -> dict[str, Any]:
     args.out_dir.mkdir(parents=True, exist_ok=True)
     accepted = ranked_accepted(args.swarm_dir, args.top_n)
     candidates = [candidate_row(row, index, args.training_task_id) for index, row in enumerate(accepted, start=1)]
+    modules = sorted({candidate["target_module"] for candidate in candidates})
+    controls = [
+        random_control_row(candidates[index % len(candidates)], index + 1, modules, args.training_task_id)
+        for index in range(args.random_control_count)
+    ] if candidates else []
+    comparison_rows = candidates + controls
     caps = {"ram_mb": args.ram_mb, "cpu_pct": args.cpu_pct, "io_mb_s": args.io_mb_s}
     plan = {
         "training_task_id": args.training_task_id,
         "status": "handoff_ready",
         "source_swarm_dir": str(args.swarm_dir),
         "candidate_count": len(candidates),
+        "random_control_count": len(controls),
         "caps": caps,
         "checkpoint_interval": args.checkpoint_interval,
         "chunk_strategy": "one candidate at a time; batch score cards; never materialize full activation matrices",
@@ -246,12 +314,16 @@ def run_handoff(args: argparse.Namespace) -> dict[str, Any]:
             "summary": str(args.out_dir / "tinylora_training_handoff_summary.json"),
             "plan": str(args.out_dir / "tinylora_training_plan.json"),
             "candidates": str(args.out_dir / "tinylora_training_candidates.jsonl"),
+            "random_controls": str(args.out_dir / "tinylora_random_controls.jsonl"),
+            "comparison_table": str(args.out_dir / "tinylora_training_comparison.csv"),
             "event_schema": str(args.out_dir / "tinylora_training_event_schema.json"),
             "wrapper": str(args.out_dir / "run_tinylora_jobobject.ps1"),
             "prompt_packet": str(args.out_dir / "prompt_packet.txt"),
         },
     }
     write_jsonl(args.out_dir / "tinylora_training_candidates.jsonl", candidates)
+    write_jsonl(args.out_dir / "tinylora_random_controls.jsonl", controls)
+    write_csv(args.out_dir / "tinylora_training_comparison.csv", comparison_rows)
     (args.out_dir / "tinylora_training_plan.json").write_text(json.dumps(plan, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     (args.out_dir / "tinylora_training_event_schema.json").write_text(json.dumps(event_schema(), indent=2, sort_keys=True) + "\n", encoding="utf-8")
     (args.out_dir / "run_tinylora_jobobject.ps1").write_text(wrapper_script(caps), encoding="utf-8")

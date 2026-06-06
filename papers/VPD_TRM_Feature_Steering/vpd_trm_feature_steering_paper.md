@@ -1815,6 +1815,32 @@ proxy delta/control margin/fitness: +0.064517 / +0.052259 / 0.132614
 
 This handoff makes the next phase decision-complete: train one candidate at a time inside the generated Windows Job Object wrapper, checkpoint every generation or 120 seconds, log aborts as valid outcomes, and accept no adapter unless it beats fixed-label and random tinyLoRA controls under live scoring.
 
+The state-space formalization is:
+
+```text
+o = (m, r, alpha, s, tau, theta, a)
+Omega = M x R x A x S x T x Theta
+W'_m = W_m + s * (alpha / r) * B A
+h' = W_m h + 1[tau(x)=1] * s * (alpha / r) * B A h
+```
+
+where `m` is the target module, `r` is rank, `alpha` is the LoRA alpha, `s` is scale, `tau` is the task-family trigger, `theta=(A,B)` is the low-rank adapter, and `a` is ancestry/mutation metadata. The scaffold fitness is:
+
+```text
+F(o) =
+  reward(o) - reward(best_control)
+  + beta * rescues(o)
+  - gamma * damages(o)
+  - lambda * touch_rate(o)
+  + eta / rank(o)
+```
+
+This turns the question from "did one edit work?" into "does VPD-guided initialization produce better trajectories through `Omega` than random tinyLoRA initialization or broad route-rule controls?" The full note is:
+
+```text
+papers\VPD_TRM_Feature_Steering\tinylora_swarm_formalization.md
+```
+
 ## Open Questions
 
 - How much recurrence should be required beyond the current six-seed accepted-graft signal?
