@@ -302,6 +302,21 @@ def run_handoff(args: argparse.Namespace) -> dict[str, Any]:
         "abort_semantics": "abort is a valid logged outcome, not a failure of the harness",
         "cleanup": "release model/tokenizer/adapter/datasets, run gc, clear CUDA if loaded, stop only owned PIDs",
     }
+    manifest = {
+        "training_task_id": args.training_task_id,
+        "status": "ready_for_dry_run_or_capped_training",
+        "caps": caps,
+        "checkpoint_interval": args.checkpoint_interval,
+        "paths": {
+            "plan": str(args.out_dir / "tinylora_training_plan.json"),
+            "candidates": str(args.out_dir / "tinylora_training_candidates.jsonl"),
+            "random_controls": str(args.out_dir / "tinylora_random_controls.jsonl"),
+            "comparison_table": str(args.out_dir / "tinylora_training_comparison.csv"),
+            "event_schema": str(args.out_dir / "tinylora_training_event_schema.json"),
+        },
+        "default_output_dir": str(args.out_dir / "dry_run_execution"),
+        "claim_boundary": "Manifest only; real training must run under the generated hard-cap wrapper.",
+    }
     summary = {
         "status": "completed",
         "generated_at_utc": utc_now(),
@@ -316,6 +331,7 @@ def run_handoff(args: argparse.Namespace) -> dict[str, Any]:
             "candidates": str(args.out_dir / "tinylora_training_candidates.jsonl"),
             "random_controls": str(args.out_dir / "tinylora_random_controls.jsonl"),
             "comparison_table": str(args.out_dir / "tinylora_training_comparison.csv"),
+            "manifest": str(args.out_dir / "tinylora_training_manifest.json"),
             "event_schema": str(args.out_dir / "tinylora_training_event_schema.json"),
             "wrapper": str(args.out_dir / "run_tinylora_jobobject.ps1"),
             "prompt_packet": str(args.out_dir / "prompt_packet.txt"),
@@ -325,6 +341,7 @@ def run_handoff(args: argparse.Namespace) -> dict[str, Any]:
     write_jsonl(args.out_dir / "tinylora_random_controls.jsonl", controls)
     write_csv(args.out_dir / "tinylora_training_comparison.csv", comparison_rows)
     (args.out_dir / "tinylora_training_plan.json").write_text(json.dumps(plan, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    (args.out_dir / "tinylora_training_manifest.json").write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     (args.out_dir / "tinylora_training_event_schema.json").write_text(json.dumps(event_schema(), indent=2, sort_keys=True) + "\n", encoding="utf-8")
     (args.out_dir / "run_tinylora_jobobject.ps1").write_text(wrapper_script(caps), encoding="utf-8")
     packet = compact_packet(summary)
