@@ -1956,6 +1956,21 @@ This turns the question from "did one edit work?" into "does VPD-guided initiali
 papers\VPD_TRM_Feature_Steering\tinylora_swarm_formalization.md
 ```
 
+The overnight local-maxima controller now operationalizes this question as a sequential, hard-capped search:
+
+```text
+controller: param_decomp\experiments\trm_tinylora_overnight_search.py
+runner: scripts\run_trm_tinylora_overnight_search.py
+source handoff: D:\Research_Engine\runs\trm_tinylora_peft_4gb_probe_20260606\cycle_001\handoff
+model: D:\Research_Engine\models\HRM-Text-1B
+cap: 4096 MB Job Object per trial
+search variables: HRM-native target module, learning rate, optimizer, max sequence length
+score: -loss_delta for finite one-batch self-loss measurements
+acceptance in this phase: loss_delta < 0
+```
+
+This controller deliberately treats each trial as an isolated organism evaluation. It writes a per-trial manifest, invokes the generated Job Object wrapper, records stdout/stderr, reads the capped trainer summary, and writes a JSONL trial ledger plus CSV leaderboard. This is still an engineering search signal, not the benchmark acceptance signal for the paper. The scientific promotion rule remains stricter: an adapter must beat random tinyLoRA controls and fixed-label controls on live eval scoring before it is counted as an accepted model-edit gain.
+
 ## Open Questions
 
 - How much recurrence should be required beyond the current six-seed accepted-graft signal?

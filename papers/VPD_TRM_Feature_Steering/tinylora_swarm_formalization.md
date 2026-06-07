@@ -299,6 +299,43 @@ This proves a capped optimizer step, not efficacy. The step was finite and saved
 an adapter, but it did not improve the tiny self-loss and has not been live-scored
 against controls.
 
+## Overnight Local-Maxima Loop
+
+The current concrete loop is:
+
+```text
+for target module m in HRM-native module set:
+  for learning rate lr in candidate schedule:
+    write trial-specific tinyLoRA manifest
+    run one capped train-one adapter trial through the Job Object wrapper
+    measure finite one-batch self-loss delta
+    append trial to ledger and leaderboard
+```
+
+This is a local engineering hill climb over the tinyLoRA state space `Omega`.
+Its temporary objective is:
+
+```text
+J_local(o) = -Delta L_self(o)
+accept_local(o) = 1[Delta L_self(o) < 0 and finite(Delta L_self(o))]
+```
+
+`J_local` is not the paper's final objective. It is a cheap search filter that
+identifies stable target-module/learning-rate regions worth promoting to live
+eval. The paper-grade objective remains:
+
+```text
+J_eval(o) =
+  score_target(o) - max(score_random_tinyLoRA_controls)
+  - damage_penalty(o)
+  - format_penalty(o)
+```
+
+The important engineering change is that every point in the loop is now an
+auditable capped trial with its own manifest, stdout/stderr, summary, and
+leaderboard row. OOMs and non-finite losses become search observations rather
+than lost runs.
+
 Top proxy organism:
 
 ```text

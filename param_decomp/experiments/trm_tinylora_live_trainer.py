@@ -255,6 +255,11 @@ def run_peft_adapter_smoke(out_dir: Path, model_path: Path, manifest: dict[str, 
 
         ensure_transformers_interval_compat()
         adapter = candidate["adapter_config"]
+        if "adapter_seed" in adapter:
+            seed = int(adapter["adapter_seed"])
+            torch.manual_seed(seed)
+            if torch.cuda.is_available():
+                torch.cuda.manual_seed_all(seed)
         model = AutoModelForCausalLM.from_pretrained(
             model_path,
             trust_remote_code=True,
