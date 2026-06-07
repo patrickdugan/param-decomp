@@ -6,6 +6,7 @@ from pathlib import Path
 from param_decomp.experiments.trm_choice_rl_feedback_loop import write_jsonl
 from param_decomp.experiments.trm_tinylora_overnight_search import (
     build_trial_grid,
+    materialize_trial_wrapper,
     prepare_trial_manifest,
     score_trial,
 )
@@ -93,3 +94,16 @@ def test_score_trial_rejects_nonfinite_or_blocked() -> None:
     assert scored["accepted"] is False
     assert scored["score"] < -999
     assert scored["reason"] == "blocked_adapter_smoke_exception"
+
+
+def test_materialize_trial_wrapper_rewrites_job_memory_limit(tmp_path: Path) -> None:
+    source = tmp_path / "source.ps1"
+    source.write_text("$MemoryLimitBytes = 4096MB\nWrite-Host 'ok'\n", encoding="utf-8")
+
+    trial_dir = tmp_path / "trial_001"
+    wrapper = materialize_trial_wrapper(source, trial_dir, 3072)
+
+    assert wrapper.exists()
+    text = wrapper.read_text(encoding="utf-8")
+    assert "$MemoryLimitBytes = 3072MB" in text
+    assert "$MemoryLimitBytes = 4096MB" not in text

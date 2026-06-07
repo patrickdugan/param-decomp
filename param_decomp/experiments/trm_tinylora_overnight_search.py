@@ -12,6 +12,7 @@ import csv
 import json
 import math
 import os
+import time
 import subprocess
 import sys
 from dataclasses import dataclass
@@ -38,6 +39,12 @@ DEFAULT_TARGETS = [
     "model.H_module.layers.1.self_attn.o_proj",
 ]
 DEFAULT_LEARNING_RATES = [0.000001, 0.000003, 0.00001, 0.00003, 0.0001]
+DEFAULT_JOB_MEMORY_MB = 3072
+DEFAULT_MIN_AVAILABLE_RAM_MB = 6144
+DEFAULT_RAM_RESERVE_MB = 1024
+DEFAULT_COOLDOWN_SECONDS = 20
+DEFAULT_RAM_POLL_SECONDS = 30
+DEFAULT_RAM_WAIT_SECONDS = 600
 
 
 def utc_now() -> str:
@@ -76,6 +83,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--optimizer", default="sgd")
     parser.add_argument("--max-trials", type=int, default=12)
     parser.add_argument("--timeout-seconds", type=int, default=1200)
+    parser.add_argument("--job-memory-mb", type=int, default=DEFAULT_JOB_MEMORY_MB)
+    parser.add_argument("--min-available-ram-mb", type=int, default=DEFAULT_MIN_AVAILABLE_RAM_MB)
+    parser.add_argument("--ram-reserve-mb", type=int, default=DEFAULT_RAM_RESERVE_MB)
+    parser.add_argument("--cooldown-seconds", type=int, default=DEFAULT_COOLDOWN_SECONDS)
+    parser.add_argument("--ram-poll-seconds", type=int, default=DEFAULT_RAM_POLL_SECONDS)
+    parser.add_argument("--ram-wait-seconds", type=int, default=DEFAULT_RAM_WAIT_SECONDS)
     return parser.parse_args()
 
 
@@ -112,6 +125,70 @@ def _replace_target(candidate: dict[str, Any], trial: TrialSpec) -> dict[str, An
     return updated
 
 
+def available_ram_mb() -> int:
+    if os.name == "nt":
+        import ctypes
+
+        class MEMORYSTATUSEX(ctypes.Structure):
+            _fields_ = [
+                ("dwLength", ctypes.c_ulong),
+                ("dwMemoryLoad", ctypes.c_ulong),
+                ("ullTotalPhys", ctypes.c_ulonglong),
+                ("ullAvailPhys", ctypes.c_ulonglong),
+                ("ullTotalPageFile", ctypes.c_ulonglong),
+                ("ullAvailPageFile", ctypes.c_ulonglong),
+                ("ullTotalVirtual", ctypes.c_ulonglong),
+                ("ullAvailVirtual", ctypes.c_ulonglong),
+                ("ullAvailExtendedVirtual", ctypes.c_ulonglong),
+            ]
+
+        status = MEMORYSTATUSEX()
+        status.dwLength = ctypes.sizeof(MEMORYSTATUSEX)
+        if ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(status)) == 0:
+            raise OSError("GlobalMemoryStatusEx failed")
+        return int(status.ullAvailPhys // (1024 * 1024))
+    try:
+        import psutil  # type: ignore
+
+        return int(psutil.virtual_memory().available // (1024 * 1024))
+    except Exception:
+        return 0
+
+
+def wait_for_ram_gate(min_available_ram_mb: int, ram_wait_seconds: int, ram_poll_seconds: int) -> tuple[bool, list[dict[str, Any]]]:
+    waited = 0
+    samples: list[dict[str, Any]] = []
+    while True:
+        current = available_ram_mb()
+        samples.append({"ts": utc_now(), "available_ram_mb": current, "waited_seconds": waited})
+        if current >= min_available_ram_mb:
+            return True, samples
+        if waited >= ram_wait_seconds:
+            return False, samples
+        time.sleep(max(1, ram_poll_seconds))
+        waited += max(1, ram_poll_seconds)
+
+
+def materialize_trial_wrapper(source_wrapper: Path, trial_dir: Path, job_memory_mb: int) -> Path:
+    wrapper_text = source_wrapper.read_text(encoding="utf-8")
+    marker = "$MemoryLimitBytes = "
+    replacement = f"$MemoryLimitBytes = {job_memory_mb}MB"
+    if marker in wrapper_text:
+        prefix, _, suffix = wrapper_text.partition(marker)
+        line_end = suffix.find("\n")
+        if line_end == -1:
+            wrapper_text = prefix + replacement
+        else:
+            wrapper_text = prefix + replacement + suffix[line_end:]
+    else:
+        raise ValueError(f"wrapper {source_wrapper} does not contain the expected memory limit assignment")
+    wrapper_dir = trial_dir / "handoff"
+    wrapper_dir.mkdir(parents=True, exist_ok=True)
+    wrapper_path = wrapper_dir / "run_tinylora_jobobject.ps1"
+    wrapper_path.write_text(wrapper_text, encoding="utf-8")
+    return wrapper_path
+
+
 def prepare_trial_manifest(source_manifest_path: Path, out_dir: Path, trial: TrialSpec) -> Path:
     source_manifest = json.loads(source_manifest_path.read_text(encoding="utf-8"))
     source_paths = {key: Path(value) for key, value in source_manifest["paths"].items()}
@@ -145,14 +222,14 @@ def prepare_trial_manifest(source_manifest_path: Path, out_dir: Path, trial: Tri
     return manifest_path
 
 
-def wrapper_command(args: argparse.Namespace, trial_manifest: Path) -> list[str]:
+def wrapper_command(args: argparse.Namespace, trial_manifest: Path, trial_wrapper: Path) -> list[str]:
     return [
         "powershell",
         "-NoProfile",
         "-ExecutionPolicy",
         "Bypass",
         "-File",
-        str(args.wrapper),
+        str(trial_wrapper),
         "-PythonExe",
         str(args.python_exe),
         "-TrainingScript",
@@ -279,10 +356,47 @@ def run_search(args: argparse.Namespace, runner: Runner = default_runner) -> dic
     )
     events: list[dict[str, Any]] = [{"ts": utc_now(), "event": "start", "trial_count": len(trials), "out_dir": str(args.out_dir)}]
     rows: list[dict[str, Any]] = []
+    abort_reason: str | None = None
     for trial in trials:
+        ok, ram_samples = wait_for_ram_gate(args.min_available_ram_mb, args.ram_wait_seconds, args.ram_poll_seconds)
+        if not ok:
+            abort_reason = "ram_gate_timeout"
+            events.append(
+                {
+                    "ts": utc_now(),
+                    "event": "ram_gate_blocked",
+                    "trial_id": trial.trial_id,
+                    "min_available_ram_mb": args.min_available_ram_mb,
+                    "reserve_mb": args.ram_reserve_mb,
+                    "samples": ram_samples,
+                }
+            )
+            rows.append(
+                {
+                    "trial_id": trial.trial_id,
+                    "target_module": trial.target_module,
+                    "learning_rate": trial.learning_rate,
+                    "max_seq_len": trial.max_seq_len,
+                    "optimizer": trial.optimizer,
+                    "returncode": None,
+                    "timed_out": False,
+                    "status": "aborted",
+                    "reason": abort_reason,
+                    "score": -1000000.0,
+                    "accepted": False,
+                    "loss_delta": None,
+                    "before_loss": None,
+                    "after_loss": None,
+                    "adapter_dir": None,
+                    "summary_path": None,
+                    "available_ram_mb": ram_samples[-1]["available_ram_mb"] if ram_samples else None,
+                }
+            )
+            break
         trial_manifest = prepare_trial_manifest(args.manifest, args.out_dir, trial)
         trial_dir = args.out_dir / trial.trial_id
-        command = wrapper_command(args, trial_manifest)
+        trial_wrapper = materialize_trial_wrapper(args.wrapper, trial_dir, args.job_memory_mb)
+        command = wrapper_command(args, trial_manifest, trial_wrapper)
         events.append({"ts": utc_now(), "event": "trial_start", **trial.__dict__, "manifest": str(trial_manifest)})
         returncode: int | None = None
         timed_out = False
@@ -295,6 +409,7 @@ def run_search(args: argparse.Namespace, runner: Runner = default_runner) -> dic
         score = score_trial(summary, returncode)
         probe = (summary or {}).get("backend_probe") or {}
         manifest = json.loads(trial_manifest.read_text(encoding="utf-8"))
+        available_after = available_ram_mb()
         row = {
             "trial_id": trial.trial_id,
             "target_module": trial.target_module,
@@ -312,19 +427,36 @@ def run_search(args: argparse.Namespace, runner: Runner = default_runner) -> dic
             "after_loss": probe.get("after_loss"),
             "adapter_dir": probe.get("adapter_dir"),
             "summary_path": str(Path(manifest["default_output_dir"]) / "tinylora_training_train_one_summary.json"),
+            "available_ram_mb": available_after,
         }
         rows.append(row)
         events.append({"ts": utc_now(), "event": "trial_complete", **row})
         write_jsonl(args.out_dir / "tinylora_overnight_trials.jsonl", rows)
         write_jsonl(args.out_dir / "tinylora_overnight_events.jsonl", events)
         write_leaderboard(args.out_dir, rows)
+        if args.cooldown_seconds > 0 and trial != trials[-1]:
+            events.append(
+                {
+                    "ts": utc_now(),
+                    "event": "cooldown",
+                    "trial_id": trial.trial_id,
+                    "cooldown_seconds": args.cooldown_seconds,
+                    "available_ram_mb": available_after,
+                }
+            )
+            write_jsonl(args.out_dir / "tinylora_overnight_events.jsonl", events)
+            time.sleep(args.cooldown_seconds)
     summary = {
-        "status": "completed",
+        "status": "aborted" if abort_reason else "completed",
         "generated_at_utc": utc_now(),
         "run_dir": str(args.out_dir),
         "trials_planned": len(trials),
         "trials_completed": len(rows),
         "accepted_count": sum(1 for row in rows if row["accepted"]),
+        "abort_reason": abort_reason,
+        "job_memory_mb": args.job_memory_mb,
+        "min_available_ram_mb": args.min_available_ram_mb,
+        "ram_reserve_mb": args.ram_reserve_mb,
         "claim_boundary": "One-batch self-loss local-maxima search only; not benchmark evidence until live eval and random-control scoring are added.",
         "outputs": {
             "summary": str(args.out_dir / "tinylora_overnight_summary.json"),
