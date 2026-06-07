@@ -89,6 +89,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--cooldown-seconds", type=int, default=DEFAULT_COOLDOWN_SECONDS)
     parser.add_argument("--ram-poll-seconds", type=int, default=DEFAULT_RAM_POLL_SECONDS)
     parser.add_argument("--ram-wait-seconds", type=int, default=DEFAULT_RAM_WAIT_SECONDS)
+    parser.add_argument("--resume", action="store_true", help="Resume from an existing out-dir by skipping completed trial ids.")
     return parser.parse_args()
 
 
@@ -173,15 +174,11 @@ def materialize_trial_wrapper(source_wrapper: Path, trial_dir: Path, job_memory_
     wrapper_text = source_wrapper.read_text(encoding="utf-8")
     marker = "$MemoryLimitBytes = "
     replacement = f"$MemoryLimitBytes = {job_memory_mb}MB"
-    if marker in wrapper_text:
-        prefix, _, suffix = wrapper_text.partition(marker)
-        line_end = suffix.find("\n")
-        if line_end == -1:
-            wrapper_text = prefix + replacement
-        else:
-            wrapper_text = prefix + replacement + suffix[line_end:]
-    else:
+    if marker not in wrapper_text:
         raise ValueError(f"wrapper {source_wrapper} does not contain the expected memory limit assignment")
+    wrapper_text = wrapper_text.replace("$MemoryLimitBytes = 4096MB", replacement, 1)
+    wrapper_text = wrapper_text.replace("$MemoryLimitBytes = 3072MB", replacement, 1)
+    wrapper_text = wrapper_text.replace("$MemoryLimitBytes = 2048MB", replacement, 1)
     wrapper_dir = trial_dir / "handoff"
     wrapper_dir.mkdir(parents=True, exist_ok=True)
     wrapper_path = wrapper_dir / "run_tinylora_jobobject.ps1"
@@ -311,6 +308,12 @@ def write_leaderboard(out_dir: Path, rows: list[dict[str, Any]]) -> None:
             writer.writerow({**{field: row.get(field) for field in fields}, "rank": index})
 
 
+def read_existing_jsonl(path: Path) -> list[dict[str, Any]]:
+    if not path.exists():
+        return []
+    return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+
+
 def next_agent_packet(out_dir: Path, rows: list[dict[str, Any]], summary: dict[str, Any]) -> None:
     ranked = sorted(rows, key=lambda row: float(row["score"]), reverse=True)
     best = ranked[0] if ranked else {}
@@ -356,104 +359,117 @@ def run_search(args: argparse.Namespace, runner: Runner = default_runner) -> dic
     )
     events: list[dict[str, Any]] = [{"ts": utc_now(), "event": "start", "trial_count": len(trials), "out_dir": str(args.out_dir)}]
     rows: list[dict[str, Any]] = []
+    if args.resume:
+        rows = read_existing_jsonl(args.out_dir / "tinylora_overnight_trials.jsonl")
+        events = read_existing_jsonl(args.out_dir / "tinylora_overnight_events.jsonl") or events
+    completed_trials = {row["trial_id"] for row in rows if row.get("status") in {"completed", "aborted"}}
     abort_reason: str | None = None
-    for trial in trials:
-        ok, ram_samples = wait_for_ram_gate(args.min_available_ram_mb, args.ram_wait_seconds, args.ram_poll_seconds)
-        if not ok:
-            abort_reason = "ram_gate_timeout"
-            events.append(
-                {
-                    "ts": utc_now(),
-                    "event": "ram_gate_blocked",
-                    "trial_id": trial.trial_id,
-                    "min_available_ram_mb": args.min_available_ram_mb,
-                    "reserve_mb": args.ram_reserve_mb,
-                    "samples": ram_samples,
-                }
-            )
-            rows.append(
-                {
-                    "trial_id": trial.trial_id,
-                    "target_module": trial.target_module,
-                    "learning_rate": trial.learning_rate,
-                    "max_seq_len": trial.max_seq_len,
-                    "optimizer": trial.optimizer,
-                    "returncode": None,
-                    "timed_out": False,
-                    "status": "aborted",
-                    "reason": abort_reason,
-                    "score": -1000000.0,
-                    "accepted": False,
-                    "loss_delta": None,
-                    "before_loss": None,
-                    "after_loss": None,
-                    "adapter_dir": None,
-                    "summary_path": None,
-                    "available_ram_mb": ram_samples[-1]["available_ram_mb"] if ram_samples else None,
-                }
-            )
-            break
-        trial_manifest = prepare_trial_manifest(args.manifest, args.out_dir, trial)
-        trial_dir = args.out_dir / trial.trial_id
-        trial_wrapper = materialize_trial_wrapper(args.wrapper, trial_dir, args.job_memory_mb)
-        command = wrapper_command(args, trial_manifest, trial_wrapper)
-        events.append({"ts": utc_now(), "event": "trial_start", **trial.__dict__, "manifest": str(trial_manifest)})
-        returncode: int | None = None
-        timed_out = False
-        try:
-            completed = runner(command, trial_env(args, trial), trial_dir / "stdout.log", trial_dir / "stderr.log", args.timeout_seconds)
-            returncode = completed.returncode
-        except subprocess.TimeoutExpired:
-            timed_out = True
-        summary = read_summary(trial_manifest)
-        score = score_trial(summary, returncode)
-        probe = (summary or {}).get("backend_probe") or {}
-        manifest = json.loads(trial_manifest.read_text(encoding="utf-8"))
-        available_after = available_ram_mb()
-        row = {
-            "trial_id": trial.trial_id,
-            "target_module": trial.target_module,
-            "learning_rate": trial.learning_rate,
-            "max_seq_len": trial.max_seq_len,
-            "optimizer": trial.optimizer,
-            "returncode": returncode,
-            "timed_out": timed_out,
-            "status": (summary or {}).get("status", "missing_summary"),
-            "reason": score["reason"],
-            "score": score["score"],
-            "accepted": score["accepted"],
-            "loss_delta": score["loss_delta"],
-            "before_loss": probe.get("before_loss"),
-            "after_loss": probe.get("after_loss"),
-            "adapter_dir": probe.get("adapter_dir"),
-            "summary_path": str(Path(manifest["default_output_dir"]) / "tinylora_training_train_one_summary.json"),
-            "available_ram_mb": available_after,
-        }
-        rows.append(row)
-        events.append({"ts": utc_now(), "event": "trial_complete", **row})
-        write_jsonl(args.out_dir / "tinylora_overnight_trials.jsonl", rows)
-        write_jsonl(args.out_dir / "tinylora_overnight_events.jsonl", events)
-        write_leaderboard(args.out_dir, rows)
-        if args.cooldown_seconds > 0 and trial != trials[-1]:
-            events.append(
-                {
-                    "ts": utc_now(),
-                    "event": "cooldown",
-                    "trial_id": trial.trial_id,
-                    "cooldown_seconds": args.cooldown_seconds,
-                    "available_ram_mb": available_after,
-                }
-            )
+    fatal_exception: str | None = None
+    try:
+        for trial in trials:
+            if trial.trial_id in completed_trials:
+                continue
+            ok, ram_samples = wait_for_ram_gate(args.min_available_ram_mb, args.ram_wait_seconds, args.ram_poll_seconds)
+            if not ok:
+                abort_reason = "ram_gate_timeout"
+                events.append(
+                    {
+                        "ts": utc_now(),
+                        "event": "ram_gate_blocked",
+                        "trial_id": trial.trial_id,
+                        "min_available_ram_mb": args.min_available_ram_mb,
+                        "reserve_mb": args.ram_reserve_mb,
+                        "samples": ram_samples,
+                    }
+                )
+                rows.append(
+                    {
+                        "trial_id": trial.trial_id,
+                        "target_module": trial.target_module,
+                        "learning_rate": trial.learning_rate,
+                        "max_seq_len": trial.max_seq_len,
+                        "optimizer": trial.optimizer,
+                        "returncode": None,
+                        "timed_out": False,
+                        "status": "aborted",
+                        "reason": abort_reason,
+                        "score": -1000000.0,
+                        "accepted": False,
+                        "loss_delta": None,
+                        "before_loss": None,
+                        "after_loss": None,
+                        "adapter_dir": None,
+                        "summary_path": None,
+                        "available_ram_mb": ram_samples[-1]["available_ram_mb"] if ram_samples else None,
+                    }
+                )
+                break
+            trial_manifest = prepare_trial_manifest(args.manifest, args.out_dir, trial)
+            trial_dir = args.out_dir / trial.trial_id
+            trial_wrapper = materialize_trial_wrapper(args.wrapper, trial_dir, args.job_memory_mb)
+            command = wrapper_command(args, trial_manifest, trial_wrapper)
+            events.append({"ts": utc_now(), "event": "trial_start", **trial.__dict__, "manifest": str(trial_manifest)})
+            returncode: int | None = None
+            timed_out = False
+            try:
+                completed = runner(command, trial_env(args, trial), trial_dir / "stdout.log", trial_dir / "stderr.log", args.timeout_seconds)
+                returncode = completed.returncode
+            except subprocess.TimeoutExpired:
+                timed_out = True
+            summary = read_summary(trial_manifest)
+            score = score_trial(summary, returncode)
+            probe = (summary or {}).get("backend_probe") or {}
+            manifest = json.loads(trial_manifest.read_text(encoding="utf-8"))
+            available_after = available_ram_mb()
+            row = {
+                "trial_id": trial.trial_id,
+                "target_module": trial.target_module,
+                "learning_rate": trial.learning_rate,
+                "max_seq_len": trial.max_seq_len,
+                "optimizer": trial.optimizer,
+                "returncode": returncode,
+                "timed_out": timed_out,
+                "status": (summary or {}).get("status", "missing_summary"),
+                "reason": score["reason"],
+                "score": score["score"],
+                "accepted": score["accepted"],
+                "loss_delta": score["loss_delta"],
+                "before_loss": probe.get("before_loss"),
+                "after_loss": probe.get("after_loss"),
+                "adapter_dir": probe.get("adapter_dir"),
+                "summary_path": str(Path(manifest["default_output_dir"]) / "tinylora_training_train_one_summary.json"),
+                "available_ram_mb": available_after,
+            }
+            rows = [existing for existing in rows if existing.get("trial_id") != trial.trial_id]
+            rows.append(row)
+            events.append({"ts": utc_now(), "event": "trial_complete", **row})
+            write_jsonl(args.out_dir / "tinylora_overnight_trials.jsonl", rows)
             write_jsonl(args.out_dir / "tinylora_overnight_events.jsonl", events)
-            time.sleep(args.cooldown_seconds)
+            write_leaderboard(args.out_dir, rows)
+            if args.cooldown_seconds > 0 and trial != trials[-1]:
+                events.append(
+                    {
+                        "ts": utc_now(),
+                        "event": "cooldown",
+                        "trial_id": trial.trial_id,
+                        "cooldown_seconds": args.cooldown_seconds,
+                        "available_ram_mb": available_after,
+                    }
+                )
+                write_jsonl(args.out_dir / "tinylora_overnight_events.jsonl", events)
+                time.sleep(args.cooldown_seconds)
+    except Exception as exc:  # pragma: no cover - resilience path.
+        fatal_exception = f"{type(exc).__name__}: {exc}"
+        events.append({"ts": utc_now(), "event": "fatal_exception", "exception": fatal_exception})
     summary = {
-        "status": "aborted" if abort_reason else "completed",
+        "status": "aborted" if abort_reason or fatal_exception else "completed",
         "generated_at_utc": utc_now(),
         "run_dir": str(args.out_dir),
         "trials_planned": len(trials),
         "trials_completed": len(rows),
         "accepted_count": sum(1 for row in rows if row["accepted"]),
         "abort_reason": abort_reason,
+        "fatal_exception": fatal_exception,
         "job_memory_mb": args.job_memory_mb,
         "min_available_ram_mb": args.min_available_ram_mb,
         "ram_reserve_mb": args.ram_reserve_mb,
@@ -468,6 +484,7 @@ def run_search(args: argparse.Namespace, runner: Runner = default_runner) -> dic
     }
     events.append({"ts": utc_now(), "event": "summary", **summary})
     write_jsonl(args.out_dir / "tinylora_overnight_events.jsonl", events)
+    write_jsonl(args.out_dir / "tinylora_overnight_trials.jsonl", rows)
     (args.out_dir / "tinylora_overnight_summary.json").write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     next_agent_packet(args.out_dir, rows, summary)
     return summary
