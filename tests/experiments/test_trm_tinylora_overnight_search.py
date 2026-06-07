@@ -6,6 +6,7 @@ from pathlib import Path
 from param_decomp.experiments.trm_choice_rl_feedback_loop import write_jsonl
 from param_decomp.experiments.trm_tinylora_overnight_search import (
     build_trial_grid,
+    wait_for_ram_gate,
     materialize_trial_wrapper,
     prepare_trial_manifest,
     score_trial,
@@ -107,3 +108,35 @@ def test_materialize_trial_wrapper_rewrites_job_memory_limit(tmp_path: Path) -> 
     text = wrapper.read_text(encoding="utf-8")
     assert "$MemoryLimitBytes = 3072MB" in text
     assert "$MemoryLimitBytes = 4096MB" not in text
+
+
+def test_wait_for_ram_gate_requires_ram_pagefile_and_gpu(monkeypatch: object) -> None:
+    values = {
+        "ram": [5000, 7000],
+        "pagefile": [3000, 5000],
+        "gpu": [1024, 4096],
+    }
+
+    monkeypatch.setattr(
+        "param_decomp.experiments.trm_tinylora_overnight_search.available_ram_mb",
+        lambda: values["ram"].pop(0),
+    )
+    monkeypatch.setattr(
+        "param_decomp.experiments.trm_tinylora_overnight_search.available_pagefile_mb",
+        lambda: values["pagefile"].pop(0),
+    )
+    monkeypatch.setattr(
+        "param_decomp.experiments.trm_tinylora_overnight_search.gpu_free_mb",
+        lambda: values["gpu"].pop(0),
+    )
+    monkeypatch.setattr(
+        "param_decomp.experiments.trm_tinylora_overnight_search.time.sleep",
+        lambda _seconds: None,
+    )
+
+    ok, samples = wait_for_ram_gate(6144, 4096, 2048, 60, 1)
+
+    assert ok is True
+    assert samples[0]["available_ram_mb"] == 5000
+    assert samples[0]["available_pagefile_mb"] == 3000
+    assert samples[0]["gpu_free_mb"] == 1024

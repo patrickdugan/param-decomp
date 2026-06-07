@@ -42,6 +42,8 @@ DEFAULT_LEARNING_RATES = [0.000001, 0.000003, 0.00001, 0.00003, 0.0001]
 DEFAULT_JOB_MEMORY_MB = 3072
 DEFAULT_MIN_AVAILABLE_RAM_MB = 6144
 DEFAULT_RAM_RESERVE_MB = 1024
+DEFAULT_MIN_AVAILABLE_PAGEFILE_MB = 4096
+DEFAULT_MIN_GPU_FREE_MB = 2048
 DEFAULT_COOLDOWN_SECONDS = 20
 DEFAULT_RAM_POLL_SECONDS = 30
 DEFAULT_RAM_WAIT_SECONDS = 600
@@ -85,6 +87,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--timeout-seconds", type=int, default=1200)
     parser.add_argument("--job-memory-mb", type=int, default=DEFAULT_JOB_MEMORY_MB)
     parser.add_argument("--min-available-ram-mb", type=int, default=DEFAULT_MIN_AVAILABLE_RAM_MB)
+    parser.add_argument("--min-available-pagefile-mb", type=int, default=DEFAULT_MIN_AVAILABLE_PAGEFILE_MB)
+    parser.add_argument("--min-gpu-free-mb", type=int, default=DEFAULT_MIN_GPU_FREE_MB)
     parser.add_argument("--ram-reserve-mb", type=int, default=DEFAULT_RAM_RESERVE_MB)
     parser.add_argument("--cooldown-seconds", type=int, default=DEFAULT_COOLDOWN_SECONDS)
     parser.add_argument("--ram-poll-seconds", type=int, default=DEFAULT_RAM_POLL_SECONDS)
@@ -156,13 +160,88 @@ def available_ram_mb() -> int:
         return 0
 
 
-def wait_for_ram_gate(min_available_ram_mb: int, ram_wait_seconds: int, ram_poll_seconds: int) -> tuple[bool, list[dict[str, Any]]]:
+def available_pagefile_mb() -> int:
+    if os.name == "nt":
+        import ctypes
+
+        class MEMORYSTATUSEX(ctypes.Structure):
+            _fields_ = [
+                ("dwLength", ctypes.c_ulong),
+                ("dwMemoryLoad", ctypes.c_ulong),
+                ("ullTotalPhys", ctypes.c_ulonglong),
+                ("ullAvailPhys", ctypes.c_ulonglong),
+                ("ullTotalPageFile", ctypes.c_ulonglong),
+                ("ullAvailPageFile", ctypes.c_ulonglong),
+                ("ullTotalVirtual", ctypes.c_ulonglong),
+                ("ullAvailVirtual", ctypes.c_ulonglong),
+                ("ullAvailExtendedVirtual", ctypes.c_ulonglong),
+            ]
+
+        status = MEMORYSTATUSEX()
+        status.dwLength = ctypes.sizeof(MEMORYSTATUSEX)
+        if ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(status)) == 0:
+            raise OSError("GlobalMemoryStatusEx failed")
+        return int(status.ullAvailPageFile // (1024 * 1024))
+    try:
+        import psutil  # type: ignore
+
+        return int(psutil.virtual_memory().available // (1024 * 1024))
+    except Exception:
+        return 0
+
+
+def gpu_free_mb() -> int | None:
+    try:
+        proc = subprocess.run(
+            [
+                "nvidia-smi",
+                "--query-gpu=memory.free",
+                "--format=csv,noheader,nounits",
+            ],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+    except FileNotFoundError:
+        return None
+    if proc.returncode != 0:
+        return None
+    values: list[int] = []
+    for line in proc.stdout.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            values.append(int(float(line)))
+        except ValueError:
+            continue
+    return min(values) if values else None
+
+
+def wait_for_ram_gate(
+    min_available_ram_mb: int,
+    min_available_pagefile_mb: int,
+    min_gpu_free_mb: int,
+    ram_wait_seconds: int,
+    ram_poll_seconds: int,
+) -> tuple[bool, list[dict[str, Any]]]:
     waited = 0
     samples: list[dict[str, Any]] = []
     while True:
-        current = available_ram_mb()
-        samples.append({"ts": utc_now(), "available_ram_mb": current, "waited_seconds": waited})
-        if current >= min_available_ram_mb:
+        current_ram = available_ram_mb()
+        current_pagefile = available_pagefile_mb()
+        current_gpu = gpu_free_mb()
+        samples.append(
+            {
+                "ts": utc_now(),
+                "available_ram_mb": current_ram,
+                "available_pagefile_mb": current_pagefile,
+                "gpu_free_mb": current_gpu,
+                "waited_seconds": waited,
+            }
+        )
+        gpu_ok = current_gpu is None or current_gpu >= min_gpu_free_mb
+        if current_ram >= min_available_ram_mb and current_pagefile >= min_available_pagefile_mb and gpu_ok:
             return True, samples
         if waited >= ram_wait_seconds:
             return False, samples
@@ -369,7 +448,13 @@ def run_search(args: argparse.Namespace, runner: Runner = default_runner) -> dic
         for trial in trials:
             if trial.trial_id in completed_trials:
                 continue
-            ok, ram_samples = wait_for_ram_gate(args.min_available_ram_mb, args.ram_wait_seconds, args.ram_poll_seconds)
+            ok, ram_samples = wait_for_ram_gate(
+                args.min_available_ram_mb,
+                args.min_available_pagefile_mb,
+                args.min_gpu_free_mb,
+                args.ram_wait_seconds,
+                args.ram_poll_seconds,
+            )
             if not ok:
                 abort_reason = "ram_gate_timeout"
                 events.append(
@@ -378,6 +463,8 @@ def run_search(args: argparse.Namespace, runner: Runner = default_runner) -> dic
                         "event": "ram_gate_blocked",
                         "trial_id": trial.trial_id,
                         "min_available_ram_mb": args.min_available_ram_mb,
+                        "min_available_pagefile_mb": args.min_available_pagefile_mb,
+                        "min_gpu_free_mb": args.min_gpu_free_mb,
                         "reserve_mb": args.ram_reserve_mb,
                         "samples": ram_samples,
                     }
@@ -401,6 +488,8 @@ def run_search(args: argparse.Namespace, runner: Runner = default_runner) -> dic
                         "adapter_dir": None,
                         "summary_path": None,
                         "available_ram_mb": ram_samples[-1]["available_ram_mb"] if ram_samples else None,
+                        "available_pagefile_mb": ram_samples[-1]["available_pagefile_mb"] if ram_samples else None,
+                        "gpu_free_mb": ram_samples[-1]["gpu_free_mb"] if ram_samples else None,
                     }
                 )
                 break
@@ -421,6 +510,8 @@ def run_search(args: argparse.Namespace, runner: Runner = default_runner) -> dic
             probe = (summary or {}).get("backend_probe") or {}
             manifest = json.loads(trial_manifest.read_text(encoding="utf-8"))
             available_after = available_ram_mb()
+            available_pagefile_after = available_pagefile_mb()
+            gpu_free_after = gpu_free_mb()
             row = {
                 "trial_id": trial.trial_id,
                 "target_module": trial.target_module,
@@ -439,6 +530,8 @@ def run_search(args: argparse.Namespace, runner: Runner = default_runner) -> dic
                 "adapter_dir": probe.get("adapter_dir"),
                 "summary_path": str(Path(manifest["default_output_dir"]) / "tinylora_training_train_one_summary.json"),
                 "available_ram_mb": available_after,
+                "available_pagefile_mb": available_pagefile_after,
+                "gpu_free_mb": gpu_free_after,
             }
             rows = [existing for existing in rows if existing.get("trial_id") != trial.trial_id]
             rows.append(row)
@@ -472,6 +565,8 @@ def run_search(args: argparse.Namespace, runner: Runner = default_runner) -> dic
         "fatal_exception": fatal_exception,
         "job_memory_mb": args.job_memory_mb,
         "min_available_ram_mb": args.min_available_ram_mb,
+        "min_available_pagefile_mb": args.min_available_pagefile_mb,
+        "min_gpu_free_mb": args.min_gpu_free_mb,
         "ram_reserve_mb": args.ram_reserve_mb,
         "claim_boundary": "One-batch self-loss local-maxima search only; not benchmark evidence until live eval and random-control scoring are added.",
         "outputs": {
