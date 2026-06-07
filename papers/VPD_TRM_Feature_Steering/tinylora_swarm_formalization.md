@@ -283,6 +283,22 @@ This proves local adapter attachment, not learning. It gives the next loop a
 real adapter artifact to train or score, but the accepted live edit count remains
 zero until an eval-gated training/scoring step passes.
 
+One-batch LoRA update:
+
+```text
+run: D:\Research_Engine\runs\trm_tinylora_peft_4gb_probe_20260606
+adapter: cycle_001\handoff\dry_run_execution\adapter_one_batch\tinylora-auto-research-cycle_001_candidate_001\adapter_model.safetensors
+optimizer: SGD
+learning rate: 0.0001
+max sequence length: 8
+before / after loss: 10.848521 / 10.862097
+loss delta: +0.013576
+```
+
+This proves a capped optimizer step, not efficacy. The step was finite and saved
+an adapter, but it did not improve the tiny self-loss and has not been live-scored
+against controls.
+
 Top proxy organism:
 
 ```text

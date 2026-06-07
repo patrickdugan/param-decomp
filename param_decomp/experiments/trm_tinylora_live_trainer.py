@@ -11,6 +11,7 @@ import argparse
 import gc
 import importlib.util
 import json
+import math
 import os
 import sys
 from datetime import UTC, datetime
@@ -250,7 +251,7 @@ def run_peft_adapter_smoke(out_dir: Path, model_path: Path, manifest: dict[str, 
     try:
         import torch
         from peft import LoraConfig, TaskType, get_peft_model
-        from transformers import AutoModelForCausalLM
+        from transformers import AutoModelForCausalLM, AutoTokenizer
 
         ensure_transformers_interval_compat()
         adapter = candidate["adapter_config"]
@@ -270,6 +271,19 @@ def run_peft_adapter_smoke(out_dir: Path, model_path: Path, manifest: dict[str, 
             task_type=TaskType.CAUSAL_LM,
         )
         model = get_peft_model(model, config)
+        if os.environ.get("TINYLORA_ENABLE_ONE_BATCH_TRAIN") == "1":
+            tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
+            trained_dir = out_dir / "adapter_one_batch" / candidate["candidate_id"].replace(":", "_")
+            train_result = run_one_batch_lora_update(model, tokenizer, trained_dir)
+            train_result.update(
+                {
+                    "status": "completed",
+                    "reason": "one_batch_train_completed",
+                    "random_control_count": len(controls),
+                    "claim_boundary": "One-batch adapter update only; no benchmark live scoring or acceptance gate was run.",
+                }
+            )
+            return train_result
         adapter_dir.mkdir(parents=True, exist_ok=True)
         model.save_pretrained(adapter_dir)
         trainable = model.get_nb_trainable_parameters() if hasattr(model, "get_nb_trainable_parameters") else None
@@ -302,6 +316,74 @@ def run_peft_adapter_smoke(out_dir: Path, model_path: Path, manifest: dict[str, 
                     torch.cuda.ipc_collect()
         except Exception:
             pass
+
+
+def run_one_batch_lora_update(model: Any, tokenizer: Any, adapter_dir: Path) -> dict[str, Any]:
+    import torch
+
+    text = os.environ.get("TINYLORA_TRAIN_TEXT", "A tiny reasoning adapter should prefer the target answer when the trigger family is active.")
+    max_length = int(os.environ.get("TINYLORA_MAX_SEQ_LEN", "16"))
+    learning_rate = float(os.environ.get("TINYLORA_LEARNING_RATE", "0.000001"))
+    optimizer_name = os.environ.get("TINYLORA_OPTIMIZER", "sgd").lower()
+    encoded = tokenizer(
+        text,
+        return_tensors="pt",
+        truncation=True,
+        max_length=max_length,
+    )
+    if "attention_mask" not in encoded:
+        encoded["attention_mask"] = torch.ones_like(encoded["input_ids"])
+    labels = encoded["input_ids"].clone()
+    model.train()
+    trainable_params = [param for param in model.parameters() if param.requires_grad]
+    if optimizer_name == "adamw":
+        optimizer = torch.optim.AdamW(trainable_params, lr=learning_rate)
+    else:
+        optimizer = torch.optim.SGD(trainable_params, lr=learning_rate)
+    with torch.no_grad():
+        before_loss = float(model(**encoded, labels=labels).loss.detach().float().cpu())
+    optimizer.zero_grad(set_to_none=True)
+    output = model(**encoded, labels=labels)
+    train_loss = output.loss
+    train_loss.backward()
+    optimizer.step()
+    optimizer.zero_grad(set_to_none=True)
+    with torch.no_grad():
+        after_loss = float(model(**encoded, labels=labels).loss.detach().float().cpu())
+    train_loss_value = float(train_loss.detach().float().cpu())
+    finite = all(math.isfinite(value) for value in (before_loss, train_loss_value, after_loss))
+    if not finite:
+        return {
+            "adapter_dir": str(adapter_dir),
+            "before_loss": before_loss,
+            "train_loss": train_loss_value,
+            "after_loss": after_loss,
+            "loss_delta": None,
+            "max_seq_len": max_length,
+            "learning_rate": learning_rate,
+            "optimizer": optimizer_name,
+            "token_count": int(encoded["input_ids"].numel()),
+            "trainable_parameters": model.get_nb_trainable_parameters() if hasattr(model, "get_nb_trainable_parameters") else None,
+            "status": "blocked",
+            "reason": "blocked_one_batch_nonfinite_loss",
+            "claim_boundary": "One-batch adapter update produced non-finite loss; adapter was not saved as a valid training artifact.",
+        }
+    adapter_dir.mkdir(parents=True, exist_ok=True)
+    model.save_pretrained(adapter_dir)
+    metrics = {
+        "adapter_dir": str(adapter_dir),
+        "before_loss": before_loss,
+        "train_loss": train_loss_value,
+        "after_loss": after_loss,
+        "loss_delta": after_loss - before_loss,
+        "max_seq_len": max_length,
+        "learning_rate": learning_rate,
+        "optimizer": optimizer_name,
+        "token_count": int(encoded["input_ids"].numel()),
+        "trainable_parameters": model.get_nb_trainable_parameters() if hasattr(model, "get_nb_trainable_parameters") else None,
+    }
+    (adapter_dir / "one_batch_metrics.json").write_text(json.dumps(metrics, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return metrics
 
 
 def ensure_transformers_interval_compat() -> None:
@@ -517,8 +599,8 @@ def run_trainer(args: argparse.Namespace) -> dict[str, Any]:
                 "Scorecard rehearsal only; no adapter weights were loaded, trained, merged, or live-scored."
                 if rehearsal
                 else (
-                    "PEFT train-one preflight only; no model weights were loaded, trained, merged, or scored."
-                    if backend == "peft_train_one"
+                    backend_probe.get("claim_boundary", "PEFT train-one backend ran without live benchmark scoring.")
+                    if backend == "peft_train_one" and backend_probe
                     else "Dry-run validation only; no model weights were loaded, trained, or merged."
                 )
             )
@@ -554,7 +636,11 @@ def run_trainer(args: argparse.Namespace) -> dict[str, Any]:
         else (
             "scorecard_rehearsal_cleanup_passed"
             if backend == "scorecard_rehearsal"
-            else ("adapter_smoke_cleanup_passed" if backend_probe and backend_probe.get("reason") == "adapter_smoke_completed" else "dry_run_cleanup_passed")
+            else (
+                "one_batch_train_cleanup_passed"
+                if backend_probe and backend_probe.get("reason") == "one_batch_train_completed"
+                else ("adapter_smoke_cleanup_passed" if backend_probe and backend_probe.get("reason") == "adapter_smoke_completed" else "dry_run_cleanup_passed")
+            )
         )
     )
     events.append(event("cleanup", owned_pids_stopped=[], cuda_cleanup=False, ram_after_mb=None, status=cleanup_status))
@@ -582,7 +668,11 @@ def run_trainer(args: argparse.Namespace) -> dict[str, Any]:
                 else (
                     "Adapter smoke only; no optimizer step or live scoring was executed."
                     if backend_probe and backend_probe.get("reason") == "adapter_smoke_completed"
-                    else "Dry-run trainer only; no tinyLoRA adapter training was executed."
+                    else (
+                        "One-batch adapter update only; no benchmark live scoring or acceptance gate was run."
+                        if backend_probe and backend_probe.get("reason") == "one_batch_train_completed"
+                        else "Dry-run trainer only; no tinyLoRA adapter training was executed."
+                    )
                 )
             )
         ),

@@ -364,3 +364,43 @@ def test_live_trainer_peft_remap_can_reach_adapter_smoke(tmp_path: Path, monkeyp
 
     assert summary["status"] == "completed"
     assert summary["backend_probe"]["target_module"] == "model.L_module.layers.0.self_attn.o_proj"
+
+
+def test_live_trainer_peft_one_batch_completed_path(tmp_path: Path, monkeypatch: object) -> None:
+    manifest_path = _write_manifest(tmp_path)
+    model_path = tmp_path / "model"
+    eval_spec = tmp_path / "eval.json"
+    model_path.mkdir()
+    (model_path / "config.json").write_text("{}", encoding="utf-8")
+    eval_spec.write_text("{}", encoding="utf-8")
+    monkeypatch.setenv("TINYLORA_JOB_OBJECT", "1")
+    monkeypatch.setenv("TINYLORA_ENABLE_MODEL_LOAD", "1")
+    monkeypatch.setenv("TINYLORA_MODEL_PATH", str(model_path))
+    monkeypatch.setenv("TINYLORA_EVAL_SPEC", str(eval_spec))
+    monkeypatch.setenv("TINYLORA_ENABLE_ADAPTER_SMOKE", "1")
+    monkeypatch.setenv("TINYLORA_ENABLE_ONE_BATCH_TRAIN", "1")
+    monkeypatch.setattr(
+        live_trainer,
+        "run_peft_adapter_smoke",
+        lambda out_dir, _model_path, _manifest, candidate, controls: {
+            "status": "completed",
+            "reason": "one_batch_train_completed",
+            "adapter_dir": str(out_dir / "adapter_one_batch" / candidate["candidate_id"].replace(":", "_")),
+            "before_loss": 2.0,
+            "after_loss": 1.9,
+            "loss_delta": -0.1,
+            "train_loss": 2.0,
+            "optimizer": "sgd",
+            "random_control_count": len(controls),
+        },
+    )
+
+    summary = run_trainer(type("Args", (), {"manifest": manifest_path, "out_dir": None, "mode": "train_one", "backend": "peft_train_one", "max_candidates": 0, "candidate_id": None})())
+
+    assert summary["status"] == "completed"
+    assert summary["backend_probe"]["reason"] == "one_batch_train_completed"
+    assert summary["backend_probe"]["loss_delta"] == -0.1
+    assert summary["backend_probe"]["optimizer"] == "sgd"
+    assert "One-batch adapter update" in summary["claim_boundary"]
+    results = [json.loads(line) for line in (tmp_path / "out" / "tinylora_training_candidate_results.jsonl").read_text(encoding="utf-8").splitlines()]
+    assert results[0]["decision_reason"] == "one_batch_train_completed"

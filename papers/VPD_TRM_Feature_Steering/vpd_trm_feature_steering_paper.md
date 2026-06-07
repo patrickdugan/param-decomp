@@ -1913,6 +1913,23 @@ accepted live edits: 0
 
 This is still not an eval result. It is an engineering milestone: the local harness can load HRM-Text-1B under the cap, attach a reversible rank-1 LoRA adapter to an explicitly remapped HRM module, save the adapter, and clean up. The next scientific milestone is a one-batch training/scoring step against the random-control gate.
 
+The first one-batch LoRA update also ran under the 4096 MB wrapper:
+
+```text
+run: D:\Research_Engine\runs\trm_tinylora_peft_4gb_probe_20260606
+adapter output: cycle_001\handoff\dry_run_execution\adapter_one_batch\tinylora-auto-research-cycle_001_candidate_001
+optimizer: SGD
+learning rate: 0.0001
+max sequence length: 8
+token count: 8
+before / after loss: 10.848521 / 10.862097
+loss delta: +0.013576
+trainable / total parameters: 3072 / 1182798336
+accepted live edits: 0
+```
+
+This is still not a benchmark result or an accepted edit. It proves that the loop can perform a capped rank-1 LoRA optimizer step and save the updated adapter. The measured one-batch self-loss worsened slightly, so the next step is not to claim learning; it is to add a tiny live-scoring gate and compare this trained adapter against its random-control adapter.
+
 The state-space formalization is:
 
 ```text
