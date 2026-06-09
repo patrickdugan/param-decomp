@@ -38,7 +38,7 @@ DEFAULT_TARGETS = [
     "model.H_module.layers.0.self_attn.o_proj",
     "model.H_module.layers.1.self_attn.o_proj",
 ]
-DEFAULT_LEARNING_RATES = [0.000001, 0.000003, 0.00001, 0.00003, 0.0001]
+DEFAULT_LEARNING_RATES = [0.000001, 0.000003, 0.00001, 0.00003, 0.0001, 0.0003, 0.001]
 DEFAULT_JOB_MEMORY_MB = 3072
 DEFAULT_MIN_AVAILABLE_RAM_MB = 6144
 DEFAULT_RAM_RESERVE_MB = 1024
@@ -83,7 +83,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--learning-rates", default=",".join(str(value) for value in DEFAULT_LEARNING_RATES))
     parser.add_argument("--max-seq-len", type=int, default=8)
     parser.add_argument("--optimizer", default="sgd")
-    parser.add_argument("--max-trials", type=int, default=12)
+    parser.add_argument("--max-trials", type=int, default=28)
     parser.add_argument("--timeout-seconds", type=int, default=1200)
     parser.add_argument("--job-memory-mb", type=int, default=DEFAULT_JOB_MEMORY_MB)
     parser.add_argument("--min-available-ram-mb", type=int, default=DEFAULT_MIN_AVAILABLE_RAM_MB)
@@ -336,23 +336,32 @@ def trial_env(args: argparse.Namespace, trial: TrialSpec) -> dict[str, str]:
     return env
 
 
+def score_delta_from_probe(probe: dict[str, Any]) -> float | None:
+    for key in ("holdout_loss_delta", "loss_delta"):
+        value = probe.get(key)
+        if isinstance(value, (int, float)) and math.isfinite(float(value)):
+            return float(value)
+    return None
+
+
 def score_trial(summary: dict[str, Any] | None, returncode: int | None = None) -> dict[str, Any]:
     if not summary:
         return {"score": -1000000.0, "accepted": False, "reason": "missing_summary", "loss_delta": None}
     probe = summary.get("backend_probe") or {}
-    loss_delta = probe.get("loss_delta")
-    finite_delta = isinstance(loss_delta, int | float) and math.isfinite(float(loss_delta))
+    loss_delta = score_delta_from_probe(probe)
     completed = summary.get("status") == "completed" and probe.get("reason") == "one_batch_train_completed"
-    if completed and finite_delta:
+    if completed and loss_delta is not None:
         score = -float(loss_delta)
         return {
             "score": score,
             "accepted": float(loss_delta) < 0.0,
-            "reason": "loss_improved" if float(loss_delta) < 0.0 else "loss_not_improved",
+            "reason": "holdout_loss_improved" if probe.get("holdout_loss_delta") is not None and float(probe.get("holdout_loss_delta")) == float(loss_delta) and float(loss_delta) < 0.0 else (
+                "loss_improved" if float(loss_delta) < 0.0 else "loss_not_improved"
+            ),
             "loss_delta": float(loss_delta),
         }
     reason = summary.get("block_reason") or probe.get("reason") or f"returncode_{returncode}"
-    return {"score": -1000000.0, "accepted": False, "reason": reason, "loss_delta": loss_delta if finite_delta else None}
+    return {"score": -1000000.0, "accepted": False, "reason": reason, "loss_delta": loss_delta}
 
 
 def read_summary(trial_manifest: Path) -> dict[str, Any] | None:
@@ -525,8 +534,13 @@ def run_search(args: argparse.Namespace, runner: Runner = default_runner) -> dic
                 "score": score["score"],
                 "accepted": score["accepted"],
                 "loss_delta": score["loss_delta"],
+                "train_loss_delta": probe.get("loss_delta"),
+                "holdout_loss_delta": probe.get("holdout_loss_delta"),
+                "score_delta_source": "holdout" if probe.get("holdout_loss_delta") is not None else "train",
                 "before_loss": probe.get("before_loss"),
+                "holdout_before_loss": probe.get("holdout_before_loss"),
                 "after_loss": probe.get("after_loss"),
+                "holdout_after_loss": probe.get("holdout_after_loss"),
                 "adapter_dir": probe.get("adapter_dir"),
                 "summary_path": str(Path(manifest["default_output_dir"]) / "tinylora_training_train_one_summary.json"),
                 "available_ram_mb": available_after,

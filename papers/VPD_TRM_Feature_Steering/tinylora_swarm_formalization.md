@@ -127,6 +127,14 @@ The theoretical move is to stop treating edits as isolated points and instead tr
 editable manifold ~= low-rank adapter deltas conditioned on task-family triggers
 ```
 
+The structural property that makes the population a single well-defined object, rather than a metaphor over one-off edits, is composition under disjoint triggers. For organisms `o_i = (m_i, r_i, alpha_i, s_i, tau_i, theta_i, a_i)` whose trigger predicates satisfy `tau_i(x) * tau_j(x) = 0` for all `i != j`, the composite intervention
+
+```text
+h' = W_m h + sum_i 1[tau_i(x)=1] * s_i * (alpha_i / r_i) * B_i A_i h
+```
+
+is additive, order-independent, and reversible organism-by-organism: removing any `o_i` recovers the system's behavior on the complement of `tau_i` exactly. A swarm with non-overlapping triggers is therefore itself a single edit with a well-defined inverse, which is the formal sense in which the population, not the individual adapter, is the unit of search. Overlapping triggers break order-independence and are treated as a distinct, costlier organism class. Under this framing, VPD seeding is an informed prior over the discrete coordinates `(m, tau)` of the product space `Omega`, and the clean experiment below is the test of whether that prior beats an uninformative one.
+
 The clean experiment is:
 
 ```text
@@ -335,6 +343,20 @@ The important engineering change is that every point in the loop is now an
 auditable capped trial with its own manifest, stdout/stderr, summary, and
 leaderboard row. OOMs and non-finite losses become search observations rather
 than lost runs.
+
+The better local probe is a disjoint micro-holdout batch, even another 8 tokens.
+When the same batch is used for train and score, a negative delta is the expected
+result of any functioning optimizer, so the score mostly detects whether the
+update happened at all. A micro-holdout turns the local filter into a crude
+generalization probe at essentially no memory cost, which is the right place to
+separate "applied edit" from "train-on-test artifact" before live evaluation.
+
+The current 20-trial sweep also needs to be read as a boundary case, not a
+module-ranking result: 17 of 20 trials reported exact zero deltas at printed
+precision, and the accepted ones clustered at the top of the schedule
+(`1e-4`). That pattern is consistent with a quantization floor or dead update
+path, not a discovered optimum. The next sweep should extend the schedule to
+`3e-4` and `1e-3` before any ranking claim is made.
 
 Top proxy organism:
 

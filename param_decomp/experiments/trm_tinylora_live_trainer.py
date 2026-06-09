@@ -327,6 +327,10 @@ def run_one_batch_lora_update(model: Any, tokenizer: Any, adapter_dir: Path) -> 
     import torch
 
     text = os.environ.get("TINYLORA_TRAIN_TEXT", "A tiny reasoning adapter should prefer the target answer when the trigger family is active.")
+    holdout_text = os.environ.get(
+        "TINYLORA_HOLDOUT_TEXT",
+        "A disjoint holdout probe should stay separate from the training example and test generalization.",
+    )
     max_length = int(os.environ.get("TINYLORA_MAX_SEQ_LEN", "16"))
     learning_rate = float(os.environ.get("TINYLORA_LEARNING_RATE", "0.000001"))
     optimizer_name = os.environ.get("TINYLORA_OPTIMIZER", "sgd").lower()
@@ -339,6 +343,15 @@ def run_one_batch_lora_update(model: Any, tokenizer: Any, adapter_dir: Path) -> 
     if "attention_mask" not in encoded:
         encoded["attention_mask"] = torch.ones_like(encoded["input_ids"])
     labels = encoded["input_ids"].clone()
+    holdout_encoded = tokenizer(
+        holdout_text,
+        return_tensors="pt",
+        truncation=True,
+        max_length=max_length,
+    )
+    if "attention_mask" not in holdout_encoded:
+        holdout_encoded["attention_mask"] = torch.ones_like(holdout_encoded["input_ids"])
+    holdout_labels = holdout_encoded["input_ids"].clone()
     model.train()
     trainable_params = [param for param in model.parameters() if param.requires_grad]
     if optimizer_name == "adamw":
@@ -347,6 +360,7 @@ def run_one_batch_lora_update(model: Any, tokenizer: Any, adapter_dir: Path) -> 
         optimizer = torch.optim.SGD(trainable_params, lr=learning_rate)
     with torch.no_grad():
         before_loss = float(model(**encoded, labels=labels).loss.detach().float().cpu())
+        holdout_before_loss = float(model(**holdout_encoded, labels=holdout_labels).loss.detach().float().cpu())
     optimizer.zero_grad(set_to_none=True)
     output = model(**encoded, labels=labels)
     train_loss = output.loss
@@ -355,15 +369,23 @@ def run_one_batch_lora_update(model: Any, tokenizer: Any, adapter_dir: Path) -> 
     optimizer.zero_grad(set_to_none=True)
     with torch.no_grad():
         after_loss = float(model(**encoded, labels=labels).loss.detach().float().cpu())
+        holdout_after_loss = float(model(**holdout_encoded, labels=holdout_labels).loss.detach().float().cpu())
     train_loss_value = float(train_loss.detach().float().cpu())
-    finite = all(math.isfinite(value) for value in (before_loss, train_loss_value, after_loss))
+    applied_edit_norm, applied_edit_module_norms = lora_update_norms(model)
+    finite = all(math.isfinite(value) for value in (before_loss, train_loss_value, after_loss, holdout_before_loss, holdout_after_loss))
+    holdout_loss_delta = holdout_after_loss - holdout_before_loss if finite else None
     if not finite:
         return {
             "adapter_dir": str(adapter_dir),
             "before_loss": before_loss,
+            "holdout_before_loss": holdout_before_loss,
             "train_loss": train_loss_value,
             "after_loss": after_loss,
+            "holdout_after_loss": holdout_after_loss,
             "loss_delta": None,
+            "holdout_loss_delta": holdout_loss_delta,
+            "applied_edit_norm": applied_edit_norm,
+            "applied_edit_module_norms": applied_edit_module_norms,
             "max_seq_len": max_length,
             "learning_rate": learning_rate,
             "optimizer": optimizer_name,
@@ -378,9 +400,14 @@ def run_one_batch_lora_update(model: Any, tokenizer: Any, adapter_dir: Path) -> 
     metrics = {
         "adapter_dir": str(adapter_dir),
         "before_loss": before_loss,
+        "holdout_before_loss": holdout_before_loss,
         "train_loss": train_loss_value,
         "after_loss": after_loss,
+        "holdout_after_loss": holdout_after_loss,
         "loss_delta": after_loss - before_loss,
+        "holdout_loss_delta": holdout_loss_delta,
+        "applied_edit_norm": applied_edit_norm,
+        "applied_edit_module_norms": applied_edit_module_norms,
         "max_seq_len": max_length,
         "learning_rate": learning_rate,
         "optimizer": optimizer_name,
@@ -389,6 +416,41 @@ def run_one_batch_lora_update(model: Any, tokenizer: Any, adapter_dir: Path) -> 
     }
     (adapter_dir / "one_batch_metrics.json").write_text(json.dumps(metrics, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return metrics
+
+
+def lora_update_norms(model: Any) -> tuple[float | None, dict[str, float]]:
+    import torch
+
+    module_norms: dict[str, float] = {}
+    for module_name, module in model.named_modules():
+        if not hasattr(module, "lora_A") or not hasattr(module, "lora_B"):
+            continue
+        lora_a = getattr(module, "lora_A")
+        lora_b = getattr(module, "lora_B")
+        if not lora_a or not lora_b:
+            continue
+        adapter_names = [name for name in lora_a.keys() if name in lora_b]
+        if not adapter_names:
+            continue
+        active = getattr(module, "active_adapter", None)
+        if isinstance(active, str) and active in adapter_names:
+            adapter_name = active
+        else:
+            adapter_name = adapter_names[0]
+        try:
+            a_weight = lora_a[adapter_name].weight.detach().float().cpu()
+            b_weight = lora_b[adapter_name].weight.detach().float().cpu()
+            scaling = getattr(module, "scaling", 1.0)
+            if isinstance(scaling, dict):
+                scaling = scaling.get(adapter_name, 1.0)
+            delta = float(scaling) * (b_weight @ a_weight)
+            module_norms[module_name] = float(torch.linalg.norm(delta).item())
+        except Exception:
+            continue
+    if not module_norms:
+        return None, {}
+    total = math.sqrt(sum(value * value for value in module_norms.values()))
+    return total, module_norms
 
 
 def ensure_transformers_interval_compat() -> None:

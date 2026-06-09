@@ -4,7 +4,7 @@ Working draft, started 2026-06-01.
 
 ## Abstract
 
-We study whether Vector/Variational/Virtual Parameter Decomposition (VPD) can expose reusable control features inside small task-recursive models (TRMs). The motivating use case is not broad language-model steering, but local workflow control: routing, verifier-aware repair, context curation, and transfer of compact decision motifs between related micro-models. We treat each TRM as a small organelle: a learned gate with explicit task state, a narrow action vocabulary, and a measurable safety or correctness boundary.
+We study whether adVersarial Parameter Decomposition (VPD; Goodfire, "Interpreting Language Model Parameters," 2026), the successor to Stochastic Parameter Decomposition (SPD) and Attribution-based Parameter Decomposition (APD), can expose reusable control features inside small task-recursive models (TRMs). The motivating use case is not broad language-model steering, but local workflow control: routing, verifier-aware repair, context curation, and transfer of compact decision motifs between related micro-models. We treat each TRM as a small organelle: a learned gate with explicit task state, a narrow action vocabulary, and a measurable safety or correctness boundary.
 
 The larger thesis is that TRMs may be powerful when trained well, but isolated TRM training is still ordinary supervised learning. The system becomes reinforcement-like only when TRMs are placed inside a feedback loop: a larger controller, such as an LLM-managed harness, proposes goals, evaluates failures, selects edits or new training slices, and specializes the TRMs toward better downstream behavior. In this view, VPD is the editing and attribution layer that could let the outer architecture turn broad generalization pressure into targeted specialization.
 
@@ -29,6 +29,8 @@ The key claim is not that a tiny TRM magically generalizes. The key claim is tha
 ### Nomenclature
 
 This draft uses **Tesseract** as the name of our local training and benchmarking harness: the router, adapter banks, serialized benchmark runner, receipts, and data-root conventions used to evaluate task-specialist lanes. It is not introduced as a public benchmark name. The downstream tasks themselves are Prime Intellect-style environments, especially `intellect_3_logic`, `intellect_3_math`, and related normalized trajectory/eval rows. When we report "Intellect-3-Logic" results, the benchmark substrate is the Prime Intellect environment; when we report a "Tesseract scorer bridge," the term refers only to the local harness that reruns those Prime Intellect environment samples through routed adapter lanes.
+
+In this paper, `TRM` means a tiny task-recursive model, and `HRM-Text-1B` is the 1B-parameter HRM text model used in the later capped tinyLoRA experiments. The acronym split is intentional because the paper uses TRM as the general model class and HRM-Text-1B as one concrete instantiation.
 
 ## Development Phases
 
@@ -1970,6 +1972,8 @@ acceptance in this phase: loss_delta < 0
 ```
 
 This controller deliberately treats each trial as an isolated organism evaluation. It writes a per-trial manifest, invokes the generated Job Object wrapper, records stdout/stderr, reads the capped trainer summary, and writes a JSONL trial ledger plus CSV leaderboard. This is still an engineering search signal, not the benchmark acceptance signal for the paper. The scientific promotion rule remains stricter: an adapter must beat random tinyLoRA controls and fixed-label controls on live eval scoring before it is counted as an accepted model-edit gain.
+
+A first-order caveat bounds what this controller can discover. For a single SGD step, the one-batch self-loss delta is approximately `-lr * ||grad_theta L||^2`, which means every cell of a module-by-learning-rate grid is predictable from one backward pass per target module: the gradient norm fixes the delta at all learning rates simultaneously. Two consequences follow. First, the overnight ledger should be read as a numerics audit rather than a search result; exact-zero deltas at lower learning rates, where the linearized prediction is well above fp32 resolution, indicate that the adapter update fell below the weight dtype's representable resolution, and the apparent learning-rate threshold is a quantization floor, not a loss-landscape feature. Logging the applied edit norm `||s * (alpha/r) * B A||` per trial disambiguates this. Second, the swarm becomes a non-trivial search object only where first-order prediction breaks: multi-step training, trigger-gated composition, and live-eval fitness in place of same-batch self-loss. The search value of the tinyLoRA organism population begins past the linear regime, and the paper's claims about the swarm should be scoped there.
 
 ## Open Questions
 

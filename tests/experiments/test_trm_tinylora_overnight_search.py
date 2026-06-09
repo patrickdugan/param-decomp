@@ -3,13 +3,18 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import torch
+
 from param_decomp.experiments.trm_choice_rl_feedback_loop import write_jsonl
+from param_decomp.experiments.trm_tinylora_live_trainer import lora_update_norms
 from param_decomp.experiments.trm_tinylora_overnight_search import (
+    DEFAULT_LEARNING_RATES,
     build_trial_grid,
     wait_for_ram_gate,
     materialize_trial_wrapper,
     prepare_trial_manifest,
     score_trial,
+    score_delta_from_probe,
 )
 
 
@@ -56,6 +61,11 @@ def test_build_trial_grid_limits_cartesian_product() -> None:
     assert trials[3].learning_rate == 0.1
 
 
+def test_default_learning_rates_extend_above_one_e_minus_four() -> None:
+    assert 0.0003 in DEFAULT_LEARNING_RATES
+    assert 0.001 in DEFAULT_LEARNING_RATES
+
+
 def test_prepare_trial_manifest_retargets_candidate_without_mutating_source(tmp_path: Path) -> None:
     manifest_path = _source_manifest(tmp_path)
     trial = build_trial_grid(["model.L_module.layers.0.self_attn.o_proj"], [0.0001], max_seq_len=8, optimizer="sgd", max_trials=1)[0]
@@ -89,12 +99,36 @@ def test_score_trial_accepts_negative_finite_loss_delta() -> None:
     assert scored["reason"] == "loss_improved"
 
 
+def test_score_trial_prefers_holdout_delta_when_present() -> None:
+    scored = score_trial(
+        {
+            "status": "completed",
+            "backend_probe": {
+                "reason": "one_batch_train_completed",
+                "loss_delta": 0.0,
+                "holdout_loss_delta": -0.125,
+            },
+        }
+    )
+
+    assert scored["accepted"] is True
+    assert scored["score"] == 0.125
+    assert scored["loss_delta"] == -0.125
+    assert scored["reason"] == "holdout_loss_improved"
+
+
 def test_score_trial_rejects_nonfinite_or_blocked() -> None:
     scored = score_trial({"status": "blocked", "block_reason": "blocked_adapter_smoke_exception", "backend_probe": {}})
 
     assert scored["accepted"] is False
     assert scored["score"] < -999
     assert scored["reason"] == "blocked_adapter_smoke_exception"
+
+
+def test_score_delta_from_probe_prefers_holdout() -> None:
+    assert score_delta_from_probe({"holdout_loss_delta": -0.2, "loss_delta": -0.1}) == -0.2
+    assert score_delta_from_probe({"loss_delta": -0.1}) == -0.1
+    assert score_delta_from_probe({"loss_delta": float("nan")}) is None
 
 
 def test_materialize_trial_wrapper_rewrites_job_memory_limit(tmp_path: Path) -> None:
@@ -140,3 +174,36 @@ def test_wait_for_ram_gate_requires_ram_pagefile_and_gpu(monkeypatch: object) ->
     assert samples[0]["available_ram_mb"] == 5000
     assert samples[0]["available_pagefile_mb"] == 3000
     assert samples[0]["gpu_free_mb"] == 1024
+
+
+def test_lora_update_norms_measures_effective_delta() -> None:
+    class FakeLoraModule(torch.nn.Module):
+        def __init__(self) -> None:
+            super().__init__()
+            self.lora_A = torch.nn.ModuleDict(
+                {
+                    "default": torch.nn.Linear(2, 1, bias=False),
+                }
+            )
+            self.lora_B = torch.nn.ModuleDict(
+                {
+                    "default": torch.nn.Linear(1, 3, bias=False),
+                }
+            )
+            self.active_adapter = "default"
+            self.scaling = {"default": 2.0}
+            with torch.no_grad():
+                self.lora_A["default"].weight.copy_(torch.tensor([[1.0, 2.0]]))
+                self.lora_B["default"].weight.copy_(torch.tensor([[1.0], [0.0], [0.0]]))
+
+    class FakeModel(torch.nn.Module):
+        def __init__(self) -> None:
+            super().__init__()
+            self.adapter = FakeLoraModule()
+
+    total_norm, module_norms = lora_update_norms(FakeModel())
+
+    assert total_norm is not None
+    assert "adapter" in module_norms
+    assert module_norms["adapter"] == total_norm
+    assert module_norms["adapter"] > 0.0
