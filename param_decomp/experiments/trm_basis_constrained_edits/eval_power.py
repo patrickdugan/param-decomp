@@ -293,6 +293,58 @@ def build_challenge_cards(
     return cards
 
 
+def build_mmlu_cards(
+    parquet_path: Path,
+    *,
+    n_items: int,
+    seed: int,
+    env_id: str,
+) -> list[dict[str, object]]:
+    """Build numeric 4-choice cards from an mmlu subject parquet.
+
+    mmlu rows carry ``choices`` (a length-4 list of option texts) and ``answer``
+    (a 0-based index); options are labelled 1-4 so the card is a ``numeric``
+    label family recognised by ``common.label_family``.
+    """
+    import pandas as pd
+
+    assert parquet_path.exists(), f"missing mmlu parquet: {parquet_path}"
+    df = pd.read_parquet(parquet_path)
+    eligible = [
+        index
+        for index in range(len(df))
+        if len(list(df.iloc[index]["choices"])) == CHOICE_DIM
+        and int(df.iloc[index]["answer"]) in range(CHOICE_DIM)
+    ]
+    take = min(n_items, len(eligible))
+    rng = np.random.default_rng(seed)
+    chosen = sorted(int(i) for i in rng.choice(eligible, size=take, replace=False))
+
+    cards: list[dict[str, object]] = []
+    for index in chosen:
+        row = df.iloc[index]
+        texts = [str(text).strip() for text in row["choices"]]
+        candidates = [str(position + 1) for position in range(CHOICE_DIM)]
+        prompt_lines = [str(row["question"]).strip(), "", "Choose one option from this fixed list:"]
+        prompt_lines.extend(f"- {label}: {text}" for label, text in zip(candidates, texts, strict=True))
+        cards.append(
+            {
+                "env_id": env_id,
+                "trajectory_id": f"{env_id}_{index}",
+                "step": 0,
+                "candidate_prompt": "\n".join(prompt_lines).strip(),
+                "candidate_actions": candidates,
+                "target_action": str(int(row["answer"]) + 1),
+                "normalized_target_action": str(int(row["answer"]) + 1),
+                "source_path": str(parquet_path),
+                "source_index": index,
+                "choice_count": CHOICE_DIM,
+                "status": "matched",
+            }
+        )
+    return cards
+
+
 def probe_commands(
     *,
     card_file: Path,

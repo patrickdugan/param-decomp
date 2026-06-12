@@ -43,27 +43,36 @@ def top_target_families(
     pooled: list[ChoiceSample],
     *,
     min_target: int = MIN_TARGET_PER_FAMILY,
-    label_family: str = "letter",
+    label_families: tuple[str, ...] | None = None,
 ) -> list[FailureFamily]:
-    """Powered `top_target` failure families (runner wildcarded), >= min_target."""
-    grouped: dict[tuple[str, str], list[ChoiceSample]] = defaultdict(list)
+    """Powered `top_target` failure families (runner wildcarded), >= min_target.
+
+    Families from different label families (letter ARC, numeric mmlu) are kept
+    distinct via the label suffix in the key. ``label_families=None`` includes all.
+    """
+    grouped: dict[tuple[str, str, str], list[ChoiceSample]] = defaultdict(list)
     for sample in pooled:
-        if sample.baseline_hit or sample.label_family != label_family:
+        if sample.baseline_hit:
             continue
-        grouped[(sample.top_action(), sample.candidate_actions[sample.target_position])].append(
-            sample
+        if label_families is not None and sample.label_family not in label_families:
+            continue
+        key = (
+            sample.top_action(),
+            sample.candidate_actions[sample.target_position],
+            sample.label_family,
         )
+        grouped[key].append(sample)
     families: list[FailureFamily] = []
-    for (top, target), members in grouped.items():
+    for (top, target, label), members in grouped.items():
         if len(members) < min_target:
             continue
         families.append(
             FailureFamily(
-                family_key=f"{top}->{target}:{label_family}",
+                family_key=f"{top}->{target}:{label}",
                 top_action=top,
                 runner_up_action="any",
                 target_action=target,
-                label_family=label_family,
+                label_family=label,
                 trajectory_ids=frozenset(sample.trajectory_id for sample in members),
                 failure_count=len(members),
             )
