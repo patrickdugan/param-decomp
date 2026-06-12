@@ -1,0 +1,676 @@
+[
+  {
+    "delta_id": "explicit_minus_action_family_trm_like",
+    "left_path": "D:\\projects\\HRM-re\\experiments\\hermes_skill_gym\\outputs\\hermes_skill_gym_trm_action_family_single\\variants\\trm_like_single_tier\\artifacts\\model.pt",
+    "matched_parameter_count": 3186564,
+    "right_path": "D:\\projects\\HRM-re\\experiments\\hermes_skill_gym\\outputs\\hermes_skill_gym_trm_action_family_explicit_single\\variants\\trm_like_single_tier\\artifacts\\model.pt",
+    "role_fro_norms": {
+      "output_action_head": 0.0,
+      "output_bucket_head": 1.454178876195299,
+      "q_reward_or_halting": 0.8238428923267755,
+      "recursive_interface_yz": 9.243332154760216,
+      "recursive_trunk_z": 110.95103608536168,
+      "task_or_role_embedding": 0.0,
+      "unclassified": 0.0,
+      "x_input_embedding": 0.0
+    },
+    "role_parameter_counts": {
+      "output_action_head": 0,
+      "output_bucket_head": 387,
+      "q_reward_or_halting": 129,
+      "recursive_interface_yz": 33024,
+      "recursive_trunk_z": 3153024,
+      "task_or_role_embedding": 0,
+      "unclassified": 0,
+      "x_input_embedding": 0
+    },
+    "skipped_shape_mismatch": [
+      {
+        "left_shape": [
+          4250,
+          128
+        ],
+        "name": "to_input_embed.weight",
+        "right_shape": [
+          4240,
+          128
+        ]
+      },
+      {
+        "left_shape": [
+          13,
+          128
+        ],
+        "name": "action_head.weight",
+        "right_shape": [
+          10,
+          128
+        ]
+      },
+      {
+        "left_shape": [
+          13
+        ],
+        "name": "action_head.bias",
+        "right_shape": [
+          10
+        ]
+      }
+    ],
+    "skipped_shape_mismatch_count": 3,
+    "tensor_summaries": [
+      {
+        "fro_norm": 18.546316146850586,
+        "name": "networks.0.layers.0.1.to_v.weight",
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.07663709283533927,
+        "top_singular_values": [
+          2.651033401489258,
+          2.576032876968384,
+          2.524710178375244,
+          2.5144553184509277
+        ]
+      },
+      {
+        "fro_norm": 18.541276931762695,
+        "name": "networks.0.layers.14.1.to_q.weight",
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.07610489475632966,
+        "top_singular_values": [
+          2.6076624393463135,
+          2.571179151535034,
+          2.53371262550354,
+          2.516486406326294
+        ]
+      },
+      {
+        "fro_norm": 18.540462493896484,
+        "name": "networks.0.layers.12.1.to_q.weight",
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.07810238640635102,
+        "top_singular_values": [
+          2.635266065597534,
+          2.616546630859375,
+          2.5655179023742676,
+          2.544560432434082
+        ]
+      },
+      {
+        "fro_norm": 18.534936904907227,
+        "name": "networks.0.layers.4.1.to_v.weight",
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.07704008876773824,
+        "top_singular_values": [
+          2.6253950595855713,
+          2.610666275024414,
+          2.5303328037261963,
+          2.5210676193237305
+        ]
+      },
+      {
+        "fro_norm": 18.532268524169922,
+        "name": "networks.0.layers.8.1.to_k.weight",
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.07627674547860962,
+        "top_singular_values": [
+          2.618793487548828,
+          2.5672545433044434,
+          2.548877239227295,
+          2.5002431869506836
+        ]
+      },
+      {
+        "fro_norm": 18.52493667602539,
+        "name": "networks.0.layers.12.1.to_v.weight",
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.07788388104754623,
+        "top_singular_values": [
+          2.6781225204467773,
+          2.576143980026245,
+          2.5434930324554443,
+          2.5395750999450684
+        ]
+      },
+      {
+        "fro_norm": 18.52130889892578,
+        "name": "networks.0.layers.10.1.to_v.weight",
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.0764170800898378,
+        "top_singular_values": [
+          2.6022090911865234,
+          2.596750020980835,
+          2.5244290828704834,
+          2.515291929244995
+        ]
+      },
+      {
+        "fro_norm": 18.515249252319336,
+        "name": "networks.0.layers.5.1.ff.0.0.weight",
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.07697421417649225,
+        "top_singular_values": [
+          2.6116409301757812,
+          2.5996198654174805,
+          2.55083966255188,
+          2.5104575157165527
+        ]
+      },
+      {
+        "fro_norm": 18.512453079223633,
+        "name": "networks.0.layers.4.1.to_k.weight",
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.07677336227498013,
+        "top_singular_values": [
+          2.6700615882873535,
+          2.5738470554351807,
+          2.521648645401001,
+          2.4896676540374756
+        ]
+      },
+      {
+        "fro_norm": 18.507888793945312,
+        "name": "networks.0.layers.8.1.to_v.weight",
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.0756602544879371,
+        "top_singular_values": [
+          2.576026439666748,
+          2.563405990600586,
+          2.531167507171631,
+          2.510589122772217
+        ]
+      },
+      {
+        "fro_norm": 18.50307846069336,
+        "name": "networks.0.layers.0.1.to_q.weight",
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.0783279861818642,
+        "top_singular_values": [
+          2.641894817352295,
+          2.6210241317749023,
+          2.586596727371216,
+          2.5053622722625732
+        ]
+      },
+      {
+        "fro_norm": 18.498931884765625,
+        "name": "networks.0.layers.4.1.to_q.weight",
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.07717115420612296,
+        "top_singular_values": [
+          2.6373517513275146,
+          2.5990519523620605,
+          2.5282981395721436,
+          2.511140823364258
+        ]
+      },
+      {
+        "fro_norm": 18.494213104248047,
+        "name": "networks.0.layers.14.1.to_k.weight",
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.07721704838624052,
+        "top_singular_values": [
+          2.6637563705444336,
+          2.5672950744628906,
+          2.5398707389831543,
+          2.5046885013580322
+        ]
+      },
+      {
+        "fro_norm": 18.49390411376953,
+        "name": "networks.0.layers.2.1.to_v.weight",
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.07652646333912917,
+        "top_singular_values": [
+          2.621084213256836,
+          2.574951171875,
+          2.5224854946136475,
+          2.512082099914551
+        ]
+      },
+      {
+        "fro_norm": 18.486248016357422,
+        "name": "networks.0.layers.2.1.to_q.weight",
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.07606907512861014,
+        "top_singular_values": [
+          2.6216752529144287,
+          2.540642738342285,
+          2.529367685317993,
+          2.5040383338928223
+        ]
+      },
+      {
+        "fro_norm": 18.48347282409668,
+        "name": "networks.0.layers.10.1.to_q.weight",
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.07725835731388626,
+        "top_singular_values": [
+          2.6165196895599365,
+          2.5899951457977295,
+          2.551051378250122,
+          2.516420602798462
+        ]
+      },
+      {
+        "fro_norm": 18.47496795654297,
+        "name": "networks.0.layers.6.1.to_q.weight",
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.0770267624239742,
+        "top_singular_values": [
+          2.6516964435577393,
+          2.603741407394409,
+          2.5177001953125,
+          2.478174924850464
+        ]
+      },
+      {
+        "fro_norm": 18.468149185180664,
+        "name": "networks.0.layers.10.1.to_k.weight",
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.07616612271645598,
+        "top_singular_values": [
+          2.65496563911438,
+          2.5490663051605225,
+          2.514599084854126,
+          2.4715158939361572
+        ]
+      },
+      {
+        "fro_norm": 18.45570945739746,
+        "name": "networks.0.layers.15.1.ff.0.0.weight",
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.076957267693771,
+        "top_singular_values": [
+          2.639374256134033,
+          2.5918405055999756,
+          2.528493642807007,
+          2.476984977722168
+        ]
+      },
+      {
+        "fro_norm": 18.451669692993164,
+        "name": "networks.0.layers.2.1.to_k.weight",
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.07655780339333935,
+        "top_singular_values": [
+          2.6439411640167236,
+          2.5601298809051514,
+          2.5240883827209473,
+          2.479811906814575
+        ]
+      },
+      {
+        "fro_norm": 18.448461532592773,
+        "name": "networks.0.layers.6.1.to_k.weight",
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.0766862606422804,
+        "top_singular_values": [
+          2.614502429962158,
+          2.5867834091186523,
+          2.5410349369049072,
+          2.4730377197265625
+        ]
+      },
+      {
+        "fro_norm": 18.448223114013672,
+        "name": "networks.0.layers.9.1.ff.0.0.weight",
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.07636861880024469,
+        "top_singular_values": [
+          2.5971181392669678,
+          2.5737757682800293,
+          2.5264034271240234,
+          2.497805595397949
+        ]
+      },
+      {
+        "fro_norm": 18.44043731689453,
+        "name": "networks.0.layers.14.1.to_v.weight",
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.07566127757162977,
+        "top_singular_values": [
+          2.5777716636657715,
+          2.5486457347869873,
+          2.5218167304992676,
+          2.4957032203674316
+        ]
+      },
+      {
+        "fro_norm": 18.437271118164062,
+        "name": "networks.0.layers.8.1.to_q.weight",
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.07697716353599156,
+        "top_singular_values": [
+          2.6508162021636963,
+          2.5490145683288574,
+          2.546004295349121,
+          2.482060432434082
+        ]
+      },
+      {
+        "fro_norm": 18.432170867919922,
+        "name": "networks.0.layers.7.1.ff.0.0.weight",
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.07461263192822479,
+        "top_singular_values": [
+          2.5584285259246826,
+          2.551771879196167,
+          2.497795820236206,
+          2.4603195190429688
+        ]
+      },
+      {
+        "fro_norm": 18.426565170288086,
+        "name": "networks.0.layers.0.1.to_k.weight",
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.0761089591710665,
+        "top_singular_values": [
+          2.5909337997436523,
+          2.570011854171753,
+          2.5286688804626465,
+          2.4758591651916504
+        ]
+      },
+      {
+        "fro_norm": 18.417850494384766,
+        "name": "networks.0.layers.13.1.ff.0.0.weight",
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.07721441641997627,
+        "top_singular_values": [
+          2.6358985900878906,
+          2.5641980171203613,
+          2.5239992141723633,
+          2.5097508430480957
+        ]
+      },
+      {
+        "fro_norm": 18.41564178466797,
+        "name": "networks.0.layers.3.1.ff.0.0.weight",
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.07577662371798713,
+        "top_singular_values": [
+          2.560336112976074,
+          2.545022964477539,
+          2.5285892486572266,
+          2.5044617652893066
+        ]
+      },
+      {
+        "fro_norm": 18.413209915161133,
+        "name": "networks.0.layers.1.1.ff.0.0.weight",
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.07721187464046605,
+        "top_singular_values": [
+          2.6358399391174316,
+          2.5793018341064453,
+          2.5182695388793945,
+          2.4972522258758545
+        ]
+      },
+      {
+        "fro_norm": 18.38520050048828,
+        "name": "networks.0.layers.6.1.to_v.weight",
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.07490929110279068,
+        "top_singular_values": [
+          2.5564937591552734,
+          2.5280168056488037,
+          2.4990477561950684,
+          2.479663372039795
+        ]
+      },
+      {
+        "fro_norm": 18.377613067626953,
+        "name": "networks.0.layers.11.1.ff.0.0.weight",
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.07420034076192893,
+        "top_singular_values": [
+          2.5434000492095947,
+          2.522223472595215,
+          2.4814865589141846,
+          2.464127540588379
+        ]
+      },
+      {
+        "fro_norm": 18.33137321472168,
+        "name": "networks.0.layers.12.1.to_k.weight",
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.07591343618433845,
+        "top_singular_values": [
+          2.6410202980041504,
+          2.5226261615753174,
+          2.477858304977417,
+          2.455907106399536
+        ]
+      },
+      {
+        "fro_norm": 9.323315620422363,
+        "name": "networks.0.layers.0.1.to_out.weight",
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          128,
+          512
+        ],
+        "top_energy_fraction": 0.0687328046412394,
+        "top_singular_values": [
+          1.2771178483963013,
+          1.2303926944732666,
+          1.197936773300171,
+          1.180931568145752
+        ]
+      },
+      {
+        "fro_norm": 9.288171768188477,
+        "name": "networks.0.layers.8.1.to_out.weight",
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          128,
+          512
+        ],
+        "top_energy_fraction": 0.0662895136829188,
+        "top_singular_values": [
+          1.229867696762085,
+          1.1961445808410645,
+          1.1801906824111938,
+          1.1758487224578857
+        ]
+      },
+      {
+        "fro_norm": 9.282095909118652,
+        "name": "networks.0.layers.2.1.to_out.weight",
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          128,
+          512
+        ],
+        "top_energy_fraction": 0.06508667675567308,
+        "top_singular_values": [
+          1.2021878957748413,
+          1.1948009729385376,
+          1.174473762512207,
+          1.1642612218856812
+        ]
+      },
+      {
+        "fro_norm": 9.27872371673584,
+        "name": "networks.0.layers.1.1.ff.2.weight",
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          128,
+          512
+        ],
+        "top_energy_fraction": 0.06684628999141308,
+        "top_singular_values": [
+          1.2275601625442505,
+          1.2123628854751587,
+          1.1842409372329712,
+          1.1730130910873413
+        ]
+      }
+    ]
+  }
+]

@@ -1,0 +1,3768 @@
+[
+  {
+    "logic_eval_slice": {
+      "env_rollup_logic_env": {
+        "critic_bucket_accuracy": 1.0,
+        "critic_macro_f1": 0.333333,
+        "rows": 5,
+        "target_action_rows": 0
+      },
+      "logic_prediction_count": 5,
+      "logic_predictions": [
+        {
+          "id": "a152787a-7dbb-4ae1-b457-ca0ee5c722ba",
+          "pred_action_confidence": 0.916618,
+          "pred_action_label": "__ABSTAIN__",
+          "pred_bucket_confidence": 0.623553,
+          "pred_bucket_label": "negative",
+          "pred_reward": -0.173077,
+          "source_env_name": "logic_env"
+        },
+        {
+          "id": "168c4107-7805-4e1d-b96e-d32a58303ecb",
+          "pred_action_confidence": 0.935842,
+          "pred_action_label": "__ABSTAIN__",
+          "pred_bucket_confidence": 0.779077,
+          "pred_bucket_label": "negative",
+          "pred_reward": -0.317255,
+          "source_env_name": "logic_env"
+        },
+        {
+          "id": "e32dd01b-2e6d-42a5-b512-79705f4ef057",
+          "pred_action_confidence": 0.936196,
+          "pred_action_label": "__ABSTAIN__",
+          "pred_bucket_confidence": 0.785171,
+          "pred_bucket_label": "negative",
+          "pred_reward": -0.340202,
+          "source_env_name": "logic_env"
+        },
+        {
+          "id": "8bf53a35-d836-4886-90da-66f2dc6d6c07",
+          "pred_action_confidence": 0.916618,
+          "pred_action_label": "__ABSTAIN__",
+          "pred_bucket_confidence": 0.623553,
+          "pred_bucket_label": "negative",
+          "pred_reward": -0.173077,
+          "source_env_name": "logic_env"
+        },
+        {
+          "id": "eaa9b59d-d3f9-437c-a7ef-082ba76c07c3",
+          "pred_action_confidence": 0.916618,
+          "pred_action_label": "__ABSTAIN__",
+          "pred_bucket_confidence": 0.623553,
+          "pred_bucket_label": "negative",
+          "pred_reward": -0.173077,
+          "source_env_name": "logic_env"
+        }
+      ]
+    },
+    "metrics": {
+      "abstain_rows": 124,
+      "bucket_metrics": {
+        "accuracy": 0.823129,
+        "macro_f1": 0.78766,
+        "per_label": {
+          "exact_positive": {
+            "f1": 0.590164,
+            "precision": 0.418605,
+            "recall": 1.0,
+            "support": 18
+          },
+          "negative": {
+            "f1": 0.883929,
+            "precision": 0.99,
+            "recall": 0.798387,
+            "support": 124
+          },
+          "weak_positive": {
+            "f1": 0.888889,
+            "precision": 1.0,
+            "recall": 0.8,
+            "support": 5
+          }
+        }
+      },
+      "config": {
+        "action_labels": [
+          "__ABSTAIN__",
+          "indexed_mapping",
+          "single_choice_letter",
+          "reward_bench::double_bracket_choice",
+          "boxed_number",
+          "boxed_choice",
+          "boolean_word",
+          "reward_bench::internal_inspect_continue",
+          "final_answer_prefixed",
+          "comma_list",
+          "comma_list_4",
+          "ascii_tree::ascii_tree",
+          "internal_inspect_continue"
+        ],
+        "architecture_kind": "hierarchical",
+        "bucket_labels": [
+          "negative",
+          "weak_positive",
+          "exact_positive"
+        ],
+        "networks": [
+          {
+            "depth": 8,
+            "dim": 128,
+            "heads": 8
+          }
+        ],
+        "one_step_grad": true,
+        "reasoning_steps": 1,
+        "relative_period": 1
+      },
+      "critic_bucket_accuracy": 0.823129,
+      "critic_gated_route_abstain_rate": 0.991935,
+      "critic_macro_f1": 0.78766,
+      "data_path": "C:\\projects\\HRM-re\\experiments\\hermes_skill_gym\\outputs\\hermes_skill_gym_trm_action_family_single\\dataset\\train.jsonl",
+      "env_rollup": {
+        "agency_bench": {
+          "critic_bucket_accuracy": 0.0,
+          "critic_macro_f1": 0.0,
+          "rows": 1,
+          "target_action_rows": 0
+        },
+        "aime2024": {
+          "critic_bucket_accuracy": 0.5,
+          "critic_macro_f1": 0.222222,
+          "rows": 6,
+          "target_action_rows": 0
+        },
+        "aime2025": {
+          "critic_bucket_accuracy": 0.5,
+          "critic_macro_f1": 0.222222,
+          "rows": 2,
+          "target_action_rows": 0
+        },
+        "aime2026": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 5,
+          "target_action_rows": 0
+        },
+        "allenai_ifeval": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 1,
+          "target_action_rows": 0
+        },
+        "antislop": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 2,
+          "target_action_rows": 2
+        },
+        "arc": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.666667,
+          "rows": 3,
+          "target_action_rows": 1
+        },
+        "ascii_tree": {
+          "critic_bucket_accuracy": 0.666667,
+          "critic_macro_f1": 0.266667,
+          "rows": 3,
+          "target_action_rows": 1
+        },
+        "bixbench": {
+          "critic_bucket_accuracy": 0.666667,
+          "critic_macro_f1": 0.266667,
+          "rows": 3,
+          "target_action_rows": 0
+        },
+        "boolq": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 1,
+          "target_action_rows": 1
+        },
+        "clbench": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 5,
+          "target_action_rows": 0
+        },
+        "coconot": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 3,
+          "target_action_rows": 0
+        },
+        "colf": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 2,
+          "target_action_rows": 0
+        },
+        "deep_consult": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 2,
+          "target_action_rows": 0
+        },
+        "gauss": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 2,
+          "target_action_rows": 0
+        },
+        "hellaswag": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 1,
+          "target_action_rows": 0
+        },
+        "if_summarize_judge": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 6,
+          "target_action_rows": 0
+        },
+        "jailbreak_bench": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 1,
+          "target_action_rows": 0
+        },
+        "lisanbench": {
+          "critic_bucket_accuracy": 0.5,
+          "critic_macro_f1": 0.222222,
+          "rows": 4,
+          "target_action_rows": 2
+        },
+        "llm_writing_detection": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 1,
+          "target_action_rows": 0
+        },
+        "logic_env": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 5,
+          "target_action_rows": 0
+        },
+        "longbench_v2": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 2,
+          "target_action_rows": 0
+        },
+        "math500": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 6,
+          "target_action_rows": 0
+        },
+        "math_env": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.666667,
+          "rows": 7,
+          "target_action_rows": 3
+        },
+        "medsafetybench": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 2,
+          "target_action_rows": 0
+        },
+        "misguided_attn": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 5,
+          "target_action_rows": 0
+        },
+        "mmlu": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 3,
+          "target_action_rows": 0
+        },
+        "mmlu_pro": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 3,
+          "target_action_rows": 0
+        },
+        "passthrough": {
+          "critic_bucket_accuracy": 0.333333,
+          "critic_macro_f1": 0.166667,
+          "rows": 3,
+          "target_action_rows": 0
+        },
+        "psycho_bench": {
+          "critic_bucket_accuracy": 0.5,
+          "critic_macro_f1": 0.222222,
+          "rows": 6,
+          "target_action_rows": 3
+        },
+        "pydantic_adherence": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 5,
+          "target_action_rows": 0
+        },
+        "reward_bench": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 4,
+          "target_action_rows": 4
+        },
+        "rust_cargo": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 2,
+          "target_action_rows": 0
+        },
+        "science_env": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 2,
+          "target_action_rows": 0
+        },
+        "simple_bench": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.666667,
+          "rows": 3,
+          "target_action_rows": 1
+        },
+        "simpleqa": {
+          "critic_bucket_accuracy": 0.333333,
+          "critic_macro_f1": 0.166667,
+          "rows": 3,
+          "target_action_rows": 0
+        },
+        "simpleqa_verified": {
+          "critic_bucket_accuracy": 0.5,
+          "critic_macro_f1": 0.222222,
+          "rows": 2,
+          "target_action_rows": 0
+        },
+        "simpleqa_verified_2": {
+          "critic_bucket_accuracy": 0.333333,
+          "critic_macro_f1": 0.166667,
+          "rows": 3,
+          "target_action_rows": 0
+        },
+        "truthfulqa": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.666667,
+          "rows": 3,
+          "target_action_rows": 1
+        },
+        "unscramble": {
+          "critic_bucket_accuracy": 0.5,
+          "critic_macro_f1": 0.222222,
+          "rows": 4,
+          "target_action_rows": 0
+        },
+        "uq": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 2,
+          "target_action_rows": 0
+        },
+        "uq_project": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 4,
+          "target_action_rows": 0
+        },
+        "vpct_1": {
+          "critic_bucket_accuracy": 0.0,
+          "critic_macro_f1": 0.0,
+          "rows": 4,
+          "target_action_rows": 0
+        },
+        "winogrande": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 4,
+          "target_action_rows": 4
+        },
+        "wmdp": {
+          "critic_bucket_accuracy": 0.666667,
+          "critic_macro_f1": 0.266667,
+          "rows": 3,
+          "target_action_rows": 0
+        },
+        "writing_bench": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 3,
+          "target_action_rows": 0
+        }
+      },
+      "leaderboard_score": 0.65918,
+      "model_path": "C:\\projects\\HRM-re\\experiments\\hermes_skill_gym\\outputs\\hermes_skill_gym_trm_action_family_single\\variants\\trm_like_single_tier\\artifacts\\model.pt",
+      "positive_bucket_f1": 0.628571,
+      "positive_bucket_recall": 0.956522,
+      "retriever_exact_match_rate": 0.304348,
+      "route_needed_recall": 0.782609,
+      "rows": 147,
+      "target_action_rows": 23
+    },
+    "model_id": "action_family_trm_like",
+    "model_path": "D:\\projects\\HRM-re\\experiments\\hermes_skill_gym\\outputs\\hermes_skill_gym_trm_action_family_single\\variants\\trm_like_single_tier\\artifacts\\model.pt",
+    "parameter_count": 3732241,
+    "role_fro_norms": {
+      "output_action_head": 2.105321957773768,
+      "output_bucket_head": 0.9676372528971721,
+      "q_reward_or_halting": 0.5948119806612638,
+      "recursive_interface_yz": 17.283633959272997,
+      "recursive_trunk_z": 78.49514905305102,
+      "task_or_role_embedding": 0.0,
+      "unclassified": 0.0,
+      "x_input_embedding": 737.9770491011221
+    },
+    "role_parameter_counts": {
+      "output_action_head": 1677,
+      "output_bucket_head": 387,
+      "q_reward_or_halting": 129,
+      "recursive_interface_yz": 33024,
+      "recursive_trunk_z": 3153024,
+      "task_or_role_embedding": 0,
+      "unclassified": 0,
+      "x_input_embedding": 544000
+    },
+    "tensor_count": 91,
+    "tensor_summaries": [
+      {
+        "fro_norm": 737.974609375,
+        "name": "to_input_embed.weight",
+        "parameters": 544000,
+        "rank_atoms_written": 4,
+        "role": "x_input_embedding",
+        "shape": [
+          4250,
+          128
+        ],
+        "top_energy_fraction": 0.04197197634041416,
+        "top_singular_values": [
+          76.17713928222656,
+          75.5941162109375,
+          75.48104858398438,
+          75.12355041503906
+        ]
+      },
+      {
+        "fro_norm": 13.118329048156738,
+        "name": "networks.0.layers.0.1.to_v.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06672672433231108,
+        "top_singular_values": [
+          1.7253667116165161,
+          1.698319911956787,
+          1.6822541952133179,
+          1.6708892583847046
+        ]
+      },
+      {
+        "fro_norm": 13.115510940551758,
+        "name": "networks.0.layers.8.1.to_k.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.0654507574185074,
+        "top_singular_values": [
+          1.7111331224441528,
+          1.6851699352264404,
+          1.6703664064407349,
+          1.6433900594711304
+        ]
+      },
+      {
+        "fro_norm": 13.104890823364258,
+        "name": "networks.0.layers.14.1.to_q.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06545391500982405,
+        "top_singular_values": [
+          1.7099064588546753,
+          1.6849888563156128,
+          1.6703972816467285,
+          1.6394357681274414
+        ]
+      },
+      {
+        "fro_norm": 13.10117244720459,
+        "name": "networks.0.layers.6.1.to_q.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06492789582398963,
+        "top_singular_values": [
+          1.7067267894744873,
+          1.6765671968460083,
+          1.65291428565979,
+          1.6396218538284302
+        ]
+      },
+      {
+        "fro_norm": 13.099035263061523,
+        "name": "networks.0.layers.12.1.to_q.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06618607356866982,
+        "top_singular_values": [
+          1.7081634998321533,
+          1.694558024406433,
+          1.681614637374878,
+          1.6550960540771484
+        ]
+      },
+      {
+        "fro_norm": 13.088968276977539,
+        "name": "networks.0.layers.0.1.to_k.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06480858208868817,
+        "top_singular_values": [
+          1.6847102642059326,
+          1.6725021600723267,
+          1.6676299571990967,
+          1.639077067375183
+        ]
+      },
+      {
+        "fro_norm": 13.088443756103516,
+        "name": "networks.0.layers.4.1.to_k.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06585662389458646,
+        "top_singular_values": [
+          1.708438754081726,
+          1.6961429119110107,
+          1.6719709634780884,
+          1.640295386314392
+        ]
+      },
+      {
+        "fro_norm": 13.087849617004395,
+        "name": "networks.0.layers.4.1.to_v.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.0674298120229119,
+        "top_singular_values": [
+          1.7256224155426025,
+          1.718742847442627,
+          1.6949412822723389,
+          1.6569557189941406
+        ]
+      },
+      {
+        "fro_norm": 13.087563514709473,
+        "name": "networks.0.layers.5.1.ff.0.0.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06576517293189679,
+        "top_singular_values": [
+          1.7041250467300415,
+          1.6979116201400757,
+          1.6630918979644775,
+          1.6467297077178955
+        ]
+      },
+      {
+        "fro_norm": 13.087074279785156,
+        "name": "networks.0.layers.2.1.to_v.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06513085642977148,
+        "top_singular_values": [
+          1.7124851942062378,
+          1.6740230321884155,
+          1.6516507863998413,
+          1.6407800912857056
+        ]
+      },
+      {
+        "fro_norm": 13.085931777954102,
+        "name": "networks.0.layers.0.1.to_q.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06610873502961731,
+        "top_singular_values": [
+          1.7111636400222778,
+          1.6910500526428223,
+          1.6648370027542114,
+          1.6616719961166382
+        ]
+      },
+      {
+        "fro_norm": 13.084582328796387,
+        "name": "networks.0.layers.8.1.to_v.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.0651469453593144,
+        "top_singular_values": [
+          1.6864230632781982,
+          1.6760058403015137,
+          1.6662367582321167,
+          1.6505156755447388
+        ]
+      },
+      {
+        "fro_norm": 13.083245277404785,
+        "name": "networks.0.layers.9.1.ff.0.0.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06639821840047203,
+        "top_singular_values": [
+          1.7169045209884644,
+          1.7112414836883545,
+          1.6656184196472168,
+          1.6477535963058472
+        ]
+      },
+      {
+        "fro_norm": 13.080381393432617,
+        "name": "networks.0.layers.10.1.to_v.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06589786730029,
+        "top_singular_values": [
+          1.7069334983825684,
+          1.6847995519638062,
+          1.6796756982803345,
+          1.6435943841934204
+        ]
+      },
+      {
+        "fro_norm": 13.079724311828613,
+        "name": "networks.0.layers.2.1.to_q.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06551064967451833,
+        "top_singular_values": [
+          1.7057898044586182,
+          1.6697510480880737,
+          1.6669695377349854,
+          1.652553677558899
+        ]
+      },
+      {
+        "fro_norm": 13.078426361083984,
+        "name": "networks.0.layers.4.1.to_q.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06671471058524543,
+        "top_singular_values": [
+          1.757075309753418,
+          1.6904815435409546,
+          1.6632548570632935,
+          1.6430996656417847
+        ]
+      },
+      {
+        "fro_norm": 13.06810188293457,
+        "name": "networks.0.layers.10.1.to_q.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06581676306940998,
+        "top_singular_values": [
+          1.6981487274169922,
+          1.6789926290512085,
+          1.672150731086731,
+          1.655617594718933
+        ]
+      },
+      {
+        "fro_norm": 13.065791130065918,
+        "name": "networks.0.layers.12.1.to_v.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06723920575632217,
+        "top_singular_values": [
+          1.7596704959869385,
+          1.6889498233795166,
+          1.6704071760177612,
+          1.655139684677124
+        ]
+      },
+      {
+        "fro_norm": 13.060969352722168,
+        "name": "networks.0.layers.11.1.ff.0.0.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06507544510514487,
+        "top_singular_values": [
+          1.6956700086593628,
+          1.6747090816497803,
+          1.6520267724990845,
+          1.6407352685928345
+        ]
+      },
+      {
+        "fro_norm": 13.053750991821289,
+        "name": "networks.0.layers.10.1.to_k.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06684450706939499,
+        "top_singular_values": [
+          1.7227128744125366,
+          1.694085717201233,
+          1.675378680229187,
+          1.6570374965667725
+        ]
+      },
+      {
+        "fro_norm": 13.051986694335938,
+        "name": "networks.0.layers.2.1.to_k.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06585278079730915,
+        "top_singular_values": [
+          1.7012555599212646,
+          1.6855887174606323,
+          1.6624943017959595,
+          1.6489241123199463
+        ]
+      },
+      {
+        "fro_norm": 13.05137825012207,
+        "name": "networks.0.layers.13.1.ff.0.0.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06582441990052942,
+        "top_singular_values": [
+          1.7052581310272217,
+          1.6826956272125244,
+          1.6604504585266113,
+          1.64801824092865
+        ]
+      },
+      {
+        "fro_norm": 13.050373077392578,
+        "name": "networks.0.layers.14.1.to_v.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06507136396207493,
+        "top_singular_values": [
+          1.6866986751556396,
+          1.6789255142211914,
+          1.6527373790740967,
+          1.639258623123169
+        ]
+      },
+      {
+        "fro_norm": 13.050151824951172,
+        "name": "networks.0.layers.6.1.to_k.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06548393946534471,
+        "top_singular_values": [
+          1.7123780250549316,
+          1.6956673860549927,
+          1.6395820379257202,
+          1.6299041509628296
+        ]
+      },
+      {
+        "fro_norm": 13.047998428344727,
+        "name": "networks.0.layers.3.1.ff.0.0.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06483561935241419,
+        "top_singular_values": [
+          1.6799544095993042,
+          1.6698634624481201,
+          1.6588324308395386,
+          1.6358106136322021
+        ]
+      },
+      {
+        "fro_norm": 13.047931671142578,
+        "name": "networks.0.layers.7.1.ff.0.0.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06458586248325664,
+        "top_singular_values": [
+          1.686456561088562,
+          1.6748054027557373,
+          1.6403294801712036,
+          1.629679799079895
+        ]
+      },
+      {
+        "fro_norm": 13.037230491638184,
+        "name": "networks.0.layers.6.1.to_v.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06614214961659422,
+        "top_singular_values": [
+          1.6950604915618896,
+          1.6839486360549927,
+          1.6737748384475708,
+          1.6527866125106812
+        ]
+      }
+    ]
+  },
+  {
+    "logic_eval_slice": {
+      "env_rollup_logic_env": {
+        "critic_bucket_accuracy": 1.0,
+        "critic_macro_f1": 0.333333,
+        "rows": 5,
+        "target_action_rows": 0
+      },
+      "logic_prediction_count": 5,
+      "logic_predictions": [
+        {
+          "id": "a152787a-7dbb-4ae1-b457-ca0ee5c722ba",
+          "pred_action_confidence": 0.855272,
+          "pred_action_label": "__ABSTAIN__",
+          "pred_bucket_confidence": 0.940301,
+          "pred_bucket_label": "negative",
+          "pred_reward": 0.023587,
+          "source_env_name": "logic_env"
+        },
+        {
+          "id": "168c4107-7805-4e1d-b96e-d32a58303ecb",
+          "pred_action_confidence": 0.831033,
+          "pred_action_label": "__ABSTAIN__",
+          "pred_bucket_confidence": 0.950574,
+          "pred_bucket_label": "negative",
+          "pred_reward": -0.036589,
+          "source_env_name": "logic_env"
+        },
+        {
+          "id": "e32dd01b-2e6d-42a5-b512-79705f4ef057",
+          "pred_action_confidence": 0.820105,
+          "pred_action_label": "__ABSTAIN__",
+          "pred_bucket_confidence": 0.954288,
+          "pred_bucket_label": "negative",
+          "pred_reward": -0.043273,
+          "source_env_name": "logic_env"
+        },
+        {
+          "id": "8bf53a35-d836-4886-90da-66f2dc6d6c07",
+          "pred_action_confidence": 0.855272,
+          "pred_action_label": "__ABSTAIN__",
+          "pred_bucket_confidence": 0.940301,
+          "pred_bucket_label": "negative",
+          "pred_reward": 0.023587,
+          "source_env_name": "logic_env"
+        },
+        {
+          "id": "eaa9b59d-d3f9-437c-a7ef-082ba76c07c3",
+          "pred_action_confidence": 0.855272,
+          "pred_action_label": "__ABSTAIN__",
+          "pred_bucket_confidence": 0.940301,
+          "pred_bucket_label": "negative",
+          "pred_reward": 0.023587,
+          "source_env_name": "logic_env"
+        }
+      ]
+    },
+    "metrics": {
+      "abstain_rows": 128,
+      "bucket_metrics": {
+        "accuracy": 0.917808,
+        "macro_f1": 0.892424,
+        "per_label": {
+          "exact_positive": {
+            "f1": 0.727273,
+            "precision": 0.615385,
+            "recall": 0.888889,
+            "support": 18
+          },
+          "negative": {
+            "f1": 0.95,
+            "precision": 0.982759,
+            "recall": 0.919355,
+            "support": 124
+          },
+          "weak_positive": {
+            "f1": 1.0,
+            "precision": 1.0,
+            "recall": 1.0,
+            "support": 4
+          }
+        }
+      },
+      "config": {
+        "action_labels": [
+          "__ABSTAIN__",
+          "comma_list",
+          "final_answer_prefixed",
+          "single_choice_letter",
+          "indexed_mapping",
+          "boxed_choice",
+          "comma_list_4",
+          "boolean_word",
+          "boxed_number",
+          "internal_inspect_continue"
+        ],
+        "architecture_kind": "hierarchical",
+        "bucket_labels": [
+          "negative",
+          "weak_positive",
+          "exact_positive"
+        ],
+        "networks": [
+          {
+            "depth": 8,
+            "dim": 128,
+            "heads": 8
+          }
+        ],
+        "one_step_grad": true,
+        "reasoning_steps": 1,
+        "relative_period": 1
+      },
+      "critic_bucket_accuracy": 0.917808,
+      "critic_gated_route_abstain_rate": 0.96875,
+      "critic_macro_f1": 0.892424,
+      "data_path": "C:\\projects\\HRM-re\\experiments\\hermes_skill_gym\\outputs\\hermes_skill_gym_trm_action_family_explicit_single\\dataset\\train.jsonl",
+      "env_rollup": {
+        "agency_bench": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 1,
+          "target_action_rows": 0
+        },
+        "aime2024": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 6,
+          "target_action_rows": 0
+        },
+        "aime2025": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 2,
+          "target_action_rows": 0
+        },
+        "aime2026": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 5,
+          "target_action_rows": 0
+        },
+        "allenai_ifeval": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 1,
+          "target_action_rows": 0
+        },
+        "antislop": {
+          "critic_bucket_accuracy": 0.0,
+          "critic_macro_f1": 0.0,
+          "rows": 2,
+          "target_action_rows": 2
+        },
+        "arc": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.666667,
+          "rows": 3,
+          "target_action_rows": 1
+        },
+        "ascii_tree": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 2,
+          "target_action_rows": 0
+        },
+        "bixbench": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 3,
+          "target_action_rows": 0
+        },
+        "boolq": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 1,
+          "target_action_rows": 1
+        },
+        "clbench": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 5,
+          "target_action_rows": 0
+        },
+        "coconot": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 3,
+          "target_action_rows": 0
+        },
+        "colf": {
+          "critic_bucket_accuracy": 0.5,
+          "critic_macro_f1": 0.222222,
+          "rows": 2,
+          "target_action_rows": 0
+        },
+        "deep_consult": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 2,
+          "target_action_rows": 0
+        },
+        "gauss": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 2,
+          "target_action_rows": 0
+        },
+        "hellaswag": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 1,
+          "target_action_rows": 0
+        },
+        "if_summarize_judge": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 6,
+          "target_action_rows": 0
+        },
+        "jailbreak_bench": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 1,
+          "target_action_rows": 0
+        },
+        "lisanbench": {
+          "critic_bucket_accuracy": 0.5,
+          "critic_macro_f1": 0.222222,
+          "rows": 4,
+          "target_action_rows": 2
+        },
+        "llm_writing_detection": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 1,
+          "target_action_rows": 0
+        },
+        "logic_env": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 5,
+          "target_action_rows": 0
+        },
+        "longbench_v2": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 2,
+          "target_action_rows": 0
+        },
+        "math500": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 6,
+          "target_action_rows": 0
+        },
+        "math_env": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.666667,
+          "rows": 7,
+          "target_action_rows": 3
+        },
+        "medsafetybench": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 2,
+          "target_action_rows": 0
+        },
+        "misguided_attn": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 5,
+          "target_action_rows": 0
+        },
+        "mmlu": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 3,
+          "target_action_rows": 0
+        },
+        "mmlu_pro": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 3,
+          "target_action_rows": 0
+        },
+        "passthrough": {
+          "critic_bucket_accuracy": 0.333333,
+          "critic_macro_f1": 0.166667,
+          "rows": 3,
+          "target_action_rows": 0
+        },
+        "psycho_bench": {
+          "critic_bucket_accuracy": 0.666667,
+          "critic_macro_f1": 0.416667,
+          "rows": 6,
+          "target_action_rows": 3
+        },
+        "pydantic_adherence": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 5,
+          "target_action_rows": 0
+        },
+        "reward_bench": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 4,
+          "target_action_rows": 0
+        },
+        "rust_cargo": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 2,
+          "target_action_rows": 0
+        },
+        "science_env": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 2,
+          "target_action_rows": 0
+        },
+        "simple_bench": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.666667,
+          "rows": 3,
+          "target_action_rows": 1
+        },
+        "simpleqa": {
+          "critic_bucket_accuracy": 0.333333,
+          "critic_macro_f1": 0.166667,
+          "rows": 3,
+          "target_action_rows": 0
+        },
+        "simpleqa_verified": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 2,
+          "target_action_rows": 0
+        },
+        "simpleqa_verified_2": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 3,
+          "target_action_rows": 0
+        },
+        "truthfulqa": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.666667,
+          "rows": 3,
+          "target_action_rows": 1
+        },
+        "unscramble": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 4,
+          "target_action_rows": 0
+        },
+        "uq": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 2,
+          "target_action_rows": 0
+        },
+        "uq_project": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 4,
+          "target_action_rows": 0
+        },
+        "vpct_1": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 4,
+          "target_action_rows": 0
+        },
+        "winogrande": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 4,
+          "target_action_rows": 4
+        },
+        "wmdp": {
+          "critic_bucket_accuracy": 0.666667,
+          "critic_macro_f1": 0.266667,
+          "rows": 3,
+          "target_action_rows": 0
+        },
+        "writing_bench": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 3,
+          "target_action_rows": 0
+        }
+      },
+      "leaderboard_score": 0.755967,
+      "model_path": "C:\\projects\\HRM-re\\experiments\\hermes_skill_gym\\outputs\\hermes_skill_gym_trm_action_family_explicit_single\\variants\\trm_like_single_tier\\artifacts\\model.pt",
+      "positive_bucket_f1": 0.769231,
+      "positive_bucket_recall": 0.909091,
+      "retriever_exact_match_rate": 0.333333,
+      "route_needed_recall": 0.833333,
+      "rows": 146,
+      "target_action_rows": 18
+    },
+    "model_id": "explicit_action_family_trm_like",
+    "model_path": "D:\\projects\\HRM-re\\experiments\\hermes_skill_gym\\outputs\\hermes_skill_gym_trm_action_family_explicit_single\\variants\\trm_like_single_tier\\artifacts\\model.pt",
+    "parameter_count": 3730574,
+    "role_fro_norms": {
+      "output_action_head": 1.793337922122695,
+      "output_bucket_head": 1.015745393558893,
+      "q_reward_or_halting": 0.6137760328162447,
+      "recursive_interface_yz": 17.270181984884108,
+      "recursive_trunk_z": 78.49110762452658,
+      "task_or_role_embedding": 0.0,
+      "unclassified": 0.0,
+      "x_input_embedding": 737.1021384448698
+    },
+    "role_parameter_counts": {
+      "output_action_head": 1290,
+      "output_bucket_head": 387,
+      "q_reward_or_halting": 129,
+      "recursive_interface_yz": 33024,
+      "recursive_trunk_z": 3153024,
+      "task_or_role_embedding": 0,
+      "unclassified": 0,
+      "x_input_embedding": 542720
+    },
+    "tensor_count": 91,
+    "tensor_summaries": [
+      {
+        "fro_norm": 737.0992431640625,
+        "name": "to_input_embed.weight",
+        "parameters": 542720,
+        "rank_atoms_written": 4,
+        "role": "x_input_embedding",
+        "shape": [
+          4240,
+          128
+        ],
+        "top_energy_fraction": 0.041983761515148654,
+        "top_singular_values": [
+          76.10377502441406,
+          75.47360229492188,
+          75.41011810302734,
+          75.07241821289062
+        ]
+      },
+      {
+        "fro_norm": 13.124621391296387,
+        "name": "networks.0.layers.0.1.to_v.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06641020125079845,
+        "top_singular_values": [
+          1.7181450128555298,
+          1.7010968923568726,
+          1.6809587478637695,
+          1.6637789011001587
+        ]
+      },
+      {
+        "fro_norm": 13.10806941986084,
+        "name": "networks.0.layers.14.1.to_q.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.0651186099210842,
+        "top_singular_values": [
+          1.6946187019348145,
+          1.6840546131134033,
+          1.6683229207992554,
+          1.6424654722213745
+        ]
+      },
+      {
+        "fro_norm": 13.105977058410645,
+        "name": "networks.0.layers.12.1.to_q.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06636110167739682,
+        "top_singular_values": [
+          1.7159783840179443,
+          1.6948697566986084,
+          1.6797481775283813,
+          1.6612985134124756
+        ]
+      },
+      {
+        "fro_norm": 13.104243278503418,
+        "name": "networks.0.layers.8.1.to_k.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06578272427861771,
+        "top_singular_values": [
+          1.7144081592559814,
+          1.6857963800430298,
+          1.6731963157653809,
+          1.6479053497314453
+        ]
+      },
+      {
+        "fro_norm": 13.0966215133667,
+        "name": "networks.0.layers.2.1.to_v.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06602928661698945,
+        "top_singular_values": [
+          1.7155336141586304,
+          1.70590078830719,
+          1.6608039140701294,
+          1.6474285125732422
+        ]
+      },
+      {
+        "fro_norm": 13.09340763092041,
+        "name": "networks.0.layers.4.1.to_k.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06588473547643933,
+        "top_singular_values": [
+          1.7044404745101929,
+          1.6993731260299683,
+          1.6733587980270386,
+          1.6437709331512451
+        ]
+      },
+      {
+        "fro_norm": 13.09335994720459,
+        "name": "networks.0.layers.6.1.to_q.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06497221422902406,
+        "top_singular_values": [
+          1.7033087015151978,
+          1.6785310506820679,
+          1.6567497253417969,
+          1.6355571746826172
+        ]
+      },
+      {
+        "fro_norm": 13.091805458068848,
+        "name": "networks.0.layers.4.1.to_v.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06676961834044123,
+        "top_singular_values": [
+          1.7435575723648071,
+          1.6972167491912842,
+          1.6679311990737915,
+          1.655741572380066
+        ]
+      },
+      {
+        "fro_norm": 13.087931632995605,
+        "name": "networks.0.layers.5.1.ff.0.0.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06571683431136716,
+        "top_singular_values": [
+          1.705479621887207,
+          1.6962754726409912,
+          1.66292142868042,
+          1.6448650360107422
+        ]
+      },
+      {
+        "fro_norm": 13.085775375366211,
+        "name": "networks.0.layers.0.1.to_k.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06492400574573859,
+        "top_singular_values": [
+          1.6882514953613281,
+          1.671465516090393,
+          1.6658366918563843,
+          1.6426903009414673
+        ]
+      },
+      {
+        "fro_norm": 13.085447311401367,
+        "name": "networks.0.layers.0.1.to_q.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06602440277738048,
+        "top_singular_values": [
+          1.7004446983337402,
+          1.6939042806625366,
+          1.6691865921020508,
+          1.6608048677444458
+        ]
+      },
+      {
+        "fro_norm": 13.082611083984375,
+        "name": "networks.0.layers.8.1.to_v.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06520596385884814,
+        "top_singular_values": [
+          1.6834397315979004,
+          1.6773910522460938,
+          1.6678379774093628,
+          1.6525790691375732
+        ]
+      },
+      {
+        "fro_norm": 13.082210540771484,
+        "name": "networks.0.layers.9.1.ff.0.0.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.0659688450725372,
+        "top_singular_values": [
+          1.7103521823883057,
+          1.7043607234954834,
+          1.6566320657730103,
+          1.64790940284729
+        ]
+      },
+      {
+        "fro_norm": 13.079536437988281,
+        "name": "networks.0.layers.10.1.to_q.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06633724320637001,
+        "top_singular_values": [
+          1.7037537097930908,
+          1.6845409870147705,
+          1.6778202056884766,
+          1.6712472438812256
+        ]
+      },
+      {
+        "fro_norm": 13.078126907348633,
+        "name": "networks.0.layers.4.1.to_q.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.066768753245685,
+        "top_singular_values": [
+          1.7541484832763672,
+          1.6887167692184448,
+          1.6715149879455566,
+          1.642314076423645
+        ]
+      },
+      {
+        "fro_norm": 13.07797622680664,
+        "name": "networks.0.layers.10.1.to_v.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06621080365985511,
+        "top_singular_values": [
+          1.7190908193588257,
+          1.7017664909362793,
+          1.6696528196334839,
+          1.6386733055114746
+        ]
+      },
+      {
+        "fro_norm": 13.073260307312012,
+        "name": "networks.0.layers.2.1.to_q.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06541842659031477,
+        "top_singular_values": [
+          1.7112773656845093,
+          1.6797740459442139,
+          1.6549522876739502,
+          1.6406395435333252
+        ]
+      },
+      {
+        "fro_norm": 13.066034317016602,
+        "name": "networks.0.layers.12.1.to_v.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.0670899408878469,
+        "top_singular_values": [
+          1.7531323432922363,
+          1.6865217685699463,
+          1.6744064092636108,
+          1.6529422998428345
+        ]
+      },
+      {
+        "fro_norm": 13.054601669311523,
+        "name": "networks.0.layers.11.1.ff.0.0.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06491019710941763,
+        "top_singular_values": [
+          1.687538743019104,
+          1.6665542125701904,
+          1.652107834815979,
+          1.6454545259475708
+        ]
+      },
+      {
+        "fro_norm": 13.053201675415039,
+        "name": "networks.0.layers.7.1.ff.0.0.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06450730596212145,
+        "top_singular_values": [
+          1.697202205657959,
+          1.666959285736084,
+          1.6396995782852173,
+          1.6258196830749512
+        ]
+      },
+      {
+        "fro_norm": 13.052233695983887,
+        "name": "networks.0.layers.13.1.ff.0.0.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.0657417445187377,
+        "top_singular_values": [
+          1.708940863609314,
+          1.6793898344039917,
+          1.6526538133621216,
+          1.6515815258026123
+        ]
+      },
+      {
+        "fro_norm": 13.051573753356934,
+        "name": "networks.0.layers.6.1.to_k.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06558239717769802,
+        "top_singular_values": [
+          1.7066130638122559,
+          1.6991480588912964,
+          1.6470649242401123,
+          1.6306750774383545
+        ]
+      },
+      {
+        "fro_norm": 13.048077583312988,
+        "name": "networks.0.layers.3.1.ff.0.0.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06492547991456633,
+        "top_singular_values": [
+          1.6780352592468262,
+          1.6736572980880737,
+          1.65910804271698,
+          1.6383373737335205
+        ]
+      },
+      {
+        "fro_norm": 13.047560691833496,
+        "name": "networks.0.layers.10.1.to_k.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06696886493015546,
+        "top_singular_values": [
+          1.7281841039657593,
+          1.698101282119751,
+          1.6717097759246826,
+          1.6540626287460327
+        ]
+      },
+      {
+        "fro_norm": 13.047199249267578,
+        "name": "networks.0.layers.14.1.to_v.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.0656596972235588,
+        "top_singular_values": [
+          1.6930146217346191,
+          1.690192461013794,
+          1.6542881727218628,
+          1.6484811305999756
+        ]
+      },
+      {
+        "fro_norm": 13.043218612670898,
+        "name": "networks.0.layers.2.1.to_k.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06585727440865852,
+        "top_singular_values": [
+          1.7118730545043945,
+          1.6795716285705566,
+          1.660385251045227,
+          1.6418466567993164
+        ]
+      },
+      {
+        "fro_norm": 13.039283752441406,
+        "name": "networks.0.layers.6.1.to_v.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06615898309626778,
+        "top_singular_values": [
+          1.6989374160766602,
+          1.6845234632492065,
+          1.6702479124069214,
+          1.6537272930145264
+        ]
+      }
+    ]
+  },
+  {
+    "logic_eval_slice": {
+      "env_rollup_logic_env": {
+        "critic_bucket_accuracy": 1.0,
+        "critic_macro_f1": 0.333333,
+        "rows": 5,
+        "target_action_rows": 0
+      },
+      "logic_prediction_count": 5,
+      "logic_predictions": [
+        {
+          "id": "a152787a-7dbb-4ae1-b457-ca0ee5c722ba",
+          "pred_action_confidence": 0.922925,
+          "pred_action_label": "__ABSTAIN__",
+          "pred_bucket_confidence": 0.959787,
+          "pred_bucket_label": "negative",
+          "pred_reward": -0.101812,
+          "source_env_name": "logic_env"
+        },
+        {
+          "id": "168c4107-7805-4e1d-b96e-d32a58303ecb",
+          "pred_action_confidence": 0.932988,
+          "pred_action_label": "__ABSTAIN__",
+          "pred_bucket_confidence": 0.960727,
+          "pred_bucket_label": "negative",
+          "pred_reward": -0.094202,
+          "source_env_name": "logic_env"
+        },
+        {
+          "id": "e32dd01b-2e6d-42a5-b512-79705f4ef057",
+          "pred_action_confidence": 0.934184,
+          "pred_action_label": "__ABSTAIN__",
+          "pred_bucket_confidence": 0.959661,
+          "pred_bucket_label": "negative",
+          "pred_reward": -0.089366,
+          "source_env_name": "logic_env"
+        },
+        {
+          "id": "8bf53a35-d836-4886-90da-66f2dc6d6c07",
+          "pred_action_confidence": 0.922925,
+          "pred_action_label": "__ABSTAIN__",
+          "pred_bucket_confidence": 0.959787,
+          "pred_bucket_label": "negative",
+          "pred_reward": -0.101812,
+          "source_env_name": "logic_env"
+        },
+        {
+          "id": "eaa9b59d-d3f9-437c-a7ef-082ba76c07c3",
+          "pred_action_confidence": 0.922925,
+          "pred_action_label": "__ABSTAIN__",
+          "pred_bucket_confidence": 0.959787,
+          "pred_bucket_label": "negative",
+          "pred_reward": -0.101812,
+          "source_env_name": "logic_env"
+        }
+      ]
+    },
+    "metrics": {
+      "abstain_rows": 128,
+      "bucket_metrics": {
+        "accuracy": 0.911565,
+        "macro_f1": 0.88967,
+        "per_label": {
+          "exact_positive": {
+            "f1": 0.723404,
+            "precision": 0.607143,
+            "recall": 0.894737,
+            "support": 19
+          },
+          "negative": {
+            "f1": 0.945607,
+            "precision": 0.982609,
+            "recall": 0.91129,
+            "support": 124
+          },
+          "weak_positive": {
+            "f1": 1.0,
+            "precision": 1.0,
+            "recall": 1.0,
+            "support": 4
+          }
+        }
+      },
+      "config": {
+        "action_labels": [
+          "__ABSTAIN__",
+          "31: 3\n39: 3\n17: 4\n26: 3\n12: 2\n16: 3\n3: 4\n37: 2\n18: 3\n1: 3\n10: 4\n40: 4\n43: 3\n27: 2\n2: 2\n25: 3\n41: 3\n35: 3\n13: 4\n8: 3\n30: 3\n33: 4\n38: 4\n21: 3\n32: 4\n5: 3\n20: 3\n28: 4\n19: 3\n34: 3\n42: 4\n44: 3\n29: 3\n6: 3\n22: 4\n9: 4\n23: 2\n4: 2\n36: 3\n7: 4\n15: 3\n24: 3\n11: 3\n14: 3",
+          "31: 3\n39: 3\n17: 4\n26: 3\n12: 2\n16: 3\n3: 4\n37: 2\n18: 3\n1: 3\n10: 4\n40: 4\n43: 3\n27: 2\n2: 2\n25: 3\n41: 3\n35: 3\n13: 4\n8: 3\n30: 3\n33: 4\n38: 4\n21: 3\n32: 4\n5: 3\n20: 3\n28: 4\n19: 3\n34: 3\n42: 4\n44: 3\n29: 3\n6: 3\n22: 4\n9: 4\n23: 2\n4: 3\n36: 3\n7: 4\n15: 3\n24: 4\n11: 3\n14: 3",
+          "A",
+          "\\boxed{0}",
+          "\\boxed{A}",
+          "True",
+          "Final Answer: A",
+          "Chapter One: The Glitch in the Wrist\n\nThe box felt heavy, not with weight, but with a strange, static hum that seemed to vibrate through Leo's palm. It was a gift from his dad, a \"next-gen\" smartwatch from a company called Chronos, marketed as the ultimate tool for optimizing a student's life. Leo, a twelve-year-old who felt perpetually stuck between the awkwardness of middle school and the desire to be taken seriously, had been skeptical. But the sleek, obsidian band had fit perfectly, and the first thing the watch did was tell him he was \"underperforming\" in math.\n\nThat night, desperate to ace a quiz the next day, Leo tapped the side button. A holographic interface flickered to life, displaying a timeline graph. He frowned at the erratic red spikes representing his upcoming test. \"Just fix it,\" he muttered, tapping the 'Optimize' command.\n\nThe world didn't snap. It didn't even blur. Instead, the air around him seemed to stretch, like taffy being pulled. The hum in the room deepened, a low thrum that rattled his teeth. Then, silence.\n\nLeo blinked. He was in his bedroom, but",
+          "origin, origins, origin, origin",
+          "D",
+          "inspect_and_continue"
+        ],
+        "architecture_kind": "hierarchical",
+        "bucket_labels": [
+          "negative",
+          "weak_positive",
+          "exact_positive"
+        ],
+        "networks": [
+          {
+            "depth": 8,
+            "dim": 128,
+            "heads": 8
+          }
+        ],
+        "one_step_grad": true,
+        "reasoning_steps": 1,
+        "relative_period": 1
+      },
+      "critic_bucket_accuracy": 0.911565,
+      "critic_gated_route_abstain_rate": 0.976562,
+      "critic_macro_f1": 0.88967,
+      "data_path": "C:\\projects\\HRM-re\\experiments\\hermes_skill_gym\\outputs\\hermes_skill_gym_pruned_cycle13_compare\\dataset\\train.jsonl",
+      "env_rollup": {
+        "agency_bench": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 1,
+          "target_action_rows": 0
+        },
+        "aime2024": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 6,
+          "target_action_rows": 0
+        },
+        "aime2025": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 2,
+          "target_action_rows": 0
+        },
+        "aime2026": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 5,
+          "target_action_rows": 0
+        },
+        "allenai_ifeval": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 1,
+          "target_action_rows": 0
+        },
+        "antislop": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 2,
+          "target_action_rows": 2
+        },
+        "arc": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.666667,
+          "rows": 3,
+          "target_action_rows": 1
+        },
+        "ascii_tree": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 2,
+          "target_action_rows": 0
+        },
+        "bixbench": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 3,
+          "target_action_rows": 0
+        },
+        "boolq": {
+          "critic_bucket_accuracy": 0.0,
+          "critic_macro_f1": 0.0,
+          "rows": 1,
+          "target_action_rows": 1
+        },
+        "clbench": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 5,
+          "target_action_rows": 0
+        },
+        "coconot": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 3,
+          "target_action_rows": 0
+        },
+        "colf": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 2,
+          "target_action_rows": 0
+        },
+        "deep_consult": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 2,
+          "target_action_rows": 0
+        },
+        "gauss": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 2,
+          "target_action_rows": 0
+        },
+        "hellaswag": {
+          "critic_bucket_accuracy": 0.5,
+          "critic_macro_f1": 0.222222,
+          "rows": 2,
+          "target_action_rows": 1
+        },
+        "if_summarize_judge": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 6,
+          "target_action_rows": 0
+        },
+        "jailbreak_bench": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 1,
+          "target_action_rows": 0
+        },
+        "lisanbench": {
+          "critic_bucket_accuracy": 0.5,
+          "critic_macro_f1": 0.222222,
+          "rows": 4,
+          "target_action_rows": 2
+        },
+        "llm_writing_detection": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 1,
+          "target_action_rows": 0
+        },
+        "logic_env": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 5,
+          "target_action_rows": 0
+        },
+        "longbench_v2": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 2,
+          "target_action_rows": 0
+        },
+        "math500": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 6,
+          "target_action_rows": 0
+        },
+        "math_env": {
+          "critic_bucket_accuracy": 0.428571,
+          "critic_macro_f1": 0.2,
+          "rows": 7,
+          "target_action_rows": 3
+        },
+        "medsafetybench": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 2,
+          "target_action_rows": 0
+        },
+        "misguided_attn": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 5,
+          "target_action_rows": 0
+        },
+        "mmlu": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 3,
+          "target_action_rows": 0
+        },
+        "mmlu_pro": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 3,
+          "target_action_rows": 0
+        },
+        "passthrough": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 3,
+          "target_action_rows": 0
+        },
+        "psycho_bench": {
+          "critic_bucket_accuracy": 0.5,
+          "critic_macro_f1": 0.222222,
+          "rows": 6,
+          "target_action_rows": 3
+        },
+        "pydantic_adherence": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 5,
+          "target_action_rows": 0
+        },
+        "reward_bench": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 4,
+          "target_action_rows": 0
+        },
+        "rust_cargo": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 2,
+          "target_action_rows": 0
+        },
+        "science_env": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 2,
+          "target_action_rows": 0
+        },
+        "simple_bench": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.666667,
+          "rows": 3,
+          "target_action_rows": 1
+        },
+        "simpleqa": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 3,
+          "target_action_rows": 0
+        },
+        "simpleqa_verified": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 2,
+          "target_action_rows": 0
+        },
+        "simpleqa_verified_2": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 3,
+          "target_action_rows": 0
+        },
+        "truthfulqa": {
+          "critic_bucket_accuracy": 0.333333,
+          "critic_macro_f1": 0.166667,
+          "rows": 3,
+          "target_action_rows": 1
+        },
+        "unscramble": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 4,
+          "target_action_rows": 0
+        },
+        "uq": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 2,
+          "target_action_rows": 0
+        },
+        "uq_project": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 4,
+          "target_action_rows": 0
+        },
+        "vpct_1": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 4,
+          "target_action_rows": 0
+        },
+        "winogrande": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 4,
+          "target_action_rows": 4
+        },
+        "wmdp": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 3,
+          "target_action_rows": 0
+        },
+        "writing_bench": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 3,
+          "target_action_rows": 0
+        }
+      },
+      "leaderboard_score": 0.760213,
+      "model_path": "C:\\projects\\HRM-re\\experiments\\hermes_skill_gym\\outputs\\hermes_skill_gym_pruned_cycle13_compare\\variants\\trm_like_single_tier\\artifacts\\model.pt",
+      "positive_bucket_f1": 0.763636,
+      "positive_bucket_recall": 0.913043,
+      "retriever_exact_match_rate": 0.368421,
+      "route_needed_recall": 0.736842,
+      "rows": 147,
+      "target_action_rows": 19
+    },
+    "model_id": "pruned_base_trm_like",
+    "model_path": "D:\\projects\\HRM-re\\experiments\\hermes_skill_gym\\outputs\\hermes_skill_gym_pruned_cycle13_base_compare\\variants\\trm_like_single_tier\\artifacts\\model.pt",
+    "parameter_count": 3726096,
+    "role_fro_norms": {
+      "output_action_head": 1.9641931245318915,
+      "output_bucket_head": 1.0419422359345192,
+      "q_reward_or_halting": 0.5375757451144043,
+      "recursive_interface_yz": 17.28706899286324,
+      "recursive_trunk_z": 78.48284258266601,
+      "task_or_role_embedding": 0.0,
+      "unclassified": 0.0,
+      "x_input_embedding": 733.8587227798005
+    },
+    "role_parameter_counts": {
+      "output_action_head": 1548,
+      "output_bucket_head": 387,
+      "q_reward_or_halting": 129,
+      "recursive_interface_yz": 33024,
+      "recursive_trunk_z": 3153024,
+      "task_or_role_embedding": 0,
+      "unclassified": 0,
+      "x_input_embedding": 537984
+    },
+    "tensor_count": 91,
+    "tensor_summaries": [
+      {
+        "fro_norm": 733.8557739257812,
+        "name": "to_input_embed.weight",
+        "parameters": 537984,
+        "rank_atoms_written": 4,
+        "role": "x_input_embedding",
+        "shape": [
+          4203,
+          128
+        ],
+        "top_energy_fraction": 0.04204748375233948,
+        "top_singular_values": [
+          75.94929504394531,
+          75.22846984863281,
+          75.05292510986328,
+          74.72655487060547
+        ]
+      },
+      {
+        "fro_norm": 13.109052658081055,
+        "name": "networks.0.layers.0.1.to_v.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06618253068629434,
+        "top_singular_values": [
+          1.7049106359481812,
+          1.69405996799469,
+          1.6742879152297974,
+          1.6713764667510986
+        ]
+      },
+      {
+        "fro_norm": 13.105388641357422,
+        "name": "networks.0.layers.14.1.to_q.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06461841518552217,
+        "top_singular_values": [
+          1.6919108629226685,
+          1.679862141609192,
+          1.6506699323654175,
+          1.6398392915725708
+        ]
+      },
+      {
+        "fro_norm": 13.097553253173828,
+        "name": "networks.0.layers.8.1.to_k.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06632582163228296,
+        "top_singular_values": [
+          1.7191622257232666,
+          1.6924028396606445,
+          1.6744328737258911,
+          1.6596559286117554
+        ]
+      },
+      {
+        "fro_norm": 13.096590995788574,
+        "name": "networks.0.layers.4.1.to_k.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06596184057219481,
+        "top_singular_values": [
+          1.7089897394180298,
+          1.6848281621932983,
+          1.6725739240646362,
+          1.6604313850402832
+        ]
+      },
+      {
+        "fro_norm": 13.093978881835938,
+        "name": "networks.0.layers.6.1.to_q.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.0664568240880005,
+        "top_singular_values": [
+          1.7218676805496216,
+          1.703276515007019,
+          1.6718156337738037,
+          1.6532484292984009
+        ]
+      },
+      {
+        "fro_norm": 13.093753814697266,
+        "name": "networks.0.layers.12.1.to_q.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06543756306220874,
+        "top_singular_values": [
+          1.696171522140503,
+          1.6823636293411255,
+          1.6659703254699707,
+          1.6541613340377808
+        ]
+      },
+      {
+        "fro_norm": 13.0881986618042,
+        "name": "networks.0.layers.0.1.to_k.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06522866255450667,
+        "top_singular_values": [
+          1.7065441608428955,
+          1.6663217544555664,
+          1.6605826616287231,
+          1.6514467000961304
+        ]
+      },
+      {
+        "fro_norm": 13.079269409179688,
+        "name": "networks.0.layers.8.1.to_v.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06531698817195333,
+        "top_singular_values": [
+          1.6940526962280273,
+          1.6710580587387085,
+          1.6659327745437622,
+          1.6540911197662354
+        ]
+      },
+      {
+        "fro_norm": 13.07845687866211,
+        "name": "networks.0.layers.10.1.to_q.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06600051281575503,
+        "top_singular_values": [
+          1.6902735233306885,
+          1.688125729560852,
+          1.6757135391235352,
+          1.6656301021575928
+        ]
+      },
+      {
+        "fro_norm": 13.07819938659668,
+        "name": "networks.0.layers.4.1.to_q.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.0667547818358085,
+        "top_singular_values": [
+          1.7584867477416992,
+          1.7052830457687378,
+          1.6532338857650757,
+          1.6383689641952515
+        ]
+      },
+      {
+        "fro_norm": 13.077924728393555,
+        "name": "networks.0.layers.10.1.to_v.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06663608197369808,
+        "top_singular_values": [
+          1.722205400466919,
+          1.6976927518844604,
+          1.6717885732650757,
+          1.659483790397644
+        ]
+      },
+      {
+        "fro_norm": 13.0775728225708,
+        "name": "networks.0.layers.11.1.ff.0.0.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06451121937353305,
+        "top_singular_values": [
+          1.692691445350647,
+          1.6617742776870728,
+          1.647029161453247,
+          1.6411865949630737
+        ]
+      },
+      {
+        "fro_norm": 13.07682991027832,
+        "name": "networks.0.layers.4.1.to_v.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06650141189953893,
+        "top_singular_values": [
+          1.7428194284439087,
+          1.6901321411132812,
+          1.6655761003494263,
+          1.6443440914154053
+        ]
+      },
+      {
+        "fro_norm": 13.076766014099121,
+        "name": "networks.0.layers.9.1.ff.0.0.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06564217376778969,
+        "top_singular_values": [
+          1.7089552879333496,
+          1.6781580448150635,
+          1.6611273288726807,
+          1.6519205570220947
+        ]
+      },
+      {
+        "fro_norm": 13.076583862304688,
+        "name": "networks.0.layers.2.1.to_v.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06525808699165678,
+        "top_singular_values": [
+          1.6908353567123413,
+          1.6845061779022217,
+          1.6634178161621094,
+          1.641794204711914
+        ]
+      },
+      {
+        "fro_norm": 13.076106071472168,
+        "name": "networks.0.layers.0.1.to_q.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06598167120396271,
+        "top_singular_values": [
+          1.7065684795379639,
+          1.6980198621749878,
+          1.666184425354004,
+          1.6462171077728271
+        ]
+      },
+      {
+        "fro_norm": 13.070307731628418,
+        "name": "networks.0.layers.5.1.ff.0.0.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.0661064227052111,
+        "top_singular_values": [
+          1.7109506130218506,
+          1.6820478439331055,
+          1.6759904623031616,
+          1.6515356302261353
+        ]
+      },
+      {
+        "fro_norm": 13.068646430969238,
+        "name": "networks.0.layers.6.1.to_k.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06513577652501475,
+        "top_singular_values": [
+          1.7092853784561157,
+          1.6700599193572998,
+          1.653116226196289,
+          1.6373621225357056
+        ]
+      },
+      {
+        "fro_norm": 13.068172454833984,
+        "name": "networks.0.layers.12.1.to_v.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06741583606265016,
+        "top_singular_values": [
+          1.7593510150909424,
+          1.6939120292663574,
+          1.6728277206420898,
+          1.6583373546600342
+        ]
+      },
+      {
+        "fro_norm": 13.067975997924805,
+        "name": "networks.0.layers.2.1.to_q.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06566039001525771,
+        "top_singular_values": [
+          1.7033021450042725,
+          1.679547905921936,
+          1.6648856401443481,
+          1.6489375829696655
+        ]
+      },
+      {
+        "fro_norm": 13.065892219543457,
+        "name": "networks.0.layers.14.1.to_v.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06681110976146801,
+        "top_singular_values": [
+          1.7363393306732178,
+          1.6965131759643555,
+          1.6675013303756714,
+          1.6529474258422852
+        ]
+      },
+      {
+        "fro_norm": 13.05408000946045,
+        "name": "networks.0.layers.13.1.ff.0.0.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06606181590972869,
+        "top_singular_values": [
+          1.7048068046569824,
+          1.6821891069412231,
+          1.667242169380188,
+          1.6558122634887695
+        ]
+      },
+      {
+        "fro_norm": 13.053335189819336,
+        "name": "networks.0.layers.2.1.to_k.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06567848795296709,
+        "top_singular_values": [
+          1.7050522565841675,
+          1.6856048107147217,
+          1.6604994535446167,
+          1.638659119606018
+        ]
+      },
+      {
+        "fro_norm": 13.051926612854004,
+        "name": "networks.0.layers.10.1.to_k.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06642840642451946,
+        "top_singular_values": [
+          1.7250858545303345,
+          1.6843640804290771,
+          1.6689486503601074,
+          1.6485929489135742
+        ]
+      },
+      {
+        "fro_norm": 13.045707702636719,
+        "name": "networks.0.layers.8.1.to_q.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06562983363768926,
+        "top_singular_values": [
+          1.688705325126648,
+          1.6826229095458984,
+          1.6612533330917358,
+          1.6513235569000244
+        ]
+      },
+      {
+        "fro_norm": 13.04554557800293,
+        "name": "networks.0.layers.3.1.ff.0.0.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06445004611180558,
+        "top_singular_values": [
+          1.6772863864898682,
+          1.666324257850647,
+          1.6460169553756714,
+          1.633772850036621
+        ]
+      },
+      {
+        "fro_norm": 13.039725303649902,
+        "name": "networks.0.layers.7.1.ff.0.0.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06526721644335158,
+        "top_singular_values": [
+          1.6982848644256592,
+          1.6830652952194214,
+          1.6535651683807373,
+          1.6268104314804077
+        ]
+      }
+    ]
+  },
+  {
+    "logic_eval_slice": {
+      "env_rollup_logic_env": {
+        "critic_bucket_accuracy": 1.0,
+        "critic_macro_f1": 0.333333,
+        "rows": 5,
+        "target_action_rows": 0
+      },
+      "logic_prediction_count": 5,
+      "logic_predictions": [
+        {
+          "id": "a152787a-7dbb-4ae1-b457-ca0ee5c722ba",
+          "pred_action_confidence": 0.381667,
+          "pred_action_label": "__ABSTAIN__",
+          "pred_bucket_confidence": 0.586192,
+          "pred_bucket_label": "negative",
+          "pred_reward": 0.207949,
+          "source_env_name": "logic_env"
+        },
+        {
+          "id": "168c4107-7805-4e1d-b96e-d32a58303ecb",
+          "pred_action_confidence": 0.373657,
+          "pred_action_label": "__ABSTAIN__",
+          "pred_bucket_confidence": 0.611389,
+          "pred_bucket_label": "negative",
+          "pred_reward": 0.165575,
+          "source_env_name": "logic_env"
+        },
+        {
+          "id": "e32dd01b-2e6d-42a5-b512-79705f4ef057",
+          "pred_action_confidence": 0.370879,
+          "pred_action_label": "__ABSTAIN__",
+          "pred_bucket_confidence": 0.608331,
+          "pred_bucket_label": "negative",
+          "pred_reward": 0.171729,
+          "source_env_name": "logic_env"
+        },
+        {
+          "id": "8bf53a35-d836-4886-90da-66f2dc6d6c07",
+          "pred_action_confidence": 0.381667,
+          "pred_action_label": "__ABSTAIN__",
+          "pred_bucket_confidence": 0.586192,
+          "pred_bucket_label": "negative",
+          "pred_reward": 0.207949,
+          "source_env_name": "logic_env"
+        },
+        {
+          "id": "eaa9b59d-d3f9-437c-a7ef-082ba76c07c3",
+          "pred_action_confidence": 0.381667,
+          "pred_action_label": "__ABSTAIN__",
+          "pred_bucket_confidence": 0.586192,
+          "pred_bucket_label": "negative",
+          "pred_reward": 0.207949,
+          "source_env_name": "logic_env"
+        }
+      ]
+    },
+    "metrics": {
+      "abstain_rows": 128,
+      "bucket_metrics": {
+        "accuracy": 0.843537,
+        "macro_f1": 0.305043,
+        "per_label": {
+          "exact_positive": {
+            "f1": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "support": 19
+          },
+          "negative": {
+            "f1": 0.915129,
+            "precision": 0.843537,
+            "recall": 1.0,
+            "support": 124
+          },
+          "weak_positive": {
+            "f1": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "support": 4
+          }
+        }
+      },
+      "config": {
+        "action_labels": [
+          "__ABSTAIN__",
+          "31: 3\n39: 3\n17: 4\n26: 3\n12: 2\n16: 3\n3: 4\n37: 2\n18: 3\n1: 3\n10: 4\n40: 4\n43: 3\n27: 2\n2: 2\n25: 3\n41: 3\n35: 3\n13: 4\n8: 3\n30: 3\n33: 4\n38: 4\n21: 3\n32: 4\n5: 3\n20: 3\n28: 4\n19: 3\n34: 3\n42: 4\n44: 3\n29: 3\n6: 3\n22: 4\n9: 4\n23: 2\n4: 2\n36: 3\n7: 4\n15: 3\n24: 3\n11: 3\n14: 3",
+          "31: 3\n39: 3\n17: 4\n26: 3\n12: 2\n16: 3\n3: 4\n37: 2\n18: 3\n1: 3\n10: 4\n40: 4\n43: 3\n27: 2\n2: 2\n25: 3\n41: 3\n35: 3\n13: 4\n8: 3\n30: 3\n33: 4\n38: 4\n21: 3\n32: 4\n5: 3\n20: 3\n28: 4\n19: 3\n34: 3\n42: 4\n44: 3\n29: 3\n6: 3\n22: 4\n9: 4\n23: 2\n4: 3\n36: 3\n7: 4\n15: 3\n24: 4\n11: 3\n14: 3",
+          "A",
+          "\\boxed{0}",
+          "\\boxed{A}",
+          "True",
+          "Final Answer: A",
+          "Chapter One: The Glitch in the Wrist\n\nThe box felt heavy, not with weight, but with a strange, static hum that seemed to vibrate through Leo's palm. It was a gift from his dad, a \"next-gen\" smartwatch from a company called Chronos, marketed as the ultimate tool for optimizing a student's life. Leo, a twelve-year-old who felt perpetually stuck between the awkwardness of middle school and the desire to be taken seriously, had been skeptical. But the sleek, obsidian band had fit perfectly, and the first thing the watch did was tell him he was \"underperforming\" in math.\n\nThat night, desperate to ace a quiz the next day, Leo tapped the side button. A holographic interface flickered to life, displaying a timeline graph. He frowned at the erratic red spikes representing his upcoming test. \"Just fix it,\" he muttered, tapping the 'Optimize' command.\n\nThe world didn't snap. It didn't even blur. Instead, the air around him seemed to stretch, like taffy being pulled. The hum in the room deepened, a low thrum that rattled his teeth. Then, silence.\n\nLeo blinked. He was in his bedroom, but",
+          "origin, origins, origin, origin",
+          "D",
+          "inspect_and_continue"
+        ],
+        "architecture_kind": "constellation_governor",
+        "bucket_labels": [
+          "negative",
+          "weak_positive",
+          "exact_positive"
+        ],
+        "networks": [
+          {
+            "depth": 4,
+            "dim": 128,
+            "heads": 4
+          },
+          {
+            "depth": 4,
+            "dim": 128,
+            "heads": 4
+          },
+          {
+            "depth": 4,
+            "dim": 128,
+            "heads": 4
+          },
+          {
+            "depth": 8,
+            "dim": 128,
+            "heads": 8
+          }
+        ],
+        "one_step_grad": true,
+        "reasoning_steps": 4,
+        "relative_period": [
+          1,
+          1,
+          4
+        ]
+      },
+      "critic_bucket_accuracy": 0.843537,
+      "critic_gated_route_abstain_rate": 1.0,
+      "critic_macro_f1": 0.305043,
+      "data_path": "C:\\projects\\HRM-re\\experiments\\hermes_skill_gym\\outputs\\hermes_skill_gym_constellation_compare_safe\\dataset\\train.jsonl",
+      "env_rollup": {
+        "agency_bench": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 1,
+          "target_action_rows": 0
+        },
+        "aime2024": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 6,
+          "target_action_rows": 0
+        },
+        "aime2025": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 2,
+          "target_action_rows": 0
+        },
+        "aime2026": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 5,
+          "target_action_rows": 0
+        },
+        "allenai_ifeval": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 1,
+          "target_action_rows": 0
+        },
+        "antislop": {
+          "critic_bucket_accuracy": 0.0,
+          "critic_macro_f1": 0.0,
+          "rows": 2,
+          "target_action_rows": 2
+        },
+        "arc": {
+          "critic_bucket_accuracy": 0.666667,
+          "critic_macro_f1": 0.266667,
+          "rows": 3,
+          "target_action_rows": 1
+        },
+        "ascii_tree": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 2,
+          "target_action_rows": 0
+        },
+        "bixbench": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 3,
+          "target_action_rows": 0
+        },
+        "boolq": {
+          "critic_bucket_accuracy": 0.0,
+          "critic_macro_f1": 0.0,
+          "rows": 1,
+          "target_action_rows": 1
+        },
+        "clbench": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 5,
+          "target_action_rows": 0
+        },
+        "coconot": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 3,
+          "target_action_rows": 0
+        },
+        "colf": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 2,
+          "target_action_rows": 0
+        },
+        "deep_consult": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 2,
+          "target_action_rows": 0
+        },
+        "gauss": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 2,
+          "target_action_rows": 0
+        },
+        "hellaswag": {
+          "critic_bucket_accuracy": 0.5,
+          "critic_macro_f1": 0.222222,
+          "rows": 2,
+          "target_action_rows": 1
+        },
+        "if_summarize_judge": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 6,
+          "target_action_rows": 0
+        },
+        "jailbreak_bench": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 1,
+          "target_action_rows": 0
+        },
+        "lisanbench": {
+          "critic_bucket_accuracy": 0.5,
+          "critic_macro_f1": 0.222222,
+          "rows": 4,
+          "target_action_rows": 2
+        },
+        "llm_writing_detection": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 1,
+          "target_action_rows": 0
+        },
+        "logic_env": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 5,
+          "target_action_rows": 0
+        },
+        "longbench_v2": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 2,
+          "target_action_rows": 0
+        },
+        "math500": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 6,
+          "target_action_rows": 0
+        },
+        "math_env": {
+          "critic_bucket_accuracy": 0.571429,
+          "critic_macro_f1": 0.242424,
+          "rows": 7,
+          "target_action_rows": 3
+        },
+        "medsafetybench": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 2,
+          "target_action_rows": 0
+        },
+        "misguided_attn": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 5,
+          "target_action_rows": 0
+        },
+        "mmlu": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 3,
+          "target_action_rows": 0
+        },
+        "mmlu_pro": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 3,
+          "target_action_rows": 0
+        },
+        "passthrough": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 3,
+          "target_action_rows": 0
+        },
+        "psycho_bench": {
+          "critic_bucket_accuracy": 0.5,
+          "critic_macro_f1": 0.222222,
+          "rows": 6,
+          "target_action_rows": 3
+        },
+        "pydantic_adherence": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 5,
+          "target_action_rows": 0
+        },
+        "reward_bench": {
+          "critic_bucket_accuracy": 0.0,
+          "critic_macro_f1": 0.0,
+          "rows": 4,
+          "target_action_rows": 0
+        },
+        "rust_cargo": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 2,
+          "target_action_rows": 0
+        },
+        "science_env": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 2,
+          "target_action_rows": 0
+        },
+        "simple_bench": {
+          "critic_bucket_accuracy": 0.666667,
+          "critic_macro_f1": 0.266667,
+          "rows": 3,
+          "target_action_rows": 1
+        },
+        "simpleqa": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 3,
+          "target_action_rows": 0
+        },
+        "simpleqa_verified": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 2,
+          "target_action_rows": 0
+        },
+        "simpleqa_verified_2": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 3,
+          "target_action_rows": 0
+        },
+        "truthfulqa": {
+          "critic_bucket_accuracy": 0.666667,
+          "critic_macro_f1": 0.266667,
+          "rows": 3,
+          "target_action_rows": 1
+        },
+        "unscramble": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 4,
+          "target_action_rows": 0
+        },
+        "uq": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 2,
+          "target_action_rows": 0
+        },
+        "uq_project": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 4,
+          "target_action_rows": 0
+        },
+        "vpct_1": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 4,
+          "target_action_rows": 0
+        },
+        "winogrande": {
+          "critic_bucket_accuracy": 0.0,
+          "critic_macro_f1": 0.0,
+          "rows": 4,
+          "target_action_rows": 4
+        },
+        "wmdp": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 3,
+          "target_action_rows": 0
+        },
+        "writing_bench": {
+          "critic_bucket_accuracy": 1.0,
+          "critic_macro_f1": 0.333333,
+          "rows": 3,
+          "target_action_rows": 0
+        }
+      },
+      "leaderboard_score": 0.183026,
+      "model_path": "C:\\projects\\HRM-re\\experiments\\hermes_skill_gym\\outputs\\hermes_skill_gym_constellation_compare_safe\\variants\\hrm_constellation_3plus1_safe\\artifacts\\model.pt",
+      "positive_bucket_f1": 0.0,
+      "positive_bucket_recall": 0.0,
+      "retriever_exact_match_rate": 0.0,
+      "route_needed_recall": 0.0,
+      "rows": 147,
+      "target_action_rows": 19
+    },
+    "model_id": "constellation_safe_enriched",
+    "model_path": "D:\\projects\\HRM-re\\experiments\\hermes_skill_gym\\outputs\\hermes_skill_gym_constellation_compare_safe_enriched\\variants\\hrm_constellation_3plus1_safe\\artifacts\\model.pt",
+    "parameter_count": 7033488,
+    "role_fro_norms": {
+      "output_action_head": 2.048233133112149,
+      "output_bucket_head": 1.0061694222894348,
+      "q_reward_or_halting": 0.5689150242350184,
+      "recursive_interface_yz": 42.801635120923336,
+      "recursive_trunk_z": 110.95533014531856,
+      "task_or_role_embedding": 0.45062510068471684,
+      "unclassified": 0.0,
+      "x_input_embedding": 710.3847549039887
+    },
+    "role_parameter_counts": {
+      "output_action_head": 1548,
+      "output_bucket_head": 387,
+      "q_reward_or_halting": 129,
+      "recursive_interface_yz": 214656,
+      "recursive_trunk_z": 6309888,
+      "task_or_role_embedding": 384,
+      "unclassified": 0,
+      "x_input_embedding": 506496
+    },
+    "tensor_count": 229,
+    "tensor_summaries": [
+      {
+        "fro_norm": 710.3825073242188,
+        "name": "to_input_embed.weight",
+        "parameters": 506496,
+        "rank_atoms_written": 4,
+        "role": "x_input_embedding",
+        "shape": [
+          3957,
+          128
+        ],
+        "top_energy_fraction": 0.042262361455437394,
+        "top_singular_values": [
+          73.61192321777344,
+          73.11507415771484,
+          72.80079650878906,
+          72.5469741821289
+        ]
+      },
+      {
+        "fro_norm": 13.10598087310791,
+        "name": "governor_network.layers.8.1.to_v.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06491589302361198,
+        "top_singular_values": [
+          1.7125792503356934,
+          1.66827392578125,
+          1.6585196256637573,
+          1.6381840705871582
+        ]
+      },
+      {
+        "fro_norm": 13.097334861755371,
+        "name": "worker_networks.1.layers.5.1.ff.0.0.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06716137198306041,
+        "top_singular_values": [
+          1.7258292436599731,
+          1.7106609344482422,
+          1.6918734312057495,
+          1.659396767616272
+        ]
+      },
+      {
+        "fro_norm": 13.09577465057373,
+        "name": "governor_network.layers.14.1.to_v.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.0661377382870805,
+        "top_singular_values": [
+          1.7147622108459473,
+          1.698713779449463,
+          1.672587275505066,
+          1.648937463760376
+        ]
+      },
+      {
+        "fro_norm": 13.095114707946777,
+        "name": "governor_network.layers.4.1.to_v.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06588604825236104,
+        "top_singular_values": [
+          1.7229423522949219,
+          1.6747288703918457,
+          1.6704708337783813,
+          1.6536492109298706
+        ]
+      },
+      {
+        "fro_norm": 13.089883804321289,
+        "name": "worker_networks.2.layers.1.1.ff.0.0.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06535325076641191,
+        "top_singular_values": [
+          1.700934886932373,
+          1.6848615407943726,
+          1.6578015089035034,
+          1.648550271987915
+        ]
+      },
+      {
+        "fro_norm": 13.086970329284668,
+        "name": "governor_network.layers.12.1.to_v.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06615509951458819,
+        "top_singular_values": [
+          1.7286157608032227,
+          1.6863137483596802,
+          1.662871241569519,
+          1.6533024311065674
+        ]
+      },
+      {
+        "fro_norm": 13.085795402526855,
+        "name": "governor_network.layers.6.1.to_v.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06616401602849192,
+        "top_singular_values": [
+          1.7139413356781006,
+          1.688944697380066,
+          1.6825026273727417,
+          1.645862102508545
+        ]
+      },
+      {
+        "fro_norm": 13.085403442382812,
+        "name": "worker_networks.2.layers.5.1.ff.0.0.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06452626142997561,
+        "top_singular_values": [
+          1.7008614540100098,
+          1.6576849222183228,
+          1.6484991312026978,
+          1.6402121782302856
+        ]
+      },
+      {
+        "fro_norm": 13.08026123046875,
+        "name": "governor_network.layers.13.1.ff.0.0.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06619811574676768,
+        "top_singular_values": [
+          1.734428882598877,
+          1.6934247016906738,
+          1.6600489616394043,
+          1.641451120376587
+        ]
+      },
+      {
+        "fro_norm": 13.07753849029541,
+        "name": "governor_network.layers.10.1.to_v.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06508799485871733,
+        "top_singular_values": [
+          1.7078673839569092,
+          1.685886263847351,
+          1.648745059967041,
+          1.6291394233703613
+        ]
+      },
+      {
+        "fro_norm": 13.073485374450684,
+        "name": "governor_network.layers.15.1.ff.0.0.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06588445129433573,
+        "top_singular_values": [
+          1.7193652391433716,
+          1.6855788230895996,
+          1.6656370162963867,
+          1.6398072242736816
+        ]
+      },
+      {
+        "fro_norm": 13.07154655456543,
+        "name": "governor_network.layers.7.1.ff.0.0.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06543742554923777,
+        "top_singular_values": [
+          1.703192114830017,
+          1.6816837787628174,
+          1.6575645208358765,
+          1.644551396369934
+        ]
+      },
+      {
+        "fro_norm": 13.07063102722168,
+        "name": "governor_network.layers.0.1.to_v.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06511550462109586,
+        "top_singular_values": [
+          1.7025631666183472,
+          1.6635833978652954,
+          1.6584486961364746,
+          1.6455214023590088
+        ]
+      },
+      {
+        "fro_norm": 13.0696382522583,
+        "name": "governor_network.layers.6.1.to_k.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06464550562219305,
+        "top_singular_values": [
+          1.6775219440460205,
+          1.6621474027633667,
+          1.6584351062774658,
+          1.647796392440796
+        ]
+      },
+      {
+        "fro_norm": 13.068968772888184,
+        "name": "governor_network.layers.2.1.to_v.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06510383350974644,
+        "top_singular_values": [
+          1.7021654844284058,
+          1.6822446584701538,
+          1.6492164134979248,
+          1.6347423791885376
+        ]
+      },
+      {
+        "fro_norm": 13.068320274353027,
+        "name": "worker_networks.1.layers.3.1.ff.0.0.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.0661156826808283,
+        "top_singular_values": [
+          1.7575606107711792,
+          1.6722418069839478,
+          1.6526654958724976,
+          1.6354159116744995
+        ]
+      },
+      {
+        "fro_norm": 13.068242073059082,
+        "name": "worker_networks.0.layers.1.1.ff.0.0.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.0660539761520671,
+        "top_singular_values": [
+          1.7125085592269897,
+          1.7062088251113892,
+          1.6550825834274292,
+          1.6424044370651245
+        ]
+      },
+      {
+        "fro_norm": 13.064969062805176,
+        "name": "governor_network.layers.12.1.to_q.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06609404371172417,
+        "top_singular_values": [
+          1.7064392566680908,
+          1.692684531211853,
+          1.6700105667114258,
+          1.6479582786560059
+        ]
+      },
+      {
+        "fro_norm": 13.064905166625977,
+        "name": "worker_networks.1.layers.1.1.ff.0.0.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06624082819766039,
+        "top_singular_values": [
+          1.7261780500411987,
+          1.676863193511963,
+          1.6667503118515015,
+          1.6544338464736938
+        ]
+      },
+      {
+        "fro_norm": 13.063243865966797,
+        "name": "governor_network.layers.14.1.to_q.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06545234420218225,
+        "top_singular_values": [
+          1.7083503007888794,
+          1.7047027349472046,
+          1.6486736536026,
+          1.6207221746444702
+        ]
+      },
+      {
+        "fro_norm": 13.062405586242676,
+        "name": "governor_network.layers.14.1.to_k.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06596989150412227,
+        "top_singular_values": [
+          1.7184618711471558,
+          1.6810799837112427,
+          1.6635830402374268,
+          1.6460739374160767
+        ]
+      },
+      {
+        "fro_norm": 13.061955451965332,
+        "name": "governor_network.layers.4.1.to_q.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06772991351449294,
+        "top_singular_values": [
+          1.7319687604904175,
+          1.7160248756408691,
+          1.6833405494689941,
+          1.6666229963302612
+        ]
+      },
+      {
+        "fro_norm": 13.061635971069336,
+        "name": "worker_networks.2.layers.7.1.ff.0.0.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06762031366465794,
+        "top_singular_values": [
+          1.7402950525283813,
+          1.7170039415359497,
+          1.6809532642364502,
+          1.6535178422927856
+        ]
+      },
+      {
+        "fro_norm": 13.06082820892334,
+        "name": "governor_network.layers.5.1.ff.0.0.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06531792028374851,
+        "top_singular_values": [
+          1.6974952220916748,
+          1.6839200258255005,
+          1.6630762815475464,
+          1.630759596824646
+        ]
+      },
+      {
+        "fro_norm": 13.06049919128418,
+        "name": "governor_network.layers.8.1.to_k.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06642945146550014,
+        "top_singular_values": [
+          1.7463299036026,
+          1.668474555015564,
+          1.6644887924194336,
+          1.6514593362808228
+        ]
+      },
+      {
+        "fro_norm": 13.058732032775879,
+        "name": "worker_networks.2.layers.3.1.ff.0.0.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06487346331016709,
+        "top_singular_values": [
+          1.7159650325775146,
+          1.6562983989715576,
+          1.6457133293151855,
+          1.6329952478408813
+        ]
+      },
+      {
+        "fro_norm": 13.058365821838379,
+        "name": "governor_network.layers.8.1.to_q.weight",
+        "parameters": 65536,
+        "rank_atoms_written": 4,
+        "role": "recursive_trunk_z",
+        "shape": [
+          512,
+          128
+        ],
+        "top_energy_fraction": 0.06549635458374282,
+        "top_singular_values": [
+          1.7170212268829346,
+          1.6643645763397217,
+          1.6569433212280273,
+          1.6446197032928467
+        ]
+      }
+    ]
+  }
+]
