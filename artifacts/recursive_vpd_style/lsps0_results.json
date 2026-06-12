@@ -1,0 +1,9 @@
+{
+  "base_model_updated": false,
+  "blocked": true,
+  "claims_actual_vpd": false,
+  "discriminator_label": "STATIC_ENDPOINT_SUFFICIENT",
+  "final_label": "UNDERPOWERED_LSPS0",
+  "reason": "discriminator precondition not satisfied; LSPS-0 evidence gated",
+  "uses_cached_4d_arc_heads": false
+}

@@ -609,12 +609,14 @@ def main() -> int:
     components = build_components(model, args.rank_atoms_per_module)
     by_id = {component.component_id: component for component in components}
     pad_id = int(payload["vocab"]["<PAD>"])
+    print(f"[disc] components={len(components)} probe_a={len(probe_a)} probe_b={len(probe_b)} status={probe_status}", flush=True)
 
     base_profile_a, base_metrics_a = evaluate_component(model, loader_a, None, 1.0, args.base_depth, pad_id)
     base_profile_b, base_metrics_b = evaluate_component(model, loader_b, None, 1.0, args.base_depth, pad_id)
     _base_profile_2t_a, base_metrics_2t_a = evaluate_component(model, loader_a, None, 1.0, args.base_depth * 2, pad_id)
     _base_profile_2t_b, base_metrics_2t_b = evaluate_component(model, loader_b, None, 1.0, args.base_depth * 2, pad_id)
 
+    print("[disc] base profiles done; running static ablations", flush=True)
     static_rows = []
     static_metrics = {}
     for index, component in enumerate(components):
@@ -622,6 +624,8 @@ def main() -> int:
         d = damage(base_metrics_a["correct"], metrics["correct"])
         static_metrics[component.component_id] = metrics
         static_rows.append(static_feature_row(component, d, float(profile[-1]["loss"])))
+        if (index + 1) % 10 == 0 or index + 1 == len(components):
+            print(f"[disc] static {index + 1}/{len(components)}", flush=True)
 
     write_json(ARTIFACT_ROOT / "static_features.json", static_rows)
     sample_ids = stratified_sample(static_rows, args.per_decile, args.seed)
@@ -635,10 +639,11 @@ def main() -> int:
         },
     )
 
+    print(f"[disc] static done; profiling {len(sample_ids)} sampled components", flush=True)
     profiles_a = {}
     profiles_b = {}
     targets = []
-    for component_id in sample_ids:
+    for sample_index, component_id in enumerate(sample_ids):
         component = by_id[component_id]
         profiles_a[component_id] = {}
         profiles_b[component_id] = {}
@@ -669,6 +674,8 @@ def main() -> int:
                 "sign_delta_damage_probe_B": 0 if delta_b == 0 else (1 if delta_b > 0 else -1),
             }
         )
+        if (sample_index + 1) % 5 == 0 or sample_index + 1 == len(sample_ids):
+            print(f"[disc] profiled {sample_index + 1}/{len(sample_ids)}", flush=True)
 
     write_json(ARTIFACT_ROOT / "loop_profiles_A.json", profiles_a)
     write_json(ARTIFACT_ROOT / "loop_profiles_B.json", profiles_b)
