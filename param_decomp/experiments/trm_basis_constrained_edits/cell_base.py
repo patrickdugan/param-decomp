@@ -25,6 +25,7 @@ import numpy as np
 from param_decomp.experiments.trm_basis_constrained_edits.common import ChoiceSample, GateSpec
 from param_decomp.experiments.trm_basis_constrained_edits.eval_power import MIN_TARGET_PER_FAMILY
 from param_decomp.experiments.trm_basis_constrained_edits.head_to_head import (
+    CandidateMetrics,
     EvalContext,
     FailureFamily,
     evaluate_candidate,
@@ -127,7 +128,7 @@ def _bootstrap_recurrence(
     return round(positives / evaluated, 6) if evaluated else 0.0
 
 
-def build_cell(
+def train_cell_edit(
     family: FailureFamily,
     pooled: list[ChoiceSample],
     *,
@@ -135,8 +136,8 @@ def build_cell(
     steps: int,
     lr: float,
     seed: int,
-    n_bootstraps: int,
-) -> Cell:
+) -> tuple[EvalContext, np.ndarray, CandidateMetrics]:
+    """Train one cell's raw LoRA edit; returns (context, edit_matrix, raw_metrics)."""
     gate = _gate_for(family)
     context = EvalContext.build(family, gate, {"pooled": pooled})
     adapter, _ = train_low_rank_adapter(
@@ -150,7 +151,23 @@ def build_cell(
         basis=None,
     )
     edit_matrix = adapter.matrix()
-    metrics = evaluate_candidate(context, edit_matrix)
+    return context, edit_matrix, evaluate_candidate(context, edit_matrix)
+
+
+def build_cell(
+    family: FailureFamily,
+    pooled: list[ChoiceSample],
+    *,
+    rank: int,
+    steps: int,
+    lr: float,
+    seed: int,
+    n_bootstraps: int,
+) -> Cell:
+    gate = _gate_for(family)
+    context, edit_matrix, metrics = train_cell_edit(
+        family, pooled, rank=rank, steps=steps, lr=lr, seed=seed
+    )
     n_nontarget = context.total_samples() - family.failure_count
     recurrence = _bootstrap_recurrence(
         family,
