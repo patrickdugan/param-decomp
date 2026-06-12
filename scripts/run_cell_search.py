@@ -75,16 +75,17 @@ def build_report(
         "",
         "## Item 3 — best-of-N existence and success rate",
         "",
-        "Per cell and sparsity stratum (subset L0): does a clean subpatch exist, and "
-        f"the search success rate at N in {list(N_GRID)} (control = norm-matched "
-        "random entries).",
+        "Per cell and sparsity stratum (subset L0): existence of a strict zero-"
+        "regression clean subpatch and of a regression-reducing one (<=0.5x raw), "
+        f"and the best-of-N success rate at N in {list(N_GRID)} for the regression-"
+        "reducing criterion (control = norm-matched random entries).",
         "",
-        "| cell | L0 | clean exists | "
+        "| cell | L0 | clean | reducing | "
         + " | ".join(f"succ@{n}" for n in N_GRID)
         + " | "
         + " | ".join(f"ctrl@{n}" for n in N_GRID)
         + " |",
-        "|---|---:|:--:|" + "---:|" * (2 * len(N_GRID)),
+        "|---|---:|:--:|:--:|" + "---:|" * (2 * len(N_GRID)),
     ]
     for cell in cells:
         for support in cell.supports:
@@ -92,7 +93,8 @@ def build_report(
             ctrl = " | ".join(f"{support.control_success_rate_by_n[n]:.2f}" for n in N_GRID)
             lines.append(
                 f"| {cell.family_key} | {support.support} | "
-                f"{'yes' if support.clean_exists else 'no'} | {succ} | {ctrl} |"
+                f"{'yes' if support.clean_exists else 'no'} | "
+                f"{'yes' if support.improved_exists else 'no'} | {succ} | {ctrl} |"
             )
 
     lines += [

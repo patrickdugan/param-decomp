@@ -75,18 +75,26 @@ def _norm_match(sub: np.ndarray, target_norm: float) -> np.ndarray:
     return sub * (target_norm / norm)
 
 
-def _is_clean(metrics: CandidateMetrics, raw_target: float) -> bool:
+def _retained(metrics: CandidateMetrics, raw_target: float) -> bool:
     target_delta = float(metrics.target_delta)
-    if raw_target <= 0:
-        return False
-    retention = target_delta / raw_target
-    return target_delta > 0 and retention >= RETENTION_FLOOR and _regression(metrics) <= REG_TOL
+    return raw_target > 0 and target_delta > 0 and (target_delta / raw_target) >= RETENTION_FLOOR
+
+
+def _accepts(
+    metrics: CandidateMetrics, raw_target: float, raw_regression: float
+) -> tuple[bool, bool]:
+    """(strict_clean, regression_reducing) flags for a target-retaining subset."""
+    if not _retained(metrics, raw_target):
+        return False, False
+    reg = _regression(metrics)
+    return reg <= REG_TOL, reg <= 0.5 * raw_regression
 
 
 @dataclass(frozen=True)
 class SupportSearch:
     support: int
     clean_exists: bool
+    improved_exists: bool
     existence_checked: int
     success_rate_by_n: dict[int, float]
     control_success_rate_by_n: dict[int, float]
@@ -130,6 +138,7 @@ def _best_of_n_success(
     matrix: np.ndarray,
     coords: list[tuple[int, int]],
     raw_target: float,
+    raw_regression: float,
     raw_norm: float,
     *,
     support: int,
@@ -138,7 +147,7 @@ def _best_of_n_success(
 ) -> bool:
     for _ in range(n):
         edit = _sample_subset_matrix(matrix, coords, support=support, raw_norm=raw_norm, rng=rng)
-        if _is_clean(evaluate_candidate(context, edit), raw_target):
+        if _accepts(evaluate_candidate(context, edit), raw_target, raw_regression)[1]:
             return True
     return False
 
@@ -148,6 +157,7 @@ def _success_rate(
     matrix: np.ndarray,
     coords: list[tuple[int, int]],
     raw_target: float,
+    raw_regression: float,
     raw_norm: float,
     *,
     support: int,
@@ -157,7 +167,8 @@ def _success_rate(
 ) -> float:
     hits = sum(
         _best_of_n_success(
-            context, matrix, coords, raw_target, raw_norm, support=support, n=n, rng=rng
+            context, matrix, coords, raw_target, raw_regression, raw_norm,
+            support=support, n=n, rng=rng,
         )
         for _ in range(repeats)
     )
@@ -167,6 +178,7 @@ def _success_rate(
 def _control_success_rate(
     context: EvalContext,
     raw_target: float,
+    raw_regression: float,
     raw_norm: float,
     shape: tuple[int, int],
     *,
@@ -187,38 +199,46 @@ def _control_success_rate(
             for index in indices:
                 i, j = flat_coords[index]
                 edit[i, j] = values[index]
-            if _is_clean(evaluate_candidate(context, _norm_match(edit, raw_norm)), raw_target):
+            metrics = evaluate_candidate(context, _norm_match(edit, raw_norm))
+            if _accepts(metrics, raw_target, raw_regression)[1]:
                 found = True
                 break
         hits += int(found)
     return round(hits / repeats, 6)
 
 
-def _clean_exists(
+def _existence(
     context: EvalContext,
     matrix: np.ndarray,
     coords: list[tuple[int, int]],
     raw_target: float,
+    raw_regression: float,
     raw_norm: float,
     *,
     support: int,
     rng: np.random.Generator,
     exact_cap: int,
     ref_budget: int,
-) -> tuple[bool, int]:
+) -> tuple[bool, bool, int]:
+    """(strict_clean_exists, regression_reducing_exists, subsets_checked)."""
     support = min(support, len(coords))
     n_subsets = math.comb(len(coords), support)
+    strict = improved = False
     if n_subsets <= exact_cap:
         for combo in combinations(range(len(coords)), support):
             edit = _norm_match(_compose(matrix, coords, list(combo)), raw_norm)
-            if _is_clean(evaluate_candidate(context, edit), raw_target):
-                return True, n_subsets
-        return False, n_subsets
+            s, i = _accepts(evaluate_candidate(context, edit), raw_target, raw_regression)
+            strict, improved = strict or s, improved or i
+            if strict and improved:
+                break
+        return strict, improved, n_subsets
     for _ in range(ref_budget):
         edit = _sample_subset_matrix(matrix, coords, support=support, raw_norm=raw_norm, rng=rng)
-        if _is_clean(evaluate_candidate(context, edit), raw_target):
-            return True, ref_budget
-    return False, ref_budget
+        s, i = _accepts(evaluate_candidate(context, edit), raw_target, raw_regression)
+        strict, improved = strict or s, improved or i
+        if strict and improved:
+            break
+    return strict, improved, ref_budget
 
 
 def greedy_extractor(
@@ -300,6 +320,7 @@ def search_cell(
         family, pooled, rank=rank, steps=steps, lr=lr, seed=seed
     )
     raw_target = float(raw_metrics.target_delta)
+    raw_regression = _regression(raw_metrics)
     raw_norm = float(np.linalg.norm(matrix))
     coords = entry_coords(matrix)
     rng = np.random.default_rng(seed + 104729)
@@ -308,20 +329,20 @@ def search_cell(
     for support in SUPPORT_STRATA:
         if support > len(coords):
             continue
-        clean_exists, checked = _clean_exists(
-            context, matrix, coords, raw_target, raw_norm,
+        clean_exists, improved_exists, checked = _existence(
+            context, matrix, coords, raw_target, raw_regression, raw_norm,
             support=support, rng=rng, exact_cap=exact_cap, ref_budget=ref_budget,
         )
         success = {
             n: _success_rate(
-                context, matrix, coords, raw_target, raw_norm,
+                context, matrix, coords, raw_target, raw_regression, raw_norm,
                 support=support, n=n, repeats=repeats, rng=rng,
             )
             for n in N_GRID
         }
         control = {
             n: _control_success_rate(
-                context, raw_target, raw_norm, matrix.shape,
+                context, raw_target, raw_regression, raw_norm, matrix.shape,
                 support=support, n=n, repeats=repeats, rng=rng,
             )
             for n in N_GRID
@@ -330,6 +351,7 @@ def search_cell(
             SupportSearch(
                 support=support,
                 clean_exists=clean_exists,
+                improved_exists=improved_exists,
                 existence_checked=checked,
                 success_rate_by_n=success,
                 control_success_rate_by_n=control,
