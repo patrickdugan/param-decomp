@@ -46,6 +46,7 @@ def build_config(
     c2: int = 64,
     steps: int,
     batch_size: int,
+    use_delta_component: bool = True,
 ) -> Config:
     info = module_info or [("shared.0", c0), ("shared.2", c2)]
     config_dict = {
@@ -57,7 +58,7 @@ def build_config(
         "sigmoid_type": "leaky_hard",
         "module_info": [{"module_pattern": pattern, "C": c} for pattern, c in info],
         "identity_module_info": None,
-        "use_delta_component": True,
+        "use_delta_component": use_delta_component,
         "loss_metric_configs": [
             {"classname": "ImportanceMinimalityLoss", "coeff": 1e-5, "pnorm": 2.0, "beta": 0},
             {"classname": "StochasticReconLayerwiseLoss", "coeff": 1.0},
