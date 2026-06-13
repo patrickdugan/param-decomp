@@ -1,0 +1,804 @@
+{
+  "base_model_updated": false,
+  "claims_actual_vpd": false,
+  "discriminator_label": "STATIC_ENDPOINT_SUFFICIENT",
+  "eta": 0.05,
+  "eta_note": "NO_LORA_YARDSTICK fallback (no matched LoRA baseline available)",
+  "families": [
+    {
+      "base_holdout_loss": 1.7892677940738697,
+      "base_proposal_errors": 17,
+      "base_proposal_loss": 2.1867051172691085,
+      "holdout_rows": 24,
+      "name": "logic_arrow_maze",
+      "proposal_rows": 24,
+      "regression_rows": {
+        "regression_global": 64
+      }
+    },
+    {
+      "base_holdout_loss": 1.2430148553103209,
+      "base_proposal_errors": 18,
+      "base_proposal_loss": 1.3018966106077035,
+      "holdout_rows": 24,
+      "name": "logic_boolean_expressions",
+      "proposal_rows": 24,
+      "regression_rows": {
+        "regression_global": 64
+      }
+    },
+    {
+      "base_holdout_loss": 1.072513337712735,
+      "base_proposal_errors": 18,
+      "base_proposal_loss": 1.0351263829506934,
+      "holdout_rows": 24,
+      "name": "logic_buggy_tables",
+      "proposal_rows": 24,
+      "regression_rows": {
+        "regression_global": 64
+      }
+    },
+    {
+      "base_holdout_loss": 1.2770355066750199,
+      "base_proposal_errors": 15,
+      "base_proposal_loss": 1.16491674988841,
+      "holdout_rows": 24,
+      "name": "logic_calcudoko",
+      "proposal_rows": 24,
+      "regression_rows": {
+        "regression_global": 64
+      }
+    },
+    {
+      "base_holdout_loss": 0.8604434824859103,
+      "base_proposal_errors": 12,
+      "base_proposal_loss": 0.8401088938117027,
+      "holdout_rows": 24,
+      "name": "logic_campsite",
+      "proposal_rows": 24,
+      "regression_rows": {
+        "regression_global": 64
+      }
+    }
+  ],
+  "final_label": "COORDINATE_SYSTEM_VOID",
+  "notes": [
+    "FAMILY_CAP_APPLIED",
+    "DISCRIMINATOR_GATE_BLOCKED:STATIC_ENDPOINT_SUFFICIENT"
+  ],
+  "override": true,
+  "results": [
+    {
+      "accepted": false,
+      "coeffs": {},
+      "evals": 4,
+      "family": "logic_arrow_maze",
+      "holdout_gain": 0.0,
+      "interaction_flag": false,
+      "method": "LSPS0",
+      "proposal_gain": 0.0,
+      "regression_deltas": {},
+      "regression_max_ucb": 0.0,
+      "support": [],
+      "support_size": 0,
+      "trust_region_max": 0.0
+    },
+    {
+      "accepted": false,
+      "coeffs": {
+        "networks.0.layers.0.1.to_out.weight::svd000": -0.25,
+        "networks.0.layers.1.1.ff.0.0.weight::svd000": -0.5
+      },
+      "evals": 31,
+      "family": "logic_arrow_maze",
+      "holdout_gain": 0.3676157193258405,
+      "interaction_flag": false,
+      "method": "B1_random",
+      "proposal_gain": 0.4128745154788096,
+      "regression_deltas": {
+        "regression_global": -0.12258361405110918
+      },
+      "regression_max_ucb": 0.00241638594889082,
+      "support": [
+        "networks.0.layers.0.1.to_out.weight::svd000",
+        "networks.0.layers.1.1.ff.0.0.weight::svd000"
+      ],
+      "support_size": 2,
+      "trust_region_max": 0.05
+    },
+    {
+      "accepted": true,
+      "coeffs": {
+        "networks.0.layers.0.1.to_k.weight::svd000": -0.5,
+        "networks.0.layers.0.1.to_q.weight::svd000": -0.5,
+        "networks.0.layers.0.1.to_v.weight::svd000": -0.5,
+        "networks.0.layers.2.1.to_k.weight::svd000": -0.5,
+        "networks.0.layers.2.1.to_v.weight::svd000": -0.5,
+        "networks.0.layers.4.1.to_k.weight::svd000": 0.25,
+        "networks.0.layers.4.1.to_q.weight::svd000": 0.25,
+        "networks.0.layers.4.1.to_v.weight::svd000": -0.5
+      },
+      "evals": 99,
+      "family": "logic_arrow_maze",
+      "holdout_gain": 0.7379113196705778,
+      "interaction_flag": false,
+      "method": "B2_static_norm",
+      "proposal_gain": 0.8833145409977683,
+      "regression_deltas": {
+        "regression_global": -0.16863560079946183
+      },
+      "regression_max_ucb": -0.04363560079946183,
+      "support": [
+        "networks.0.layers.0.1.to_v.weight::svd000",
+        "networks.0.layers.0.1.to_k.weight::svd000",
+        "networks.0.layers.4.1.to_k.weight::svd000",
+        "networks.0.layers.4.1.to_q.weight::svd000",
+        "networks.0.layers.0.1.to_q.weight::svd000",
+        "networks.0.layers.2.1.to_v.weight::svd000",
+        "networks.0.layers.2.1.to_k.weight::svd000",
+        "networks.0.layers.4.1.to_v.weight::svd000"
+      ],
+      "support_size": 8,
+      "trust_region_max": 0.05000000000000001
+    },
+    {
+      "accepted": true,
+      "coeffs": {
+        "networks.0.layers.0.1.to_k.weight::svd000": -0.1,
+        "networks.0.layers.0.1.to_out.weight::svd000": -0.25,
+        "networks.0.layers.0.1.to_q.weight::svd000": -0.1,
+        "networks.0.layers.0.1.to_v.weight::svd000": -0.5,
+        "networks.0.layers.1.1.ff.0.0.weight::svd000": -0.5,
+        "networks.0.layers.1.1.ff.2.weight::svd000": 0.5,
+        "networks.0.layers.2.1.to_out.weight::svd000": -0.5,
+        "networks.0.layers.2.1.to_v.weight::svd000": -0.5
+      },
+      "evals": 99,
+      "family": "logic_arrow_maze",
+      "holdout_gain": 0.9224663943362732,
+      "interaction_flag": false,
+      "method": "B3_static_damage",
+      "proposal_gain": 1.1641317203951378,
+      "regression_deltas": {
+        "regression_global": -0.2477822402433958
+      },
+      "regression_max_ucb": -0.12278224024339579,
+      "support": [
+        "networks.0.layers.0.1.to_out.weight::svd000",
+        "networks.0.layers.0.1.to_v.weight::svd000",
+        "networks.0.layers.2.1.to_out.weight::svd000",
+        "networks.0.layers.0.1.to_k.weight::svd000",
+        "networks.0.layers.1.1.ff.2.weight::svd000",
+        "networks.0.layers.1.1.ff.0.0.weight::svd000",
+        "networks.0.layers.0.1.to_q.weight::svd000",
+        "networks.0.layers.2.1.to_v.weight::svd000"
+      ],
+      "support_size": 8,
+      "trust_region_max": 0.05
+    },
+    {
+      "accepted": true,
+      "coeffs": {
+        "networks.0.layers.0.1.to_k.weight::svd000": -0.1,
+        "networks.0.layers.0.1.to_out.weight::svd000": -0.25,
+        "networks.0.layers.0.1.to_v.weight::svd000": -0.5,
+        "networks.0.layers.1.1.ff.2.weight::svd000": 0.5,
+        "networks.0.layers.2.1.to_out.weight::svd000": -0.5,
+        "networks.0.layers.2.1.to_v.weight::svd000": -0.5,
+        "networks.0.layers.4.1.to_k.weight::svd000": 0.25,
+        "networks.0.layers.4.1.to_q.weight::svd000": 0.25
+      },
+      "evals": 99,
+      "family": "logic_arrow_maze",
+      "holdout_gain": 0.9478236382516722,
+      "interaction_flag": false,
+      "method": "B4_gradient_only",
+      "proposal_gain": 1.1788587478610375,
+      "regression_deltas": {
+        "regression_global": -0.2509377695096191
+      },
+      "regression_max_ucb": -0.1259377695096191,
+      "support": [
+        "networks.0.layers.0.1.to_out.weight::svd000",
+        "networks.0.layers.0.1.to_v.weight::svd000",
+        "networks.0.layers.2.1.to_out.weight::svd000",
+        "networks.0.layers.2.1.to_v.weight::svd000",
+        "networks.0.layers.4.1.to_q.weight::svd000",
+        "networks.0.layers.4.1.to_k.weight::svd000",
+        "networks.0.layers.1.1.ff.2.weight::svd000",
+        "networks.0.layers.0.1.to_k.weight::svd000"
+      ],
+      "support_size": 8,
+      "trust_region_max": 0.05
+    },
+    {
+      "accepted": false,
+      "coeffs": {
+        "networks.0.layers.0.1.to_out.weight::svd000": -0.25,
+        "networks.0.layers.0.1.to_v.weight::svd000": -0.25,
+        "networks.0.layers.2.1.to_k.weight::svd000": 0.5,
+        "networks.0.layers.2.1.to_q.weight::svd000": 0.5,
+        "networks.0.layers.4.1.to_v.weight::svd000": 0.5
+      },
+      "evals": 67,
+      "family": "logic_boolean_expressions",
+      "holdout_gain": 0.0974249398956697,
+      "interaction_flag": false,
+      "method": "LSPS0",
+      "proposal_gain": 0.18461985761920596,
+      "regression_deltas": {
+        "regression_global": -0.08516684212372638
+      },
+      "regression_max_ucb": 0.03983315787627362,
+      "support": [
+        "networks.0.layers.0.1.to_out.weight::svd000",
+        "networks.0.layers.0.1.to_v.weight::svd000",
+        "networks.0.layers.2.1.to_k.weight::svd000",
+        "networks.0.layers.2.1.to_q.weight::svd000",
+        "networks.0.layers.4.1.to_v.weight::svd000"
+      ],
+      "support_size": 5,
+      "trust_region_max": 0.05000000000000001
+    },
+    {
+      "accepted": false,
+      "coeffs": {
+        "networks.0.layers.1.1.ff.0.0.weight::svd000": -0.5,
+        "networks.0.layers.2.1.to_out.weight::svd000": -0.5,
+        "networks.0.layers.4.1.to_v.weight::svd000": 0.5
+      },
+      "evals": 43,
+      "family": "logic_boolean_expressions",
+      "holdout_gain": 0.0774841203043859,
+      "interaction_flag": false,
+      "method": "B1_random",
+      "proposal_gain": 0.1414095374445119,
+      "regression_deltas": {
+        "regression_global": -0.06598711368860677
+      },
+      "regression_max_ucb": 0.05901288631139323,
+      "support": [
+        "networks.0.layers.2.1.to_out.weight::svd000",
+        "networks.0.layers.1.1.ff.0.0.weight::svd000",
+        "networks.0.layers.4.1.to_v.weight::svd000"
+      ],
+      "support_size": 3,
+      "trust_region_max": 0.05
+    },
+    {
+      "accepted": false,
+      "coeffs": {
+        "networks.0.layers.0.1.to_q.weight::svd000": 0.5,
+        "networks.0.layers.0.1.to_v.weight::svd000": -0.25,
+        "networks.0.layers.1.1.ff.0.0.weight::svd000": -0.5,
+        "networks.0.layers.2.1.to_k.weight::svd000": 0.5,
+        "networks.0.layers.2.1.to_q.weight::svd000": 0.5,
+        "networks.0.layers.2.1.to_v.weight::svd000": -0.5,
+        "networks.0.layers.4.1.to_v.weight::svd000": 0.5,
+        "to_input_embed.weight::svd000": -0.1
+      },
+      "evals": 99,
+      "family": "logic_boolean_expressions",
+      "holdout_gain": 0.1178622512767713,
+      "interaction_flag": false,
+      "method": "B2_static_norm",
+      "proposal_gain": 0.20245348537961627,
+      "regression_deltas": {
+        "regression_global": -0.09524593816604465
+      },
+      "regression_max_ucb": 0.029754061833955348,
+      "support": [
+        "networks.0.layers.0.1.to_v.weight::svd000",
+        "to_input_embed.weight::svd000",
+        "networks.0.layers.0.1.to_q.weight::svd000",
+        "networks.0.layers.2.1.to_q.weight::svd000",
+        "networks.0.layers.2.1.to_k.weight::svd000",
+        "networks.0.layers.2.1.to_v.weight::svd000",
+        "networks.0.layers.1.1.ff.0.0.weight::svd000",
+        "networks.0.layers.4.1.to_v.weight::svd000"
+      ],
+      "support_size": 8,
+      "trust_region_max": 0.05000000000000001
+    },
+    {
+      "accepted": false,
+      "coeffs": {
+        "networks.0.layers.0.1.to_out.weight::svd000": -0.25,
+        "networks.0.layers.0.1.to_v.weight::svd000": -0.25,
+        "networks.0.layers.1.1.ff.0.0.weight::svd000": -0.5
+      },
+      "evals": 43,
+      "family": "logic_boolean_expressions",
+      "holdout_gain": 0.08460988166431593,
+      "interaction_flag": false,
+      "method": "B3_static_damage",
+      "proposal_gain": 0.1780543761948743,
+      "regression_deltas": {
+        "regression_global": -0.07286488416139036
+      },
+      "regression_max_ucb": 0.052135115838609636,
+      "support": [
+        "networks.0.layers.0.1.to_out.weight::svd000",
+        "networks.0.layers.0.1.to_v.weight::svd000",
+        "networks.0.layers.1.1.ff.0.0.weight::svd000"
+      ],
+      "support_size": 3,
+      "trust_region_max": 0.05
+    },
+    {
+      "accepted": false,
+      "coeffs": {
+        "networks.0.layers.0.1.to_out.weight::svd000": -0.1,
+        "networks.0.layers.0.1.to_v.weight::svd000": -0.25,
+        "networks.0.layers.1.1.ff.0.0.weight::svd000": -0.5,
+        "networks.0.layers.1.1.ff.2.weight::svd000": 0.5,
+        "networks.0.layers.2.1.to_k.weight::svd000": 0.5,
+        "networks.0.layers.2.1.to_q.weight::svd000": 0.5,
+        "networks.0.layers.4.1.to_v.weight::svd000": 0.5
+      },
+      "evals": 91,
+      "family": "logic_boolean_expressions",
+      "holdout_gain": 0.11881232882539439,
+      "interaction_flag": false,
+      "method": "B4_gradient_only",
+      "proposal_gain": 0.2032263043026128,
+      "regression_deltas": {
+        "regression_global": -0.05724823533091694
+      },
+      "regression_max_ucb": 0.06775176466908306,
+      "support": [
+        "networks.0.layers.0.1.to_out.weight::svd000",
+        "networks.0.layers.0.1.to_v.weight::svd000",
+        "networks.0.layers.1.1.ff.0.0.weight::svd000",
+        "networks.0.layers.1.1.ff.2.weight::svd000",
+        "networks.0.layers.4.1.to_v.weight::svd000",
+        "networks.0.layers.2.1.to_k.weight::svd000",
+        "networks.0.layers.2.1.to_q.weight::svd000"
+      ],
+      "support_size": 7,
+      "trust_region_max": 0.05000000000000001
+    },
+    {
+      "accepted": false,
+      "coeffs": {
+        "networks.0.layers.0.1.to_k.weight::svd000": 0.5,
+        "networks.0.layers.0.1.to_q.weight::svd000": 0.5,
+        "networks.0.layers.2.1.to_q.weight::svd000": 0.5
+      },
+      "evals": 43,
+      "family": "logic_buggy_tables",
+      "holdout_gain": -3.348880757880757e-05,
+      "interaction_flag": false,
+      "method": "LSPS0",
+      "proposal_gain": 0.006318437090764517,
+      "regression_deltas": {
+        "regression_global": 0.0426785146119073
+      },
+      "regression_max_ucb": 0.1676785146119073,
+      "support": [
+        "networks.0.layers.0.1.to_k.weight::svd000",
+        "networks.0.layers.0.1.to_q.weight::svd000",
+        "networks.0.layers.2.1.to_q.weight::svd000"
+      ],
+      "support_size": 3,
+      "trust_region_max": 0.05
+    },
+    {
+      "accepted": false,
+      "coeffs": {},
+      "evals": 4,
+      "family": "logic_buggy_tables",
+      "holdout_gain": 0.0,
+      "interaction_flag": false,
+      "method": "B1_random",
+      "proposal_gain": 0.0,
+      "regression_deltas": {},
+      "regression_max_ucb": 0.0,
+      "support": [],
+      "support_size": 0,
+      "trust_region_max": 0.0
+    },
+    {
+      "accepted": false,
+      "coeffs": {
+        "networks.0.layers.0.1.to_k.weight::svd000": 0.5,
+        "networks.0.layers.0.1.to_q.weight::svd000": 0.5,
+        "networks.0.layers.0.1.to_v.weight::svd000": -0.5,
+        "networks.0.layers.2.1.to_k.weight::svd000": 0.5,
+        "networks.0.layers.4.1.to_q.weight::svd000": -0.25
+      },
+      "evals": 67,
+      "family": "logic_buggy_tables",
+      "holdout_gain": -0.006392809407164579,
+      "interaction_flag": false,
+      "method": "B2_static_norm",
+      "proposal_gain": 0.012206632411107421,
+      "regression_deltas": {
+        "regression_global": -0.008954192569945008
+      },
+      "regression_max_ucb": 0.11604580743005499,
+      "support": [
+        "networks.0.layers.0.1.to_v.weight::svd000",
+        "networks.0.layers.0.1.to_k.weight::svd000",
+        "networks.0.layers.0.1.to_q.weight::svd000",
+        "networks.0.layers.4.1.to_q.weight::svd000",
+        "networks.0.layers.2.1.to_k.weight::svd000"
+      ],
+      "support_size": 5,
+      "trust_region_max": 0.05000000000000001
+    },
+    {
+      "accepted": false,
+      "coeffs": {
+        "networks.0.layers.0.1.to_k.weight::svd000": 0.5,
+        "networks.0.layers.0.1.to_out.weight::svd000": -0.1,
+        "networks.0.layers.0.1.to_q.weight::svd000": 0.5,
+        "networks.0.layers.0.1.to_v.weight::svd000": -0.5,
+        "networks.0.layers.1.1.ff.0.0.weight::svd000": 0.5,
+        "networks.0.layers.1.1.ff.2.weight::svd000": 0.5,
+        "networks.0.layers.2.1.to_k.weight::svd000": 0.5
+      },
+      "evals": 91,
+      "family": "logic_buggy_tables",
+      "holdout_gain": -0.0072767847838501876,
+      "interaction_flag": false,
+      "method": "B3_static_damage",
+      "proposal_gain": 0.022071773031105524,
+      "regression_deltas": {
+        "regression_global": -0.004128786793444306
+      },
+      "regression_max_ucb": 0.1208712132065557,
+      "support": [
+        "networks.0.layers.0.1.to_v.weight::svd000",
+        "networks.0.layers.0.1.to_out.weight::svd000",
+        "networks.0.layers.1.1.ff.0.0.weight::svd000",
+        "networks.0.layers.1.1.ff.2.weight::svd000",
+        "networks.0.layers.0.1.to_k.weight::svd000",
+        "networks.0.layers.0.1.to_q.weight::svd000",
+        "networks.0.layers.2.1.to_k.weight::svd000"
+      ],
+      "support_size": 7,
+      "trust_region_max": 0.05000000000000001
+    },
+    {
+      "accepted": false,
+      "coeffs": {
+        "networks.0.layers.0.1.to_k.weight::svd000": 0.5,
+        "networks.0.layers.0.1.to_q.weight::svd000": 0.5,
+        "networks.0.layers.0.1.to_v.weight::svd000": -0.1,
+        "networks.0.layers.1.1.ff.2.weight::svd000": 0.5,
+        "networks.0.layers.2.1.to_k.weight::svd000": 0.5,
+        "networks.0.layers.2.1.to_out.weight::svd000": 0.5,
+        "networks.0.layers.2.1.to_v.weight::svd000": 0.5,
+        "networks.0.layers.4.1.to_v.weight::svd000": 0.5
+      },
+      "evals": 99,
+      "family": "logic_buggy_tables",
+      "holdout_gain": -0.0051993620581924915,
+      "interaction_flag": false,
+      "method": "B4_gradient_only",
+      "proposal_gain": 0.04362637107260525,
+      "regression_deltas": {
+        "regression_global": 0.18802785268053412
+      },
+      "regression_max_ucb": 0.3130278526805341,
+      "support": [
+        "networks.0.layers.1.1.ff.2.weight::svd000",
+        "networks.0.layers.0.1.to_v.weight::svd000",
+        "networks.0.layers.0.1.to_k.weight::svd000",
+        "networks.0.layers.0.1.to_q.weight::svd000",
+        "networks.0.layers.2.1.to_v.weight::svd000",
+        "networks.0.layers.4.1.to_v.weight::svd000",
+        "networks.0.layers.2.1.to_out.weight::svd000",
+        "networks.0.layers.2.1.to_k.weight::svd000"
+      ],
+      "support_size": 8,
+      "trust_region_max": 0.05000000000000001
+    },
+    {
+      "accepted": false,
+      "coeffs": {
+        "networks.0.layers.1.1.ff.0.0.weight::svd000": -0.5,
+        "networks.0.layers.1.1.ff.2.weight::svd000": -0.5,
+        "networks.0.layers.2.1.to_out.weight::svd000": -0.1,
+        "networks.0.layers.2.1.to_v.weight::svd000": -0.5,
+        "networks.0.layers.3.1.ff.2.weight::svd000": -0.5,
+        "networks.0.layers.4.1.to_k.weight::svd000": 0.25,
+        "networks.0.layers.4.1.to_q.weight::svd000": 0.25,
+        "networks.0.layers.4.1.to_v.weight::svd000": -0.5
+      },
+      "evals": 99,
+      "family": "logic_calcudoko",
+      "holdout_gain": 0.09803369136837614,
+      "interaction_flag": false,
+      "method": "LSPS0",
+      "proposal_gain": 0.10464602134500933,
+      "regression_deltas": {
+        "regression_global": -0.04090586194070056
+      },
+      "regression_max_ucb": 0.08409413805929944,
+      "support": [
+        "networks.0.layers.4.1.to_q.weight::svd000",
+        "networks.0.layers.1.1.ff.2.weight::svd000",
+        "networks.0.layers.4.1.to_k.weight::svd000",
+        "networks.0.layers.4.1.to_v.weight::svd000",
+        "networks.0.layers.1.1.ff.0.0.weight::svd000",
+        "networks.0.layers.2.1.to_out.weight::svd000",
+        "networks.0.layers.3.1.ff.2.weight::svd000",
+        "networks.0.layers.2.1.to_v.weight::svd000"
+      ],
+      "support_size": 8,
+      "trust_region_max": 0.05
+    },
+    {
+      "accepted": false,
+      "coeffs": {
+        "networks.0.layers.0.1.to_k.weight::svd000": 0.5,
+        "networks.0.layers.1.1.ff.2.weight::svd000": -0.5,
+        "networks.0.layers.2.1.to_q.weight::svd000": 0.5,
+        "networks.0.layers.4.1.to_v.weight::svd000": -0.5
+      },
+      "evals": 55,
+      "family": "logic_calcudoko",
+      "holdout_gain": 0.007897963359331017,
+      "interaction_flag": false,
+      "method": "B1_random",
+      "proposal_gain": 0.03904711571522057,
+      "regression_deltas": {
+        "regression_global": 0.006101648061303422
+      },
+      "regression_max_ucb": 0.13110164806130342,
+      "support": [
+        "networks.0.layers.1.1.ff.2.weight::svd000",
+        "networks.0.layers.4.1.to_v.weight::svd000",
+        "networks.0.layers.2.1.to_q.weight::svd000",
+        "networks.0.layers.0.1.to_k.weight::svd000"
+      ],
+      "support_size": 4,
+      "trust_region_max": 0.05
+    },
+    {
+      "accepted": false,
+      "coeffs": {
+        "networks.0.layers.0.1.to_k.weight::svd000": 0.5,
+        "networks.0.layers.0.1.to_q.weight::svd000": 0.5,
+        "networks.0.layers.0.1.to_v.weight::svd000": -0.1,
+        "networks.0.layers.2.1.to_k.weight::svd000": 0.5,
+        "networks.0.layers.2.1.to_v.weight::svd000": -0.5,
+        "networks.0.layers.4.1.to_k.weight::svd000": 0.25,
+        "networks.0.layers.4.1.to_q.weight::svd000": 0.25,
+        "networks.0.layers.4.1.to_v.weight::svd000": -0.5
+      },
+      "evals": 99,
+      "family": "logic_calcudoko",
+      "holdout_gain": 0.10482622892595828,
+      "interaction_flag": false,
+      "method": "B2_static_norm",
+      "proposal_gain": 0.0976298563182354,
+      "regression_deltas": {
+        "regression_global": -0.053587456030072644
+      },
+      "regression_max_ucb": 0.07141254396992736,
+      "support": [
+        "networks.0.layers.0.1.to_v.weight::svd000",
+        "networks.0.layers.4.1.to_q.weight::svd000",
+        "networks.0.layers.0.1.to_k.weight::svd000",
+        "networks.0.layers.0.1.to_q.weight::svd000",
+        "networks.0.layers.4.1.to_k.weight::svd000",
+        "networks.0.layers.2.1.to_v.weight::svd000",
+        "networks.0.layers.2.1.to_k.weight::svd000",
+        "networks.0.layers.4.1.to_v.weight::svd000"
+      ],
+      "support_size": 8,
+      "trust_region_max": 0.05000000000000001
+    },
+    {
+      "accepted": false,
+      "coeffs": {
+        "networks.0.layers.0.1.to_k.weight::svd000": 0.5,
+        "networks.0.layers.0.1.to_out.weight::svd000": -0.25,
+        "networks.0.layers.0.1.to_q.weight::svd000": 0.5,
+        "networks.0.layers.1.1.ff.2.weight::svd000": -0.5,
+        "networks.0.layers.2.1.to_k.weight::svd000": 0.5,
+        "networks.0.layers.2.1.to_q.weight::svd000": 0.5,
+        "networks.0.layers.2.1.to_v.weight::svd000": -0.5,
+        "to_input_embed.weight::svd000": -1.0
+      },
+      "evals": 99,
+      "family": "logic_calcudoko",
+      "holdout_gain": 0.09539117268286645,
+      "interaction_flag": false,
+      "method": "B3_static_damage",
+      "proposal_gain": 0.11304644277940179,
+      "regression_deltas": {
+        "regression_global": -0.05122741110972129
+      },
+      "regression_max_ucb": 0.07377258889027871,
+      "support": [
+        "networks.0.layers.2.1.to_v.weight::svd000",
+        "networks.0.layers.0.1.to_out.weight::svd000",
+        "to_input_embed.weight::svd000",
+        "networks.0.layers.0.1.to_q.weight::svd000",
+        "networks.0.layers.0.1.to_k.weight::svd000",
+        "networks.0.layers.1.1.ff.2.weight::svd000",
+        "networks.0.layers.2.1.to_q.weight::svd000",
+        "networks.0.layers.2.1.to_k.weight::svd000"
+      ],
+      "support_size": 8,
+      "trust_region_max": 0.05000000000000001
+    },
+    {
+      "accepted": false,
+      "coeffs": {
+        "networks.0.layers.0.1.to_k.weight::svd000": 0.5,
+        "networks.0.layers.0.1.to_out.weight::svd000": -0.1,
+        "networks.0.layers.0.1.to_q.weight::svd000": 0.5,
+        "networks.0.layers.1.1.ff.2.weight::svd000": -0.5,
+        "networks.0.layers.2.1.to_k.weight::svd000": 0.5,
+        "networks.0.layers.2.1.to_v.weight::svd000": -0.5,
+        "networks.0.layers.3.1.ff.2.weight::svd000": -0.5,
+        "networks.0.layers.4.1.to_q.weight::svd000": 0.25
+      },
+      "evals": 99,
+      "family": "logic_calcudoko",
+      "holdout_gain": 0.10882510702746617,
+      "interaction_flag": false,
+      "method": "B4_gradient_only",
+      "proposal_gain": 0.12672940889994289,
+      "regression_deltas": {
+        "regression_global": -0.04997505198116414
+      },
+      "regression_max_ucb": 0.07502494801883586,
+      "support": [
+        "networks.0.layers.2.1.to_v.weight::svd000",
+        "networks.0.layers.0.1.to_out.weight::svd000",
+        "networks.0.layers.1.1.ff.2.weight::svd000",
+        "networks.0.layers.4.1.to_q.weight::svd000",
+        "networks.0.layers.0.1.to_k.weight::svd000",
+        "networks.0.layers.0.1.to_q.weight::svd000",
+        "networks.0.layers.3.1.ff.2.weight::svd000",
+        "networks.0.layers.2.1.to_k.weight::svd000"
+      ],
+      "support_size": 8,
+      "trust_region_max": 0.05000000000000001
+    },
+    {
+      "accepted": false,
+      "coeffs": {
+        "networks.0.layers.0.1.to_v.weight::svd000": -0.5,
+        "networks.0.layers.1.1.ff.2.weight::svd000": -0.5,
+        "networks.0.layers.3.1.ff.0.0.weight::svd000": -0.5,
+        "networks.0.layers.3.1.ff.2.weight::svd000": -0.5,
+        "networks.0.layers.4.1.to_v.weight::svd000": -0.5
+      },
+      "evals": 67,
+      "family": "logic_campsite",
+      "holdout_gain": 0.04315826389938593,
+      "interaction_flag": false,
+      "method": "LSPS0",
+      "proposal_gain": 0.02941855539878213,
+      "regression_deltas": {
+        "regression_global": -0.08016088721342385
+      },
+      "regression_max_ucb": 0.04483911278657615,
+      "support": [
+        "networks.0.layers.1.1.ff.2.weight::svd000",
+        "networks.0.layers.4.1.to_v.weight::svd000",
+        "networks.0.layers.0.1.to_v.weight::svd000",
+        "networks.0.layers.3.1.ff.0.0.weight::svd000",
+        "networks.0.layers.3.1.ff.2.weight::svd000"
+      ],
+      "support_size": 5,
+      "trust_region_max": 0.05
+    },
+    {
+      "accepted": false,
+      "coeffs": {
+        "networks.0.layers.0.1.to_q.weight::svd000": 0.5,
+        "networks.0.layers.3.1.ff.0.0.weight::svd000": -0.5,
+        "networks.0.layers.4.1.to_k.weight::svd000": -0.25
+      },
+      "evals": 43,
+      "family": "logic_campsite",
+      "holdout_gain": 0.0002066735178232193,
+      "interaction_flag": false,
+      "method": "B1_random",
+      "proposal_gain": 0.011495569720864296,
+      "regression_deltas": {
+        "regression_global": -0.012024710333207622
+      },
+      "regression_max_ucb": 0.11297528966679238,
+      "support": [
+        "networks.0.layers.0.1.to_q.weight::svd000",
+        "networks.0.layers.4.1.to_k.weight::svd000",
+        "networks.0.layers.3.1.ff.0.0.weight::svd000"
+      ],
+      "support_size": 3,
+      "trust_region_max": 0.05
+    },
+    {
+      "accepted": false,
+      "coeffs": {
+        "networks.0.layers.0.1.to_v.weight::svd000": -0.5,
+        "networks.0.layers.2.1.to_q.weight::svd000": -0.5,
+        "networks.0.layers.4.1.to_k.weight::svd000": -0.25,
+        "networks.0.layers.4.1.to_q.weight::svd000": -0.25
+      },
+      "evals": 55,
+      "family": "logic_campsite",
+      "holdout_gain": 0.03233911097049713,
+      "interaction_flag": false,
+      "method": "B2_static_norm",
+      "proposal_gain": 0.0256901619335016,
+      "regression_deltas": {
+        "regression_global": -0.054485512140672654
+      },
+      "regression_max_ucb": 0.07051448785932735,
+      "support": [
+        "networks.0.layers.0.1.to_v.weight::svd000",
+        "networks.0.layers.4.1.to_q.weight::svd000",
+        "networks.0.layers.4.1.to_k.weight::svd000",
+        "networks.0.layers.2.1.to_q.weight::svd000"
+      ],
+      "support_size": 4,
+      "trust_region_max": 0.05
+    },
+    {
+      "accepted": false,
+      "coeffs": {
+        "networks.0.layers.0.1.to_out.weight::svd000": -0.25
+      },
+      "evals": 19,
+      "family": "logic_campsite",
+      "holdout_gain": 0.026581553742289543,
+      "interaction_flag": false,
+      "method": "B3_static_damage",
+      "proposal_gain": 0.026319297651449802,
+      "regression_deltas": {
+        "regression_global": -0.07484981761081144
+      },
+      "regression_max_ucb": 0.05015018238918856,
+      "support": [
+        "networks.0.layers.0.1.to_out.weight::svd000"
+      ],
+      "support_size": 1,
+      "trust_region_max": 0.05
+    },
+    {
+      "accepted": false,
+      "coeffs": {
+        "networks.0.layers.0.1.to_out.weight::svd000": -0.25
+      },
+      "evals": 19,
+      "family": "logic_campsite",
+      "holdout_gain": 0.026581527665257454,
+      "interaction_flag": false,
+      "method": "B4_gradient_only",
+      "proposal_gain": 0.026319295167922974,
+      "regression_deltas": {
+        "regression_global": -0.07484983204631135
+      },
+      "regression_max_ucb": 0.05015016795368865,
+      "support": [
+        "networks.0.layers.0.1.to_out.weight::svd000"
+      ],
+      "support_size": 1,
+      "trust_region_max": 0.05
+    }
+  ],
+  "summary": {
+    "any_accept_families": 1,
+    "b3_accept_families": 1,
+    "beats_b3_by_family": {
+      "logic_arrow_maze": 0,
+      "logic_boolean_expressions": 1,
+      "logic_buggy_tables": 1,
+      "logic_calcudoko": 1,
+      "logic_campsite": 1
+    },
+    "lsps0_accept_families": 0,
+    "lsps0_beats_b3_families": 4,
+    "n_families": 5
+  },
+  "uses_cached_4d_arc_heads": false
+}
