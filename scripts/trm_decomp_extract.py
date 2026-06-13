@@ -15,6 +15,7 @@ import numpy as np
 import torch
 from torch import Tensor, nn
 
+from param_decomp.configs import Config
 from param_decomp.models.batch_and_loss_fns import run_batch_first_element
 from param_decomp.models.component_model import ComponentModel
 from param_decomp.utils.module_utils import expand_module_patterns
@@ -68,7 +69,7 @@ def main() -> int:
     model.eval()
     model.requires_grad_(False)
 
-    config = build_config(args.c0, args.c2, steps=1, batch_size=args.n_prompts)
+    config = build_config(c0=args.c0, c2=args.c2, steps=1, batch_size=args.n_prompts)
     module_path_info = expand_module_patterns(model, config.all_module_info)
     cm = ComponentModel(
         target_model=model,
@@ -83,15 +84,37 @@ def main() -> int:
 
     prompts = arc_prompts(args.parquet, args.n_prompts)
     x = torch.tensor(np.asarray(vectorizer.transform(prompts).todense(), dtype=np.float32), device=device)
-    batch = (x,)
+    run_extraction(
+        model, cm, x, config,
+        model_name="ConveyorTRM trm_arc_challenge",
+        checkpoint=args.checkpoint,
+        model_path=args.model,
+        out_dir=args.out_dir,
+        report_path=args.report_path,
+    )
+    return 0
 
+
+def run_extraction(
+    model: nn.Module,
+    cm: ComponentModel,
+    x: Tensor,
+    config: Config,
+    *,
+    model_name: str,
+    checkpoint: Path,
+    model_path: Path,
+    out_dir: Path,
+    report_path: Path,
+) -> dict[str, object]:
+    """Faithfulness + per-datapoint causal importance + per-component ablation."""
+    device = x.device
     original_out = model(x).detach()
     with torch.no_grad():
-        out = cm(batch, cache_type="input")
+        out = cm((x,), cache_type="input")
         ci = cm.calc_causal_importances(pre_weight_acts=out.cache, sampling=config.sampling)
     deltas = cm.calc_weight_deltas()
 
-    # Install the faithful surrogate weights W = components + delta on every target.
     original_weights = {p: _linear(model, p).weight.data.clone() for p in cm.target_module_paths}
     w_full: dict[str, Tensor] = {}
     for path in cm.target_module_paths:
@@ -106,12 +129,11 @@ def main() -> int:
     component_rows: list[dict[str, object]] = []
     for path in cm.target_module_paths:
         component = cm.components[path]
-        w_components = component.weight.detach()
         w_orig = original_weights[path]
-        component_capture = float(torch.linalg.norm(w_components) / torch.linalg.norm(w_orig))
+        component_capture = float(torch.linalg.norm(component.weight.detach()) / torch.linalg.norm(w_orig))
         delta_fraction = float(torch.linalg.norm(deltas[path]) / torch.linalg.norm(w_orig))
 
-        ci_layer = ci.lower_leaky[path].detach()  # [N, C]
+        ci_layer = ci.lower_leaky[path].detach()
         ci_mean = ci_layer.mean(dim=0)
         alive_frac = (ci_layer > CI_ALIVE).float().mean(dim=0)
         per_datapoint_l0 = (ci_layer > CI_ALIVE).float().sum(dim=1)
@@ -150,18 +172,19 @@ def main() -> int:
 
     manifest: dict[str, object] = {
         "dictionary_type": "GOODFIRE_PARAM_DECOMP (this repo SPD)",
-        "model": "ConveyorTRM trm_arc_challenge",
-        "checkpoint": str(args.checkpoint),
-        "trained_decomposition": str(args.model),
-        "n_datapoints": len(prompts),
+        "model": model_name,
+        "checkpoint": str(checkpoint),
+        "trained_decomposition": str(model_path),
+        "n_datapoints": int(x.shape[0]),
         "behavioral_faithfulness_rel_error": round(behavioral_rel_error, 8),
         "layers": layers,
         "components": component_rows,
     }
-    (args.out_dir / "manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
-    _write_report(args.report_path, manifest)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    (out_dir / "manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+    _write_report(report_path, manifest)
     print(json.dumps({"layers": layers, "n_components": len(component_rows)}, indent=2))
-    return 0
+    return manifest
 
 
 def _label(alive_fraction: float, damage: float) -> str:

@@ -39,7 +39,15 @@ class ConveyorTRMConcat(nn.Module):
         return torch.cat([self.category_head(h), self.risk_head(h), self.success_head(h)], dim=-1)
 
 
-def build_config(c0: int, c2: int, steps: int, batch_size: int) -> Config:
+def build_config(
+    module_info: list[tuple[str, int]] | None = None,
+    *,
+    c0: int = 64,
+    c2: int = 64,
+    steps: int,
+    batch_size: int,
+) -> Config:
+    info = module_info or [("shared.0", c0), ("shared.2", c2)]
     config_dict = {
         "wandb_project": None,
         "wandb_run_name": None,
@@ -47,10 +55,7 @@ def build_config(c0: int, c2: int, steps: int, batch_size: int) -> Config:
         "n_mask_samples": 1,
         "ci_config": {"mode": "layerwise", "fn_type": "mlp", "hidden_dims": [16]},
         "sigmoid_type": "leaky_hard",
-        "module_info": [
-            {"module_pattern": "shared.0", "C": c0},
-            {"module_pattern": "shared.2", "C": c2},
-        ],
+        "module_info": [{"module_pattern": pattern, "C": c} for pattern, c in info],
         "identity_module_info": None,
         "use_delta_component": True,
         "loss_metric_configs": [
@@ -136,7 +141,7 @@ def main() -> int:
         dataset, batch_size=args.batch_size, shuffle=False
     )
 
-    config = build_config(args.c0, args.c2, args.steps, args.batch_size)
+    config = build_config(c0=args.c0, c2=args.c2, steps=args.steps, batch_size=args.batch_size)
     optimize(
         target_model=model,
         config=config,
