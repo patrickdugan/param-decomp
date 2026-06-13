@@ -56,6 +56,7 @@ from run_trm_loop_spline_first_discriminator import load_trained_model  # noqa: 
 REPORT_PATH = disc.REPORT_PATH.parent / "lsps0_loop_spline_patch_search.md"
 RESULTS_PATH = ARTIFACT_ROOT / "lsps0_results.json"
 DISCRIMINATOR_MANIFEST = ARTIFACT_ROOT / "manifest.json"
+DEVICE = "cpu"
 
 BLOCKING_DISCRIMINATOR_LABELS = {
     "PROFILE_UNSTABLE",
@@ -129,6 +130,10 @@ def parse_args() -> argparse.Namespace:
         default="",
         help="Suffix for output filenames, to keep descriptive override runs separate from canonical artifacts.",
     )
+    parser.add_argument("--device", type=str, default="cpu")
+    parser.add_argument("--proposal-target", type=int, default=PROPOSAL_TARGET)
+    parser.add_argument("--artifact-root", type=Path, default=ARTIFACT_ROOT)
+    parser.add_argument("--report", type=Path, default=REPORT_PATH)
     return parser.parse_args()
 
 
@@ -167,10 +172,10 @@ def forward_losses(
     correct: list[bool] = []
     with reasoning_depth(model, depth), torch.no_grad():
         for batch in loader:
-            input_ids = batch["input_ids"]
+            input_ids = batch["input_ids"].to(DEVICE)
             attention_mask = input_ids.ne(pad_id)
             bucket_logits, _action, _reward, _pooled = model(input_ids, attention_mask)
-            labels = batch["bucket_labels"]
+            labels = batch["bucket_labels"].to(DEVICE)
             loss = F.cross_entropy(bucket_logits, labels, reduction="none")
             losses.extend(float(x) for x in loss.tolist())
             correct.extend(bool(x) for x in bucket_logits.argmax(dim=-1).eq(labels).tolist())
@@ -192,7 +197,7 @@ def grad_step_weights(
     model.zero_grad(set_to_none=True)
     with reasoning_depth(model, depth):
         for batch in loader:
-            input_ids = batch["input_ids"]
+            input_ids = batch["input_ids"].to(DEVICE)
             attention_mask = input_ids.ne(pad_id)
             tokens = model.to_input_embed(input_ids)
             hiddens = torch.zeros_like(tokens).unsqueeze(0).repeat(model.num_networks, 1, 1, 1)
@@ -242,7 +247,7 @@ def trace_loss_profile(
     step_count: dict[int, int] = defaultdict(int)
     with reasoning_depth(model, depth), torch.no_grad():
         for batch in loader:
-            input_ids = batch["input_ids"]
+            input_ids = batch["input_ids"].to(DEVICE)
             attention_mask = input_ids.ne(pad_id)
             rows = disc.trace_hierarchical(model, input_ids, attention_mask, batch)
             for row in rows:
@@ -520,16 +525,17 @@ def build_families(
     for env, env_rows in sorted(by_env.items()):
         if len(env_rows) < MIN_FAMILY_ROWS:
             continue
-        loader = build_loader(env_rows, payload, batch_size)
+        probe_rows = env_rows[: 2 * PROPOSAL_TARGET]
+        loader = build_loader(probe_rows, payload, batch_size)
         loss, correct = forward_losses(model, loader, depth, pad_id)
         errors = sum(1 for c in correct if not c)
         if errors == 0:
             continue
         shuffled = list(env_rows)
         rng.shuffle(shuffled)
-        split = len(shuffled) // 2
+        split = min(PROPOSAL_TARGET, len(shuffled) // 2)
         proposal_rows = shuffled[:split]
-        holdout_rows = shuffled[split:]
+        holdout_rows = shuffled[split : split + PROPOSAL_TARGET]
         regression_pool = [r for other, other_rows in by_env.items() if other != env for r in other_rows]
         rng.shuffle(regression_pool)
         regression_suites = {"regression_global": regression_pool[: min(64, len(regression_pool))]}
@@ -791,6 +797,13 @@ def render_report(
 
 def main() -> int:
     args = parse_args()
+    global DEVICE, ARTIFACT_ROOT, RESULTS_PATH, DISCRIMINATOR_MANIFEST, REPORT_PATH, PROPOSAL_TARGET
+    DEVICE = args.device
+    PROPOSAL_TARGET = args.proposal_target
+    ARTIFACT_ROOT = args.artifact_root
+    RESULTS_PATH = ARTIFACT_ROOT / "lsps0_results.json"
+    DISCRIMINATOR_MANIFEST = ARTIFACT_ROOT / "manifest.json"
+    REPORT_PATH = args.report
     random.seed(args.seed)
     np.random.seed(args.seed)
     torch.manual_seed(args.seed)
@@ -817,7 +830,7 @@ def main() -> int:
         print(json.dumps({"final_label": label, "blocked": True, "report": str(report_path)}, indent=2))
         return 0
 
-    payload, model = load_trained_model(str(args.model), "cpu")
+    payload, model = load_trained_model(str(args.model), DEVICE)
     if not isinstance(model, HermesHRMClassifier) or isinstance(model, ConstellationGovernorHermesClassifier):
         label = "BLOCKED_NO_GRADIENT_PROFILE"
         write_blocker(label, discriminator_label, report_path)
@@ -848,8 +861,9 @@ def main() -> int:
     summary = summarize(all_results, families)
     label = decide_label(summary, families, notes)
     if discriminator_label in BLOCKING_DISCRIMINATOR_LABELS:
-        label = "UNDERPOWERED_LSPS0"
-        notes = list(dict.fromkeys(notes + ["DISCRIMINATOR_OVERRIDE_NO_EVIDENCE"]))
+        notes = list(dict.fromkeys(notes + [f"DISCRIMINATOR_GATE_BLOCKED:{discriminator_label}"]))
+        if label == "LSPS0_SPLINE_PROPOSAL_POSITIVE":
+            label = "SPLINE_PROPOSAL_NEGATIVE"
 
     report_path.parent.mkdir(parents=True, exist_ok=True)
     report_path.write_text(

@@ -1,0 +1,140 @@
+{
+  "gym_id": "powered_int3_logic",
+  "created_at": "2026-06-12T18:16:51+00:00",
+  "source_paths": [
+    "D:/projects/VDP/artifacts/powered_int3_logic/raw_logic_traces.jsonl"
+  ],
+  "dataset_dir": "D:/projects/VDP/artifacts/powered_int3_logic/gym_out\\dataset",
+  "train_path": "D:/projects/VDP/artifacts/powered_int3_logic/gym_out\\dataset\\train.jsonl",
+  "eval_path": "D:/projects/VDP/artifacts/powered_int3_logic/gym_out\\dataset\\eval.jsonl",
+  "seed": 7,
+  "eval_ratio": 0.2,
+  "symbolic_top_k": 12,
+  "text_fields": [
+    "source_env_name",
+    "source_env_type",
+    "task_family",
+    "task",
+    "observation",
+    "model_action",
+    "reasoning_mode",
+    "reasoning_trace_stages",
+    "reasoning_summary",
+    "output_status",
+    "visible_output_emitted",
+    "valid_action",
+    "symbolic_channels",
+    "constitutional_score",
+    "latent_goal_conflict",
+    "rationalization_gap"
+  ],
+  "action_label_mode": "action_family_explicit",
+  "bucket_labels": [
+    "negative",
+    "weak_positive",
+    "exact_positive"
+  ],
+  "action_labels": [
+    "__ABSTAIN__",
+    "logic_dyck_language_errors",
+    "logic_web_of_lies",
+    "logic_time_sequence",
+    "logic_number_wall",
+    "logic_goods_exchange",
+    "logic_calcudoko",
+    "logic_sudoku",
+    "logic_arrow_maze",
+    "logic_zebra_puzzle",
+    "logic_mathador",
+    "logic_survo",
+    "logic_futoshiki",
+    "logic_space_reasoning_tree",
+    "logic_wordscapes",
+    "logic_numbrix",
+    "logic_boolean_expressions",
+    "logic_dyck_language",
+    "logic_word_sorting_mistake",
+    "logic_cipher",
+    "logic_object_counting",
+    "logic_norinori",
+    "logic_kukurasu",
+    "logic_word_sorting",
+    "logic_buggy_tables",
+    "logic_campsite",
+    "logic_object_properties",
+    "logic_math_path"
+  ],
+  "train_vocab_size": 62605,
+  "all_summary": {
+    "rows": 16356,
+    "bucket_counts": {
+      "exact_positive": 5452,
+      "weak_positive": 5452,
+      "negative": 5452
+    },
+    "target_action_rows": 10904,
+    "distinct_target_actions": 27,
+    "top_envs": {
+      "logic_cipher": 660,
+      "logic_numbrix": 660,
+      "logic_number_wall": 660,
+      "logic_survo": 660,
+      "logic_object_counting": 660,
+      "logic_norinori": 660,
+      "logic_zebra_puzzle": 660,
+      "logic_goods_exchange": 660,
+      "logic_dyck_language": 660,
+      "logic_kukurasu": 660,
+      "logic_web_of_lies": 660,
+      "logic_mathador": 660
+    }
+  },
+  "train_summary": {
+    "rows": 13086,
+    "bucket_counts": {
+      "weak_positive": 4362,
+      "negative": 4362,
+      "exact_positive": 4362
+    },
+    "target_action_rows": 8724,
+    "distinct_target_actions": 27,
+    "top_envs": {
+      "logic_goods_exchange": 546,
+      "logic_time_sequence": 542,
+      "logic_sudoku": 539,
+      "logic_cipher": 537,
+      "logic_survo": 536,
+      "logic_kukurasu": 536,
+      "logic_norinori": 534,
+      "logic_boolean_expressions": 533,
+      "logic_web_of_lies": 531,
+      "logic_word_sorting": 531,
+      "logic_space_reasoning_tree": 530,
+      "logic_dyck_language": 530
+    }
+  },
+  "eval_summary": {
+    "rows": 3270,
+    "bucket_counts": {
+      "weak_positive": 1090,
+      "negative": 1090,
+      "exact_positive": 1090
+    },
+    "target_action_rows": 2180,
+    "distinct_target_actions": 27,
+    "top_envs": {
+      "logic_wordscapes": 149,
+      "logic_numbrix": 148,
+      "logic_zebra_puzzle": 145,
+      "logic_object_counting": 142,
+      "logic_futoshiki": 140,
+      "logic_arrow_maze": 139,
+      "logic_calcudoko": 138,
+      "logic_number_wall": 137,
+      "logic_word_sorting_mistake": 135,
+      "logic_mathador": 132,
+      "logic_dyck_language_errors": 132,
+      "logic_dyck_language": 130
+    }
+  }
+}

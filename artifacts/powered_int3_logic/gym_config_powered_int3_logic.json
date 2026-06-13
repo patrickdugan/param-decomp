@@ -1,0 +1,29 @@
+{
+  "gym_id": "powered_int3_logic",
+  "output_dir": "D:/projects/VDP/artifacts/powered_int3_logic/gym_out",
+  "dataset": {
+    "source_jsonl": "D:/projects/VDP/artifacts/powered_int3_logic/raw_logic_traces.jsonl",
+    "eval_ratio": 0.2,
+    "seed": 7,
+    "symbolic_top_k": 12,
+    "action_label_mode": "action_family_explicit",
+    "text_fields": [
+      "source_env_name",
+      "source_env_type",
+      "task_family",
+      "task",
+      "observation",
+      "model_action",
+      "reasoning_mode",
+      "reasoning_trace_stages",
+      "reasoning_summary",
+      "output_status",
+      "visible_output_emitted",
+      "valid_action",
+      "symbolic_channels",
+      "constitutional_score",
+      "latent_goal_conflict",
+      "rationalization_gap"
+    ]
+  }
+}

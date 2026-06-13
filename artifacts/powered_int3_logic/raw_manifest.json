@@ -1,0 +1,49 @@
+{
+  "source": "D:\\Research_Engine\\tesseract_persistent\\data\\normalized_trajectories\\intellect_3_logic.jsonl",
+  "raw_path": "D:\\projects\\VDP\\artifacts\\powered_int3_logic\\raw_logic_traces.jsonl",
+  "excluded_arc_or_unparseable": 747,
+  "n_families": 27,
+  "n_items": 5452,
+  "n_rows": 16356,
+  "bucket_counts": {
+    "weak_positive": 5452,
+    "exact_positive": 5452,
+    "negative": 5452
+  },
+  "family_item_counts": {
+    "logic_mathador": 220,
+    "logic_zebra_puzzle": 220,
+    "logic_cipher": 220,
+    "logic_web_of_lies": 220,
+    "logic_goods_exchange": 220,
+    "logic_sudoku": 220,
+    "logic_object_counting": 220,
+    "logic_kukurasu": 220,
+    "logic_arrow_maze": 220,
+    "logic_survo": 220,
+    "logic_calcudoko": 220,
+    "logic_dyck_language": 220,
+    "logic_dyck_language_errors": 220,
+    "logic_futoshiki": 220,
+    "logic_word_sorting": 220,
+    "logic_numbrix": 220,
+    "logic_word_sorting_mistake": 220,
+    "logic_norinori": 220,
+    "logic_time_sequence": 220,
+    "logic_number_wall": 220,
+    "logic_wordscapes": 220,
+    "logic_space_reasoning_tree": 220,
+    "logic_boolean_expressions": 220,
+    "logic_buggy_tables": 196,
+    "logic_campsite": 109,
+    "logic_math_path": 53,
+    "logic_object_properties": 34
+  },
+  "weak_frac": 0.1,
+  "neg_frac": 0.5,
+  "excluded_families": [
+    "arc_agi"
+  ],
+  "claims_actual_vpd": false,
+  "uses_cached_4d_arc_heads": false
+}

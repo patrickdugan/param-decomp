@@ -1,0 +1,5 @@
+# Large, regenerable artifacts (rebuild via build_powered_int3_logic_corpus.py + train_hrm_hermes)
+model
+raw_logic_traces.jsonl
+gym_out/dataset/train.jsonl
+gym_out/dataset/eval.jsonl

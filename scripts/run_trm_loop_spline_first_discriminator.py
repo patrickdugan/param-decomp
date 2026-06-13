@@ -47,6 +47,7 @@ from experiments.hermes_skill_gym.train_hrm_hermes import (  # noqa: E402
 
 ARTIFACT_ROOT = REPO_ROOT / "artifacts" / "recursive_vpd_style"
 REPORT_PATH = REPO_ROOT / "reports" / "trm_loop_spline_first_discriminator.md"
+DEVICE = "cpu"
 MODEL_DIR = (
     Path(r"D:\projects\HRM-re\experiments\hermes_skill_gym\outputs")
     / "hermes_skill_gym_trm_action_family_explicit_single"
@@ -97,6 +98,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--batch-size", type=int, default=32)
     parser.add_argument("--seed", type=int, default=17)
     parser.add_argument("--permutations", type=int, default=200)
+    parser.add_argument("--device", type=str, default="cpu")
+    parser.add_argument("--artifact-root", type=Path, default=ARTIFACT_ROOT)
+    parser.add_argument("--report", type=Path, default=REPORT_PATH)
     return parser.parse_args()
 
 
@@ -325,7 +329,7 @@ def trace_model(model: torch.nn.Module, loader: DataLoader, depth: int, pad_id: 
     all_loss = []
     with reasoning_depth(model, depth):
         for batch in loader:
-            input_ids = batch["input_ids"]
+            input_ids = batch["input_ids"].to(DEVICE)
             attention_mask = input_ids.ne(pad_id)
             if isinstance(model, HermesHRMClassifier) and not isinstance(model, ConstellationGovernorHermesClassifier):
                 trace_rows = trace_hierarchical(model, input_ids, attention_mask, batch)
@@ -340,7 +344,7 @@ def trace_model(model: torch.nn.Module, loader: DataLoader, depth: int, pad_id: 
             final = trace_rows[-1]
             # Re-run final correctness with public forward for exact per-example correctness.
             bucket_logits, _action_logits, _reward_pred, _pooled = model(input_ids, attention_mask)
-            labels = batch["bucket_labels"]
+            labels = batch["bucket_labels"].to(DEVICE)
             loss = F.cross_entropy(bucket_logits, labels, reduction="none")
             all_loss.extend(float(x) for x in loss.tolist())
             all_correct.extend(bool(x) for x in bucket_logits.argmax(dim=-1).eq(labels).tolist())
@@ -591,12 +595,16 @@ def render_report(payload: dict[str, Any]) -> str:
 
 def main() -> int:
     args = parse_args()
+    global DEVICE, ARTIFACT_ROOT, REPORT_PATH
+    DEVICE = args.device
+    ARTIFACT_ROOT = args.artifact_root
+    REPORT_PATH = args.report
     random.seed(args.seed)
     np.random.seed(args.seed)
     ARTIFACT_ROOT.mkdir(parents=True, exist_ok=True)
     REPORT_PATH.parent.mkdir(parents=True, exist_ok=True)
 
-    payload, model = load_trained_model(str(args.model), "cpu")
+    payload, model = load_trained_model(str(args.model), DEVICE)
     if not isinstance(model, HermesHRMClassifier) or isinstance(model, ConstellationGovernorHermesClassifier):
         final = {"final_label": "BLOCKED_NO_RECURSION_TRACE", "reason": type(model).__name__}
         write_json(ARTIFACT_ROOT / "manifest.json", final)
