@@ -1,10 +1,10 @@
 """VPD-gated component adapter on the powered Intellect-3-Logic TRM.
 
-This is the first fine-tuning methodology test after retiring loop-spline:
-train only scalar coefficients on selected rank-one component directions, with
-the base powered critic frozen. The primary arm selects high-damage recursive
-trunk components from the powered discriminator static labels; the control arm
-uses norm/role-matched random components at the same count.
+This is a fine-tuning methodology test after retiring loop-spline: apply or
+train scalar coefficients on selected rank-one component directions, with the
+base powered critic frozen. The primary arm can select either high-damage
+components or validation-scored signed VPD components; the control arm uses
+damage/role-matched random components at the same count.
 """
 
 from __future__ import annotations
@@ -15,7 +15,7 @@ import json
 import random
 import sys
 from collections.abc import Iterator
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any, cast, override
 
@@ -56,6 +56,13 @@ class ComponentSpec:
     static_damage: float
     role: str
     scale: float
+    mean_ci: float = 0.0
+    alive_fraction: float = 1.0
+    label: str = ""
+    initial_coeff: float = 0.0
+    validation_score: float | None = None
+    validation_loss: float | None = None
+    validation_drift: float | None = None
     basis: Tensor | None = None
 
 
@@ -81,7 +88,8 @@ class ComponentDeltaLinear(nn.Module):
                 idx = min(spec.rank_index, u.shape[1] - 1, vh.shape[0] - 1)
                 basis.append(torch.outer(u[:, idx], vh[idx]).to(dtype=base.weight.dtype))
         self.register_buffer("basis", torch.stack(basis, dim=0))
-        self.coeff = nn.Parameter(torch.zeros(len(specs), dtype=base.weight.dtype))
+        initial = torch.tensor([spec.initial_coeff for spec in specs], dtype=base.weight.dtype)
+        self.coeff = nn.Parameter(initial)
 
     @override
     def forward(self, x: Tensor) -> Tensor:
@@ -100,6 +108,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--vpd-manifest", type=Path, default=None)
     parser.add_argument("--spd-checkpoint", type=Path, default=None)
     parser.add_argument("--selection-source", choices=["static", "vpd"], default="static")
+    parser.add_argument("--selection-method", choices=["damage", "validated"], default="damage")
     parser.add_argument("--out-dir", type=Path, default=OUT_DIR)
     parser.add_argument("--report", type=Path, default=REPORT_PATH)
     parser.add_argument("--device", default="cpu")
@@ -111,6 +120,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--top-k", type=int, default=8)
     parser.add_argument("--seed", type=int, default=23)
     parser.add_argument("--drift-weight", type=float, default=0.05)
+    parser.add_argument("--candidate-pool-size", type=int, default=24)
+    parser.add_argument("--min-alive-fraction", type=float, default=0.05)
+    parser.add_argument("--max-alive-fraction", type=float, default=0.95)
+    parser.add_argument("--probe-coeffs", default="-0.10,-0.05,0.05,0.10")
+    parser.add_argument("--validation-rows", type=int, default=32)
     return parser.parse_args()
 
 
@@ -135,6 +149,7 @@ def load_static_specs(path: Path, model: nn.Module) -> list[ComponentSpec]:
                 static_damage=float(row.get("static_ablation_damage_T_probe_A") or 0.0),
                 role=str(row.get("role") or ""),
                 scale=float(row.get("scale") or 0.0),
+                label=str(row.get("label") or ""),
             )
         )
     return specs
@@ -175,22 +190,141 @@ def load_vpd_specs(manifest_path: Path, checkpoint_path: Path, model: nn.Module)
                 static_damage=float(row.get("ablation_output_l2_delta") or 0.0),
                 role=component_role(module_path),
                 scale=float(torch.linalg.vector_norm(basis).item()),
+                mean_ci=float(row.get("mean_ci") or 0.0),
+                alive_fraction=float(row.get("alive_fraction") or 0.0),
+                label=str(row.get("label") or ""),
                 basis=basis,
             )
         )
     return specs
 
 
-def select_specs(specs: list[ComponentSpec], *, top_k: int, seed: int) -> tuple[list[ComponentSpec], list[ComponentSpec]]:
+def select_damage_specs(
+    specs: list[ComponentSpec], *, top_k: int, seed: int
+) -> tuple[list[ComponentSpec], list[ComponentSpec]]:
     trunk = [spec for spec in specs if spec.role == "recursive_trunk_z"]
     selected = sorted(trunk, key=lambda item: (item.static_damage, item.scale), reverse=True)[:top_k]
+    control = select_control_specs(trunk, selected, top_k=top_k, seed=seed)
+    return selected, control
+
+
+def select_control_specs(
+    pool: list[ComponentSpec], selected: list[ComponentSpec], *, top_k: int, seed: int
+) -> list[ComponentSpec]:
     selected_ids = {spec.component_id for spec in selected}
-    pool = [spec for spec in trunk if spec.component_id not in selected_ids]
+    remaining = [spec for spec in pool if spec.component_id not in selected_ids]
     rng = random.Random(seed)
-    pool_by_damage = sorted(pool, key=lambda item: abs(item.static_damage - mean_damage(selected)))
+    pool_by_damage = sorted(remaining, key=lambda item: abs(item.static_damage - mean_damage(selected)))
     near_pool = pool_by_damage[: max(top_k * 4, top_k)]
     control = rng.sample(near_pool, k=min(top_k, len(near_pool)))
-    return selected, control
+    return control
+
+
+def parse_probe_coeffs(raw: str) -> list[float]:
+    coeffs = [float(item.strip()) for item in raw.split(",") if item.strip()]
+    if not coeffs:
+        raise ValueError("--probe-coeffs must contain at least one coefficient")
+    return coeffs
+
+
+def component_basis(spec: ComponentSpec, module: nn.Linear) -> Tensor:
+    if spec.basis is not None:
+        return spec.basis.to(dtype=module.weight.dtype, device=module.weight.device)
+    weight = module.weight.detach().float().cpu()
+    u, _s, vh = torch.linalg.svd(weight, full_matrices=False)
+    idx = min(spec.rank_index, u.shape[1] - 1, vh.shape[0] - 1)
+    return torch.outer(u[:, idx], vh[idx]).to(dtype=module.weight.dtype, device=module.weight.device)
+
+
+def score_component_probe(
+    model: nn.Module,
+    spec: ComponentSpec,
+    coeff: float,
+    loader: DataLoader[Any],
+    device: str,
+    base_logits: list[Tensor],
+    drift_weight: float,
+) -> tuple[float, dict[str, float]]:
+    module = model.get_submodule(spec.module_path)
+    if not isinstance(module, nn.Linear):
+        raise TypeError(f"{spec.module_path} is not Linear")
+    basis = component_basis(spec, module)
+    original = module.weight.data.detach().clone()
+    try:
+        module.weight.data = original + float(coeff) * basis
+        metrics = evaluate(model, loader, device, base_logits)
+    finally:
+        module.weight.data = original
+    score = float(metrics["loss"]) + float(drift_weight) * float(metrics["bucket_logit_l2_drift"])
+    return score, metrics
+
+
+def select_validated_specs(
+    specs: list[ComponentSpec],
+    *,
+    top_k: int,
+    seed: int,
+    model: nn.Module,
+    loader: DataLoader[Any],
+    device: str,
+    base_logits: list[Tensor],
+    drift_weight: float,
+    candidate_pool_size: int,
+    min_alive_fraction: float,
+    max_alive_fraction: float,
+    probe_coeffs: list[float],
+) -> tuple[list[ComponentSpec], list[ComponentSpec], list[dict[str, Any]]]:
+    filtered = [
+        spec
+        for spec in specs
+        if spec.role == "recursive_trunk_z"
+        and spec.alive_fraction >= min_alive_fraction
+        and spec.alive_fraction <= max_alive_fraction
+        and spec.label != "dead_component"
+    ]
+    candidates = sorted(filtered, key=lambda item: (item.static_damage, item.scale), reverse=True)[:candidate_pool_size]
+    scored: list[ComponentSpec] = []
+    probe_rows: list[dict[str, Any]] = []
+    for spec in candidates:
+        best_coeff = 0.0
+        best_score = float("inf")
+        best_metrics: dict[str, float] = {}
+        for coeff in probe_coeffs:
+            score, metrics = score_component_probe(
+                model,
+                spec,
+                coeff,
+                loader,
+                device,
+                base_logits,
+                drift_weight,
+            )
+            probe_rows.append(
+                {
+                    "component_id": spec.component_id,
+                    "coeff": coeff,
+                    "score": round(score, 6),
+                    "loss": metrics["loss"],
+                    "bucket_accuracy": metrics["bucket_accuracy"],
+                    "bucket_logit_l2_drift": metrics["bucket_logit_l2_drift"],
+                }
+            )
+            if score < best_score:
+                best_coeff = coeff
+                best_score = score
+                best_metrics = metrics
+        scored.append(
+            replace(
+                spec,
+                initial_coeff=best_coeff,
+                validation_score=round(best_score, 6),
+                validation_loss=best_metrics.get("loss"),
+                validation_drift=best_metrics.get("bucket_logit_l2_drift"),
+            )
+        )
+    selected = sorted(scored, key=lambda item: (item.validation_score or float("inf"), -item.static_damage))[:top_k]
+    control = select_control_specs(candidates, selected, top_k=top_k, seed=seed)
+    return selected, control, probe_rows
 
 
 def mean_damage(specs: list[ComponentSpec]) -> float:
@@ -205,6 +339,13 @@ def spec_to_dict(spec: ComponentSpec) -> dict[str, Any]:
         "static_damage": spec.static_damage,
         "role": spec.role,
         "scale": spec.scale,
+        "mean_ci": spec.mean_ci,
+        "alive_fraction": spec.alive_fraction,
+        "label": spec.label,
+        "initial_coeff": spec.initial_coeff,
+        "validation_score": spec.validation_score,
+        "validation_loss": spec.validation_loss,
+        "validation_drift": spec.validation_drift,
         "has_explicit_basis": spec.basis is not None,
     }
 
@@ -405,11 +546,13 @@ def render_report(payload: dict[str, Any]) -> str:
         "# Powered Intellect-3 VPD-Gated Adapter Report",
         "",
         f"Model: `{payload['model']}`",
-        f"Train rows: `{payload['train_rows']}`; eval rows: `{payload['eval_rows']}`; steps: `{payload['steps']}`",
+        f"Train rows: `{payload['train_rows']}`; validation rows: `{payload['validation_rows']}`; "
+        f"eval rows: `{payload['eval_rows']}`; steps: `{payload['steps']}`",
         f"Selection source: `{payload['selection_source']}`",
+        f"Selection method: `{payload['selection_method']}`",
         "",
-        "The selected arm trains scalar coefficients on chosen recursive-trunk component directions. "
-        "The control arm trains the same number of random recursive-trunk component directions from the same source.",
+        "The selected arm applies and optionally trains scalar coefficients on chosen recursive-trunk component directions. "
+        "The control arm uses the same number of random recursive-trunk component directions from the same source.",
         "",
         "## Results",
         "",
@@ -422,6 +565,22 @@ def render_report(payload: dict[str, Any]) -> str:
             f"| {arm['name']} | {arm['component_count']} | {ev['loss']} | "
             f"{ev['bucket_accuracy']} | {ev['bucket_logit_l2_drift']} |"
         )
+    if payload["selection_method"] == "validated":
+        lines += [
+            "",
+            "## Validation Selection",
+            "",
+            "| component | init coeff | validation score | validation loss | validation drift | alive | damage |",
+            "|---|---:|---:|---:|---:|---:|---:|",
+        ]
+        selected_arm = next((arm for arm in payload["arms"] if arm["name"].endswith("_validated")), None)
+        if selected_arm is not None:
+            for comp in selected_arm["components"]:
+                lines.append(
+                    f"| `{comp['component_id']}` | {comp['initial_coeff']} | {comp['validation_score']} | "
+                    f"{comp['validation_loss']} | {comp['validation_drift']} | "
+                    f"{comp['alive_fraction']} | {comp['static_damage']} |"
+                )
     lines += ["", "## Selected Components", ""]
     for arm in payload["arms"]:
         lines.append(f"### {arm['name']}")
@@ -429,7 +588,8 @@ def render_report(payload: dict[str, Any]) -> str:
         for comp in arm["components"][:12]:
             lines.append(
                 f"- `{comp['component_id']}` damage={comp['static_damage']} "
-                f"scale={round(float(comp['scale']), 6)}"
+                f"scale={round(float(comp['scale']), 6)} alive={comp['alive_fraction']} "
+                f"init={comp['initial_coeff']}"
             )
         lines.append("")
     return "\n".join(lines)
@@ -449,12 +609,40 @@ def main() -> int:
         specs = load_vpd_specs(args.vpd_manifest, args.spd_checkpoint, base_model)
     else:
         specs = load_static_specs(args.static_features, base_model)
-    selected, control = select_specs(specs, top_k=args.top_k, seed=args.seed)
-    train_rows = read_jsonl(str(args.train))[: args.max_train_rows]
+    all_train_rows = read_jsonl(str(args.train))[: args.max_train_rows]
+    validation_count = min(args.validation_rows, max(0, len(all_train_rows) - 1))
+    if args.selection_method == "validated" and validation_count > 0:
+        train_rows = all_train_rows[:-validation_count]
+        validation_rows = all_train_rows[-validation_count:]
+    else:
+        train_rows = all_train_rows
+        validation_rows = []
     eval_rows = read_jsonl(str(args.eval))[: args.max_eval_rows]
     eval_loader = build_loader(eval_rows, payload, args.batch_size, shuffle=False)
     base_eval = evaluate(base_model, eval_loader, args.device)
     base_eval_logits = collect_base_logits(base_model, eval_loader, args.device)
+    validation_probe_rows: list[dict[str, Any]] = []
+    if args.selection_method == "validated":
+        if not validation_rows:
+            raise ValueError("--selection-method validated requires at least two train rows")
+        validation_loader = build_loader(validation_rows, payload, args.batch_size, shuffle=False)
+        validation_base_logits = collect_base_logits(base_model, validation_loader, args.device)
+        selected, control, validation_probe_rows = select_validated_specs(
+            specs,
+            top_k=args.top_k,
+            seed=args.seed,
+            model=base_model,
+            loader=validation_loader,
+            device=args.device,
+            base_logits=validation_base_logits,
+            drift_weight=float(args.drift_weight),
+            candidate_pool_size=args.candidate_pool_size,
+            min_alive_fraction=args.min_alive_fraction,
+            max_alive_fraction=args.max_alive_fraction,
+            probe_coeffs=parse_probe_coeffs(args.probe_coeffs),
+        )
+    else:
+        selected, control = select_damage_specs(specs, top_k=args.top_k, seed=args.seed)
 
     arms = [
         {
@@ -466,7 +654,11 @@ def main() -> int:
             "coefficients": {},
         },
         run_arm(
-            name="vpd_selected" if args.selection_source == "vpd" else "static_selected",
+            name=(
+                f"{args.selection_source}_validated"
+                if args.selection_method == "validated"
+                else ("vpd_selected" if args.selection_source == "vpd" else "static_selected")
+            ),
             specs=selected,
             args=args,
             payload=payload,
@@ -490,7 +682,14 @@ def main() -> int:
         "selection_source": args.selection_source,
         "vpd_manifest": str(args.vpd_manifest) if args.vpd_manifest else None,
         "spd_checkpoint": str(args.spd_checkpoint) if args.spd_checkpoint else None,
+        "selection_method": args.selection_method,
+        "candidate_pool_size": args.candidate_pool_size,
+        "min_alive_fraction": args.min_alive_fraction,
+        "max_alive_fraction": args.max_alive_fraction,
+        "probe_coeffs": parse_probe_coeffs(args.probe_coeffs),
+        "validation_probe_rows": validation_probe_rows,
         "train_rows": len(train_rows),
+        "validation_rows": len(validation_rows),
         "eval_rows": len(eval_rows),
         "steps": args.steps,
         "top_k": args.top_k,
