@@ -72,6 +72,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--n-rows", type=int, default=2048)
     parser.add_argument("--steps", type=int, default=4000)
     parser.add_argument("--batch-size", type=int, default=32)
+    parser.add_argument("--save-freq", type=int, default=None)
     parser.add_argument("--device", default="cpu")
     parser.add_argument("--out-dir", type=Path, default=OUT_DIR)
     return parser.parse_args()
@@ -109,7 +110,11 @@ def main() -> int:
     eval_loader = build_loader(rows, payload, args.batch_size)
 
     config = build_config(
-        TARGET_MODULES, steps=args.steps, batch_size=args.batch_size, use_delta_component=False
+        TARGET_MODULES,
+        steps=args.steps,
+        batch_size=args.batch_size,
+        use_delta_component=False,
+        save_freq=args.save_freq,
     )
     optimize(
         target_model=model,

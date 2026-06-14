@@ -47,6 +47,7 @@ def build_config(
     steps: int,
     batch_size: int,
     use_delta_component: bool = True,
+    save_freq: int | None = None,
 ) -> Config:
     info = module_info or [("shared.0", c0), ("shared.2", c2)]
     config_dict = {
@@ -76,7 +77,7 @@ def build_config(
         "n_eval_steps": 20,
         "slow_eval_freq": 5_000,
         "slow_eval_on_first_step": False,
-        "save_freq": None,
+        "save_freq": save_freq,
         "ci_alive_threshold": 0.1,
         "eval_metric_configs": [
             {"classname": "CI_L0", "groups": None},
