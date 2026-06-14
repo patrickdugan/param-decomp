@@ -47,9 +47,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--train", type=Path, default=TRAIN_PATH)
     parser.add_argument("--model", type=Path, default=OUT_DIR / "model_500.pth")
     parser.add_argument("--n-rows", type=int, default=64)
+    parser.add_argument("--start-row", type=int, default=0)
     parser.add_argument("--batch-size", type=int, default=64)
     parser.add_argument("--device", default="cpu")
     parser.add_argument("--out-dir", type=Path, default=OUT_DIR)
+    parser.add_argument("--manifest-name", default="hermes_manifest.json")
     parser.add_argument(
         "--report-path",
         type=Path,
@@ -84,7 +86,7 @@ def main() -> int:
     cm.load_state_dict(state)
     cm.eval()
 
-    rows = read_jsonl(args.train)[: args.n_rows]
+    rows = read_jsonl(args.train)[args.start_row : args.start_row + args.n_rows]
     loader = build_loader(rows, payload, args.batch_size)
     batch = _batch_to_device(next(iter(loader)), args.device)
     run_extraction(
@@ -96,7 +98,9 @@ def main() -> int:
         model_name="HermesHRMClassifier recursive logic critic",
         critic_model_path=args.critic_model,
         component_model_path=args.model,
+        row_start=args.start_row,
         out_dir=args.out_dir,
+        manifest_name=args.manifest_name,
         report_path=args.report_path,
     )
     return 0
@@ -112,7 +116,9 @@ def run_extraction(
     model_name: str,
     critic_model_path: Path,
     component_model_path: Path,
+    row_start: int,
     out_dir: Path,
+    manifest_name: str,
     report_path: Path,
 ) -> dict[str, object]:
     """Faithfulness, CI, and per-component ablation on a Hermes critic batch."""
@@ -186,13 +192,14 @@ def run_extraction(
         "model": model_name,
         "critic_model": str(critic_model_path),
         "trained_decomposition": str(component_model_path),
+        "row_start": row_start,
         "n_datapoints": int(batch["input_ids"].shape[0]),
         "behavioral_faithfulness_rel_error": round(behavioral_rel_error, 8),
         "layers": layers,
         "components": component_rows,
     }
     out_dir.mkdir(parents=True, exist_ok=True)
-    (out_dir / "hermes_manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+    (out_dir / manifest_name).write_text(json.dumps(manifest, indent=2), encoding="utf-8")
     _write_report(report_path, manifest)
     print(json.dumps({"layers": layers, "n_components": len(component_rows)}, indent=2))
     return manifest
