@@ -56,6 +56,7 @@ class ComponentSpec:
     static_damage: float
     role: str
     scale: float
+    basis: Tensor | None = None
 
 
 class ComponentDeltaLinear(nn.Module):
@@ -74,8 +75,11 @@ class ComponentDeltaLinear(nn.Module):
         weight = base.weight.detach().float().cpu()
         u, _s, vh = torch.linalg.svd(weight, full_matrices=False)
         for spec in specs:
-            idx = min(spec.rank_index, u.shape[1] - 1, vh.shape[0] - 1)
-            basis.append(torch.outer(u[:, idx], vh[idx]).to(dtype=base.weight.dtype))
+            if spec.basis is not None:
+                basis.append(spec.basis.to(dtype=base.weight.dtype))
+            else:
+                idx = min(spec.rank_index, u.shape[1] - 1, vh.shape[0] - 1)
+                basis.append(torch.outer(u[:, idx], vh[idx]).to(dtype=base.weight.dtype))
         self.register_buffer("basis", torch.stack(basis, dim=0))
         self.coeff = nn.Parameter(torch.zeros(len(specs), dtype=base.weight.dtype))
 
@@ -93,6 +97,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--train", type=Path, default=TRAIN_PATH)
     parser.add_argument("--eval", type=Path, default=EVAL_PATH)
     parser.add_argument("--static-features", type=Path, default=STATIC_FEATURES)
+    parser.add_argument("--vpd-manifest", type=Path, default=None)
+    parser.add_argument("--spd-checkpoint", type=Path, default=None)
+    parser.add_argument("--selection-source", choices=["static", "vpd"], default="static")
     parser.add_argument("--out-dir", type=Path, default=OUT_DIR)
     parser.add_argument("--report", type=Path, default=REPORT_PATH)
     parser.add_argument("--device", default="cpu")
@@ -133,6 +140,47 @@ def load_static_specs(path: Path, model: nn.Module) -> list[ComponentSpec]:
     return specs
 
 
+def safe_module_key(module_path: str) -> str:
+    return module_path.replace(".", "-")
+
+
+def component_role(module_path: str) -> str:
+    if module_path.startswith("networks."):
+        return "recursive_trunk_z"
+    if module_path == "bucket_head":
+        return "output_bucket_head"
+    return "unclassified"
+
+
+def load_vpd_specs(manifest_path: Path, checkpoint_path: Path, model: nn.Module) -> list[ComponentSpec]:
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    state = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
+    modules = dict(model.named_modules())
+    specs = []
+    for row in manifest["components"]:
+        module_path = str(row["module"])
+        module = modules.get(module_path)
+        if not isinstance(module, nn.Linear):
+            continue
+        rank_index = int(row["rank_index"])
+        key = safe_module_key(module_path)
+        u = state[f"_components.{key}.U"][rank_index].detach().cpu().float()
+        v = state[f"_components.{key}.V"][:, rank_index].detach().cpu().float()
+        basis = torch.outer(u, v)
+        specs.append(
+            ComponentSpec(
+                component_id=str(row["component_id"]),
+                module_path=module_path,
+                rank_index=rank_index,
+                static_damage=float(row.get("ablation_output_l2_delta") or 0.0),
+                role=component_role(module_path),
+                scale=float(torch.linalg.vector_norm(basis).item()),
+                basis=basis,
+            )
+        )
+    return specs
+
+
 def select_specs(specs: list[ComponentSpec], *, top_k: int, seed: int) -> tuple[list[ComponentSpec], list[ComponentSpec]]:
     trunk = [spec for spec in specs if spec.role == "recursive_trunk_z"]
     selected = sorted(trunk, key=lambda item: (item.static_damage, item.scale), reverse=True)[:top_k]
@@ -147,6 +195,18 @@ def select_specs(specs: list[ComponentSpec], *, top_k: int, seed: int) -> tuple[
 
 def mean_damage(specs: list[ComponentSpec]) -> float:
     return sum(spec.static_damage for spec in specs) / max(1, len(specs))
+
+
+def spec_to_dict(spec: ComponentSpec) -> dict[str, Any]:
+    return {
+        "component_id": spec.component_id,
+        "module_path": spec.module_path,
+        "rank_index": spec.rank_index,
+        "static_damage": spec.static_damage,
+        "role": spec.role,
+        "scale": spec.scale,
+        "has_explicit_basis": spec.basis is not None,
+    }
 
 
 def set_submodule(root: nn.Module, path: str, module: nn.Module) -> None:
@@ -333,7 +393,7 @@ def run_arm(
     return {
         "name": name,
         "component_count": len(specs),
-        "components": [spec.__dict__ for spec in specs],
+        "components": [spec_to_dict(spec) for spec in specs],
         "history": history,
         "eval": metrics,
         "coefficients": coeffs,
@@ -346,9 +406,10 @@ def render_report(payload: dict[str, Any]) -> str:
         "",
         f"Model: `{payload['model']}`",
         f"Train rows: `{payload['train_rows']}`; eval rows: `{payload['eval_rows']}`; steps: `{payload['steps']}`",
+        f"Selection source: `{payload['selection_source']}`",
         "",
-        "The selected arm trains scalar coefficients on high-static-damage recursive-trunk component directions. "
-        "The control arm trains the same number of random recursive-trunk component directions.",
+        "The selected arm trains scalar coefficients on chosen recursive-trunk component directions. "
+        "The control arm trains the same number of random recursive-trunk component directions from the same source.",
         "",
         "## Results",
         "",
@@ -382,7 +443,12 @@ def main() -> int:
     args.report.parent.mkdir(parents=True, exist_ok=True)
 
     payload, base_model = load_trained_model(str(args.model), args.device)
-    specs = load_static_specs(args.static_features, base_model)
+    if args.selection_source == "vpd":
+        if args.vpd_manifest is None or args.spd_checkpoint is None:
+            raise ValueError("--selection-source vpd requires --vpd-manifest and --spd-checkpoint")
+        specs = load_vpd_specs(args.vpd_manifest, args.spd_checkpoint, base_model)
+    else:
+        specs = load_static_specs(args.static_features, base_model)
     selected, control = select_specs(specs, top_k=args.top_k, seed=args.seed)
     train_rows = read_jsonl(str(args.train))[: args.max_train_rows]
     eval_rows = read_jsonl(str(args.eval))[: args.max_eval_rows]
@@ -400,7 +466,7 @@ def main() -> int:
             "coefficients": {},
         },
         run_arm(
-            name="vpd_static_selected",
+            name="vpd_selected" if args.selection_source == "vpd" else "static_selected",
             specs=selected,
             args=args,
             payload=payload,
@@ -421,6 +487,9 @@ def main() -> int:
     result = {
         "model": str(args.model),
         "static_features": str(args.static_features),
+        "selection_source": args.selection_source,
+        "vpd_manifest": str(args.vpd_manifest) if args.vpd_manifest else None,
+        "spd_checkpoint": str(args.spd_checkpoint) if args.spd_checkpoint else None,
         "train_rows": len(train_rows),
         "eval_rows": len(eval_rows),
         "steps": args.steps,

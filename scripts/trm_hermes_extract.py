@@ -223,7 +223,7 @@ def _write_report(path: Path, manifest: dict[str, object]) -> None:
     lines = [
         "# Hermes Logic Critic VPD Report",
         "",
-        "This report uses this repo's SPD `optimize()` on Fable's recursive HRM logic critic. "
+        "This report uses this repo's SPD `optimize()` on a recursive HRM/Hermes logic critic. "
         "It is not the earlier SVD loop-spline atom lane.",
         "",
         f"Behavioral faithfulness relative L2: {manifest['behavioral_faithfulness_rel_error']}.",
